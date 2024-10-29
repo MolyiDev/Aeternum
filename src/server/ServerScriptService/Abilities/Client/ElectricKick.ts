@@ -1,0 +1,30 @@
+// Imports
+import { Players, ReplicatedStorage } from "@rbxts/services";
+import { EAbility } from "shared/Enums/Abilities/EAbility";
+import { IModel } from "shared/Interfaces/IModel";
+import { Tools } from "shared/Libraries/Tools";
+import { CharacterManager } from "shared/Managers/CharacterManager";
+
+// Events
+const Events = ReplicatedStorage.WaitForChild("Events").WaitForChild("Combat").WaitForChild("Abilities");
+const ElectricKickEvent = Events.WaitForChild("ElectricKickEvent") as RemoteEvent;
+
+// Variables
+const Player = Players.LocalPlayer;
+const Character = CharacterManager.GetCharacter((Player.Character ?? Player.CharacterAdded.Wait()[0]) as IModel);
+const Attributes = Character.Attributes;
+const Humanoid = Character.Humanoid;
+
+const Ability = EAbility.ElectricKick;
+
+export = {
+	Start() {
+		if (Attributes.IsStunned() || !Tools.IsTouchingGround(Humanoid, true)) return;
+
+		ElectricKickEvent.FireServer();
+	},
+
+	GetAbility() {
+		return Ability;
+	},
+};

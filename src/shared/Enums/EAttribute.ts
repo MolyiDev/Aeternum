@@ -1,0 +1,16 @@
+export enum EAttribute {
+	Tick_Ability1 = "Tick_Ability1",
+	Tick_Ability2 = "Tick_Ability2",
+	Tick_Ability3 = "Tick_Ability3",
+	Tick_Ability4 = "Tick_Ability4",
+	Tick_Punch = "Tick_Punch",
+	Tick_AttackStealth = "Tick_AttackStealth",
+	Tick_Parry = "Tick_Parry",
+	AutoRotate = "AutoRotate",
+	IsBlocking = "IsBlocking",
+	IsCameraLocked = "IsCameraLocked",
+	IsDashing = "IsDashing",
+	IsRagdoll = "IsRagdoll",
+	IsStunnedFull = "IsStunnedFull",
+	IsStunnedPartial = "IsStunnedPartial",
+}

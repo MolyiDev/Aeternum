@@ -1,0 +1,16 @@
+export enum EMovementState {
+	Idle,
+	Jumping,
+	Falling,
+	Landing,
+	Walking,
+	Running,
+	Climbing,
+	Sliding,
+	SlidingJump,
+	Crouching,
+	Attacking,
+	Blocking,
+	Guarding,
+	Stunned,
+}
