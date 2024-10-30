@@ -24,11 +24,11 @@ import { CharacterManager } from "../../../shared/Managers/CharacterManager";
 // Variables
 const TemporalFolder = Workspace.WaitForChild("Temporal");
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
 const Attributes = Character.Attributes;
 const Humanoid = Character.Humanoid;
 const HumanoidRootPart = Character.HumanoidRootPart;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 const Model = Character.Model;
 
 const Dust = ReplicatedStorage.WaitForChild("Effects").WaitForChild("Dust") as BasePart;
@@ -293,28 +293,26 @@ function Movement() {
 	lastPosition = HumanoidRootPart.Position;
 }
 
-Janitor.Add(
-	ControlManager.LocalInputBegan.Connect(
-		(control: [string, number] | undefined, input: InputObject, doublePressed: boolean) =>
-			InputBegan(control, input, doublePressed),
-	),
-	"Disconnect",
+Butler.Connect(
+	ControlManager.LocalInputBegan,
+	(control: [string, number] | undefined, input: InputObject, doublePressed: boolean) => {
+		InputBegan(control, input, doublePressed);
+	},
 );
 
-Janitor.Add(
-	ControlManager.LocalInputEnded.Connect((control: [string, number] | undefined, input: InputObject | undefined) =>
-		InputEnded(control, input),
-	),
-	"Disconnect",
+Butler.Connect(
+	ControlManager.LocalInputEnded,
+	(control: [string, number] | undefined, input: InputObject | undefined) => {
+		InputEnded(control, input);
+	},
 );
 
-Janitor.Add(
-	StateManager.StateChanged.Connect((oldState: EMovementState, newState: EMovementState, speed: number | undefined) =>
+Butler.Connect(
+	StateManager.StateChanged,
+	(oldState: EMovementState, newState: EMovementState, speed: number | undefined) =>
 		StateChanged(oldState, newState, speed),
-	),
-	"Disconnect",
 );
 
-Janitor.Add(RunService.Heartbeat.Connect(() => Movement()));
+Butler.Connect(RunService.Heartbeat, () => Movement());
 
 IdleManager.Initialize();

@@ -5,10 +5,10 @@ import { EAttribute } from "shared/Enums/EAttribute";
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
 const Attributes = Character.Attributes;
 const Humanoid = Character.Humanoid;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 
 function AttributeChanged(attribute: string) {
 	if (attribute !== EAttribute.IsRagdoll) return;
@@ -23,4 +23,4 @@ function AttributeChanged(attribute: string) {
 	}
 }
 
-Janitor.Add(Attributes.AttributeChanged.Connect((attribute) => AttributeChanged(attribute)));
+Butler.Connect(Attributes.AttributeChanged, (attribute: string) => AttributeChanged(attribute));

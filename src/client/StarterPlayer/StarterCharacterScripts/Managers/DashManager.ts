@@ -6,7 +6,6 @@ import { ESettingsControls } from "shared/Enums/Settings/ESettingsControls";
 import { StateManager } from "./StateManager";
 import { EMovementState } from "shared/Enums/Movement/EMovementState";
 import { CharacterManager } from "shared/Managers/CharacterManager";
-import { AnimManager } from "shared/Managers/AnimManager";
 import { EAnimations } from "shared/Enums/EAnimations";
 
 // States
@@ -16,14 +15,14 @@ const ExcludeStates = new Set<EMovementState>([EMovementState.Sliding]);
 // Variables
 const Player = Players.LocalPlayer;
 const Camera = Workspace.CurrentCamera as Camera;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Animations = Character.Animations;
 const Attributes = Character.Attributes;
 const Humanoid = Character.Humanoid;
 const HumanoidRootPart = Character.HumanoidRootPart;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 
-const [DashForward, DashBack, DashLeft, DashRight] = AnimManager.GetAnimations(
-	Character,
+const [DashForward, DashBack, DashLeft, DashRight] = Animations.GetAnimations(
 	EAnimations.DashForward,
 	EAnimations.DashBack,
 	EAnimations.DashLeft,
@@ -88,7 +87,7 @@ export class DashManager {
 	}
 }
 
-Janitor.Add(DashForward.GetMarkerReachedSignal("End").Connect(() => DashForward.Stop(0.3)));
-Janitor.Add(DashBack.GetMarkerReachedSignal("End").Connect(() => DashBack.Stop(0.3)));
-Janitor.Add(DashLeft.GetMarkerReachedSignal("End").Connect(() => DashLeft.Stop(0.3)));
-Janitor.Add(DashRight.GetMarkerReachedSignal("End").Connect(() => DashRight.Stop(0.3)));
+Butler.Connect(DashForward.GetMarkerReachedSignal("End"), () => DashForward.Stop(0.3));
+Butler.Connect(DashBack.GetMarkerReachedSignal("End"), () => DashBack.Stop(0.3));
+Butler.Connect(DashLeft.GetMarkerReachedSignal("End"), () => DashLeft.Stop(0.3));
+Butler.Connect(DashRight.GetMarkerReachedSignal("End"), () => DashRight.Stop(0.3));

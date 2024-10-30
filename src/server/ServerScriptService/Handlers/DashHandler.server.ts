@@ -10,20 +10,16 @@ const AnimationList = new Set<string>([
 	EAnimations.DashRight,
 ]);
 
-AnimManager.AnimationPlayed.Connect((character, animName, animTrack) => {
+AnimManager.AnimationPlayOnce.Connect((character, animName, animTrack) => {
 	if (!AnimationList.has(animName)) return;
 	const Attributes = character.Attributes;
-	const Janitor = character.Janitor;
+	const Butler = character.Butler;
 
-	Janitor.Add(
-		animTrack.GetMarkerReachedSignal("DashStart").Connect(() => {
-			Attributes.SetIsDashing(true);
-		}),
-	);
+	Butler.Connect(animTrack.GetMarkerReachedSignal("DashStart"), () => {
+		Attributes.SetIsDashing(true);
+	});
 
-	Janitor.Add(
-		animTrack.GetMarkerReachedSignal("DashEnd").Connect(() => {
-			Attributes.SetIsDashing(false);
-		}),
-	);
+	Butler.Connect(animTrack.GetMarkerReachedSignal("DashEnd"), () => {
+		Attributes.SetIsDashing(false);
+	});
 });

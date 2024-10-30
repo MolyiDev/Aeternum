@@ -7,7 +7,6 @@ import { StateManager } from "./StateManager";
 import { EMovementState } from "shared/Enums/Movement/EMovementState";
 import { CharacterManager } from "shared/Managers/CharacterManager";
 import { TweenManager } from "./TweenManager";
-import { AnimManager } from "shared/Managers/AnimManager";
 import { EAnimations } from "shared/Enums/EAnimations";
 
 // States
@@ -20,12 +19,13 @@ const ExcludeStates = new Set<EMovementState>([
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Animations = Character.Animations;
 const Humanoid = Character.Humanoid;
 const HumanoidRootPart = Character.HumanoidRootPart;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 
-const CrouchMovement = AnimManager.GetAnimation(Character, EAnimations.CrouchMove);
+const CrouchMovement = Animations.GetAnimation(EAnimations.CrouchMove);
 
 export class CrouchManager {
 	public static CrouchStop() {
@@ -61,5 +61,5 @@ function MoveDirection() {
 	else CrouchMovement.AdjustSpeed(1);
 }
 
-Janitor.Add(Humanoid.GetPropertyChangedSignal("MoveDirection").Connect(() => MoveDirection()));
-Janitor.Add(HumanoidRootPart.GetPropertyChangedSignal("CFrame").Connect(() => MoveDirection()));
+Butler.Connect(Humanoid.GetPropertyChangedSignal("MoveDirection"), () => MoveDirection());
+Butler.Connect(HumanoidRootPart.GetPropertyChangedSignal("CFrame"), () => MoveDirection());

@@ -1,25 +1,21 @@
 // Imports
 import { EAnimations } from "shared/Enums/EAnimations";
-import { Tools } from "shared/Libraries/Tools";
-import { IModel } from "shared/Interfaces/IModel";
-import { Janitor } from "@rbxts/janitor";
 import { CharacterManager } from "shared/Managers/CharacterManager";
-import { EAttribute } from "shared/Enums/EAttribute";
-import { AttributeManager } from "shared/Managers/AttributeManager";
+import { AnimManager } from "shared/Managers/AnimManager";
 
 // Variables
 const AnimationList = new Set<string>([EAnimations.Block]);
 
-CharacterManager.AddedCharacter.Connect((character: IModel, janitor: Janitor) => {
-	const Humanoid = character.WaitForChild("Humanoid") as Humanoid;
+CharacterManager.AddedCharacter.Connect((character) => {
+	const Butler = character.Butler;
+	const Attributes = character.Attributes;
+	const Humanoid = character.Humanoid;
 	const Animator = Humanoid.WaitForChild("Animator") as Animator;
 
-	janitor.Add(
-		Animator.AnimationPlayed.Connect((animationTrack: AnimationTrack) => {
-			if (!AnimationList.has(Tools.IdAnimToName(animationTrack.Animation!.AnimationId))) return;
-			AttributeManager.SetIsBlocking(character, true);
-			AttributeManager.SetTickParry(character, tick());
-			janitor.Add(animationTrack.Stopped.Once(() => AttributeManager.SetIsBlocking(character, false)));
-		}),
-	);
+	Butler.Connect(Animator.AnimationPlayed, (animationTrack: AnimationTrack) => {
+		if (!AnimationList.has(AnimManager.IdToName(animationTrack.Animation!.AnimationId))) return;
+		Attributes.SetIsBlocking(true);
+		Attributes.SetTickParry(tick());
+		Butler.Once(animationTrack.Stopped, () => Attributes.SetIsBlocking(false));
+	});
 });

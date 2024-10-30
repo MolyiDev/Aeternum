@@ -2,7 +2,6 @@
 import { Players } from "@rbxts/services";
 import { EAnimations } from "shared/Enums/EAnimations";
 import { Tools } from "shared/Libraries/Tools";
-import { AnimManager } from "shared/Managers/AnimManager";
 import { CharacterManager } from "shared/Managers/CharacterManager";
 import { StateManager } from "../../Managers/StateManager";
 import { EMovementState } from "shared/Enums/Movement/EMovementState";
@@ -10,13 +9,13 @@ import { GuardManager } from "./GuardManager";
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Animations = Character.Animations;
 const Attributes = Character.Attributes;
 const Humanoid = Character.Humanoid;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 
-const [Punch0, Punch1, Punch2, Punch3] = AnimManager.GetAnimations(
-	Character,
+const [Punch0, Punch1, Punch2, Punch3] = Animations.GetAnimations(
 	EAnimations.Punch0,
 	EAnimations.Punch1,
 	EAnimations.Punch2,
@@ -33,7 +32,7 @@ let CurrentPunch = 0;
 let LastPunchTime = tick();
 
 let OffsetTween: Tween;
-let OffsettConnection: RBXScriptConnection;
+let OffsettConnection: RBXScriptConnection | undefined;
 
 interface PunchConfig {
 	Animation: AnimationTrack;
@@ -88,7 +87,10 @@ const Punches = new Map<number, PunchConfig>([
 
 function ApplyCameraOffset(newPunch: PunchConfig) {
 	OffsetTween?.Pause();
-	OffsettConnection?.Disconnect();
+	if (OffsettConnection) {
+		Butler.Remove(OffsettConnection);
+		OffsettConnection = undefined;
+	}
 
 	OffsetTween = Tools.TweenPlay(
 		Humanoid,
@@ -102,12 +104,10 @@ function ApplyCameraOffset(newPunch: PunchConfig) {
 		},
 	);
 
-	OffsettConnection = Janitor.Add(
-		OffsetTween.Completed.Once(() =>
-			Tools.TweenPlay(Humanoid, new TweenInfo(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-				CameraOffset: DEFAULT_CAMERA_OFFSET,
-			}),
-		),
+	OffsettConnection = Butler.Once(OffsetTween.Completed, () =>
+		Tools.TweenPlay(Humanoid, new TweenInfo(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			CameraOffset: DEFAULT_CAMERA_OFFSET,
+		}),
 	);
 }
 
@@ -144,7 +144,7 @@ export class PunchManager {
 	}
 }
 
-Janitor.Add(Punch0.GetMarkerReachedSignal("End").Connect(() => GuardManager.Start()));
-Janitor.Add(Punch1.GetMarkerReachedSignal("End").Connect(() => GuardManager.Start()));
-Janitor.Add(Punch2.GetMarkerReachedSignal("End").Connect(() => GuardManager.Start()));
-Janitor.Add(Punch3.GetMarkerReachedSignal("End").Connect(() => GuardManager.Start()));
+Butler.Connect(Punch0.GetMarkerReachedSignal("End"), () => GuardManager.Start());
+Butler.Connect(Punch1.GetMarkerReachedSignal("End"), () => GuardManager.Start());
+Butler.Connect(Punch2.GetMarkerReachedSignal("End"), () => GuardManager.Start());
+Butler.Connect(Punch3.GetMarkerReachedSignal("End"), () => GuardManager.Start());

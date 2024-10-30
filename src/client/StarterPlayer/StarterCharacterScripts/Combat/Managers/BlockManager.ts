@@ -5,16 +5,16 @@ import { EMovementState } from "shared/Enums/Movement/EMovementState";
 import { EMovementSpeeds } from "shared/Enums/Movement/EMovementSpeeds";
 import { EMovementJumps } from "shared/Enums/Movement/EMovementJumps";
 import { TweenManager } from "../../Managers/TweenManager";
-import { AnimManager } from "shared/Managers/AnimManager";
 import { EAnimations } from "shared/Enums/EAnimations";
 import { CharacterManager } from "shared/Managers/CharacterManager";
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Animations = Character.Animations;
 const Attributes = Character.Attributes;
 
-const Block = AnimManager.GetAnimation(Character, EAnimations.Block);
+const Block = Animations.GetAnimation(EAnimations.Block);
 
 let IsBlocking = false;
 

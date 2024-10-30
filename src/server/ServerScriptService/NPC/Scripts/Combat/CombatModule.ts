@@ -1,14 +1,13 @@
 // Imports
 import { EAnimations } from "shared/Enums/EAnimations";
-import { IModel } from "shared/Interfaces/IModel";
-import { AnimManager } from "shared/Managers/AnimManager";
-import { AttributeManager } from "shared/Managers/AttributeManager";
+import { CharacterManager } from "shared/Managers/CharacterManager";
 
 // Variables
-const Character = script.Parent!.Parent!.Parent as IModel;
+const Character = CharacterManager.GetCharacter(script.Parent!.Parent!.Parent)!;
+const Attributes = Character.Attributes;
+const Animations = Character.Animations;
 
-const [Punch0, Punch1, Punch2, Punch3] = AnimManager.GetAnimations(
-	Character,
+const [Punch0, Punch1, Punch2, Punch3] = Animations.GetAnimations(
 	EAnimations.Punch0,
 	EAnimations.Punch1,
 	EAnimations.Punch2,
@@ -65,7 +64,7 @@ function ResetPunchIfIdle() {
 }
 
 function Attack1() {
-	if (!CanPunch || AttributeManager.IsStunnedFull(Character) || AttributeManager.IsBlocking(Character)) return;
+	if (!CanPunch || Attributes.IsStunnedFull() || Attributes.IsBlocking()) return;
 	if (CurrentPunch >= Punches.size()) CurrentPunch = 0;
 
 	LastPunchTime = tick();

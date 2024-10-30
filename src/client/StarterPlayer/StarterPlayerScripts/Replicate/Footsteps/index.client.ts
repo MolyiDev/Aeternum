@@ -2,7 +2,6 @@
 import { Workspace } from "@rbxts/services";
 import { EAnimations } from "shared/Enums/EAnimations";
 import { Tools } from "shared/Libraries/Tools";
-import { AnimManager } from "shared/Managers/AnimManager";
 import { CharacterManager } from "shared/Managers/CharacterManager";
 
 // Variables
@@ -22,10 +21,6 @@ const Footprint = script.WaitForChild("Footprint") as BasePart;
 const SFX = script.WaitForChild("SFX") as Folder;
 
 const LoadedSFX: { [key: string]: Sound[] } = {};
-const PlayerAttachments: Map<
-	Model,
-	{ SFXOrigin: Attachment; LeftFootAttachment: Attachment; RightFootAttachment: Attachment; RayParams: RaycastParams }
-> = new Map();
 
 SFX.GetChildren().forEach((folder) => (LoadedSFX[folder.Name] = folder.GetChildren() as Sound[]));
 
@@ -38,39 +33,32 @@ const MIN_SPEED = 0.94;
 const MAX_SPEED = 1.06;
 
 CharacterManager.AddedCharacter.Connect((character) => {
+	const Animations = character.Animations;
+	const Humanoid = character.Humanoid;
+	const Butler = character.Butler;
+	const Model = character.Model;
+
 	const SFXOrigin = new Instance("Attachment");
 	SFXOrigin.CFrame = new CFrame(0, -2.875, 0);
-	SFXOrigin.Parent = character.PrimaryPart;
+	SFXOrigin.Parent = character.HumanoidRootPart;
 
 	const LeftFootAttachment = new Instance("Attachment");
 	LeftFootAttachment.CFrame = new CFrame(0, -0.075, 0);
-	LeftFootAttachment.Parent = character.WaitForChild("LeftFoot");
+	LeftFootAttachment.Parent = Model.WaitForChild("LeftFoot");
 
 	const RightFootAttachment = new Instance("Attachment");
 	RightFootAttachment.CFrame = new CFrame(0, -0.075, 0);
-	RightFootAttachment.Parent = character.WaitForChild("RightFoot");
+	RightFootAttachment.Parent = Model.WaitForChild("RightFoot");
 
 	const RayParams = new RaycastParams();
 	RayParams.FilterType = Enum.RaycastFilterType.Exclude;
-	RayParams.FilterDescendantsInstances = [character];
+	RayParams.FilterDescendantsInstances = [Model];
 	RayParams.IgnoreWater = true;
 
-	PlayerAttachments.set(character, { SFXOrigin, LeftFootAttachment, RightFootAttachment, RayParams });
-});
+	Animations.AnimationPlayOnce.Connect((animName, animTrack) => {
+		if (!AnimationList.has(animName)) return;
 
-CharacterManager.RemovedCharacter.Connect((character) => PlayerAttachments.delete(character));
-
-AnimManager.AnimationPlayed.Connect((character, janitor, animName, animTrack) => {
-	if (!AnimationList.has(animName)) return;
-	const Humanoid = character.Humanoid;
-
-	const attachments = PlayerAttachments.get(character);
-	if (!attachments) return;
-
-	const { SFXOrigin, LeftFootAttachment, RightFootAttachment, RayParams } = attachments;
-
-	janitor.Add(
-		animTrack.GetMarkerReachedSignal("Footstep").Connect((FootEnum?: string) => {
+		Butler.Connect(animTrack.GetMarkerReachedSignal("Footstep"), (FootEnum?: string) => {
 			const MaterialName = Humanoid.FloorMaterial.Name;
 			if (!LoadedSFX[MaterialName]) return;
 
@@ -124,7 +112,7 @@ AnimManager.AnimationPlayed.Connect((character, janitor, animName, animTrack) =>
 			const ModelFadeOut = Tools.TweenPlay(FootprintClone, FADE_OUT, { Transparency: 1 });
 			Tools.TweenPlay(ShadowDecal, FADE_OUT, { Transparency: 1 });
 
-			janitor.Add(ModelFadeOut.Completed.Once(() => FootprintClone.Destroy()));
-		}),
-	);
+			Butler.Once(ModelFadeOut.Completed, () => FootprintClone.Destroy());
+		});
+	});
 });

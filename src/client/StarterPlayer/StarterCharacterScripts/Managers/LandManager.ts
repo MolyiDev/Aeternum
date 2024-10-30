@@ -1,10 +1,10 @@
+/* eslint-disable roblox-ts/lua-truthiness */
 // Imports
 import { Players } from "@rbxts/services";
 import { StateManager } from "./StateManager";
 import { EMovementState } from "shared/Enums/Movement/EMovementState";
 import { CharacterManager } from "shared/Managers/CharacterManager";
 import { EStunType } from "shared/Enums/EStunType";
-import { AnimManager } from "shared/Managers/AnimManager";
 import { EAnimations } from "shared/Enums/EAnimations";
 
 // States
@@ -13,13 +13,14 @@ const ExcludeStates = new Set<EMovementState>([EMovementState.Sliding]);
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Animations = Character.Animations;
 const Attributes = Character.Attributes;
 const Humanoid = Character.Humanoid;
 const HumanoidRootPart = Character.HumanoidRootPart;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 
-const [LandShort, LandLarge] = AnimManager.GetAnimations(Character, EAnimations.LandShort, EAnimations.LandLarge);
+const [LandShort, LandLarge] = Animations.GetAnimations(EAnimations.LandShort, EAnimations.LandLarge);
 
 const LANDING_LARGE_HEIGHT = -160;
 
@@ -53,11 +54,9 @@ function StateChanged(oldState: Enum.HumanoidStateType, newState: Enum.HumanoidS
 	} else StateManager.SetState(EMovementState.Landing, false);
 }
 
-Janitor.Add(
-	Humanoid.StateChanged.Connect((oldState: Enum.HumanoidStateType, newState: Enum.HumanoidStateType) =>
-		StateChanged(oldState, newState),
-	),
+Butler.Connect(Humanoid.StateChanged, (oldState: Enum.HumanoidStateType, newState: Enum.HumanoidStateType) =>
+	StateChanged(oldState, newState),
 );
 
-Janitor.Add(LandShort.GetMarkerReachedSignal("End").Connect(() => LandShort.Stop(0.25)));
-Janitor.Add(LandLarge.GetMarkerReachedSignal("End").Connect(() => LandLarge.Stop(0.35)));
+Butler.Connect(LandShort.GetMarkerReachedSignal("End"), () => LandShort.Stop(0.25));
+Butler.Connect(LandLarge.GetMarkerReachedSignal("End"), () => LandLarge.Stop(0.35));

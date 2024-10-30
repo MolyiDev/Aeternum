@@ -15,8 +15,8 @@ const LocalInputEndedSignal = new Signal<(control: [string, number], input: Inpu
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
-const Janitor = Character.Janitor;
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Butler = Character.Butler;
 const KeyTimePressed = new Map<string, number>();
 const KeyPressed = new Map<string, boolean>();
 let WindowFocused = true;
@@ -95,34 +95,22 @@ function InputEnded(input: InputObject, processed: boolean) {
 	FireInputEnded(control, input);
 }
 
-Janitor.Add(
-	UserInputService.InputBegan.Connect((input: InputObject, processed: boolean) => InputBegan(input, processed)),
-);
+Butler.Connect(UserInputService.InputBegan, (input: InputObject, processed: boolean) => InputBegan(input, processed));
 
-Janitor.Add(
-	UserInputService.InputEnded.Connect((input: InputObject, processed: boolean) => InputEnded(input, processed)),
-);
+Butler.Connect(UserInputService.InputEnded, (input: InputObject, processed: boolean) => InputEnded(input, processed));
 
-Janitor.Add(
-	GuiService.MenuClosed.Connect(() => {
-		FireWindowFocus(true);
-	}),
-);
+Butler.Connect(GuiService.MenuClosed, () => {
+	FireWindowFocus(true);
+});
 
-Janitor.Add(
-	GuiService.MenuOpened.Connect(() => {
-		FireWindowFocus(false);
-	}),
-);
+Butler.Connect(GuiService.MenuOpened, () => {
+	FireWindowFocus(false);
+});
 
-Janitor.Add(
-	UserInputService.WindowFocused.Connect(() => {
-		FireWindowFocus(true);
-	}),
-);
+Butler.Connect(UserInputService.WindowFocused, () => {
+	FireWindowFocus(true);
+});
 
-Janitor.Add(
-	UserInputService.WindowFocusReleased.Connect(() => {
-		FireWindowFocus(false);
-	}),
-);
+Butler.Connect(UserInputService.WindowFocusReleased, () => {
+	FireWindowFocus(false);
+});

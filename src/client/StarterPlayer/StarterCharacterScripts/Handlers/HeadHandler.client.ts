@@ -14,10 +14,10 @@ const bodyVerFactor = 0.4;
 
 const Player = Players.LocalPlayer;
 const Camera = Workspace.CurrentCamera as Camera;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
 const Attributes = Character.Attributes;
 const Humanoid = Character.Humanoid;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 const Model = Character.Model;
 
 const Head = Model.WaitForChild("Head") as BasePart;
@@ -57,5 +57,5 @@ function AttributeChanged(attribute: string) {
 	UpdateHead.FireServer(NeckC0, WaistC0);
 }
 
-Janitor.Add(RunService.RenderStepped.Connect(() => HeadMovement()));
-Janitor.Add(Attributes.AttributeChanged.Connect((attribute) => AttributeChanged(attribute)));
+Butler.Connect(RunService.RenderStepped, () => HeadMovement());
+Butler.Connect(Attributes.AttributeChanged, (attribute) => AttributeChanged(attribute));

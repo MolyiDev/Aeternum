@@ -12,8 +12,8 @@ import { PunchManager } from "./Managers/PunchManager";
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
-const Janitor = Character.Janitor;
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Butler = Character.Butler;
 
 function InputBegan(control: [string, number] | undefined, input: InputObject, doublePressed: boolean) {
 	if (!control) return;
@@ -42,17 +42,13 @@ function InputEnded(control: [string, number] | undefined, input: InputObject | 
 	}
 }
 
-Janitor.Add(
-	ControlManager.LocalInputBegan.Connect(
-		(control: [string, number] | undefined, input: InputObject, doublePressed: boolean) =>
-			InputBegan(control, input, doublePressed),
-	),
-	"Disconnect",
+Butler.Connect(
+	ControlManager.LocalInputBegan,
+	(control: [string, number] | undefined, input: InputObject, doublePressed: boolean) =>
+		InputBegan(control, input, doublePressed),
 );
 
-Janitor.Add(
-	ControlManager.LocalInputEnded.Connect((control: [string, number] | undefined, input: InputObject | undefined) =>
-		InputEnded(control, input),
-	),
-	"Disconnect",
+Butler.Connect(
+	ControlManager.LocalInputEnded,
+	(control: [string, number] | undefined, input: InputObject | undefined) => InputEnded(control, input),
 );

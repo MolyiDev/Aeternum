@@ -1,12 +1,12 @@
 // Imports
-import { PhysicsService, Players, Workspace } from "@rbxts/services";
+import { PhysicsService, Workspace } from "@rbxts/services";
 import { NPCManager } from "shared/Managers/NPCManager";
 import { SettingsManager } from "shared/Managers/SettingsManager";
 import { AbilityManager } from "./Managers/AbilitiesManager";
 import { EAbilityPlace } from "shared/Enums/Abilities/EAbilityPlace";
 import { EAbility } from "shared/Enums/Abilities/EAbility";
-import { IModel } from "shared/Interfaces/IModel";
 import { ECollisionGroup } from "shared/Enums/ECollisionGroup";
+import { CharacterManager } from "shared/Managers/CharacterManager";
 
 PhysicsService.RegisterCollisionGroup(ECollisionGroup.RockDebris);
 PhysicsService.RegisterCollisionGroup(ECollisionGroup.Player);
@@ -26,12 +26,8 @@ task.delay(5, () => {
 	}
 });
 
-Players.PlayerAdded.Connect((player) => {
-	player.CharacterAdded.Connect((character) => {
-		character.Parent = PlayersFolder;
-		AbilityManager.AddAbility(character as IModel, EAbilityPlace.Ability1, EAbility.SeriousPunch);
-		AbilityManager.AddAbility(character as IModel, EAbilityPlace.Ability2, EAbility.ElectricKick);
-	});
+CharacterManager.AddedCharacter.Connect((character) => {
+	character.Model.Parent = PlayersFolder;
+	AbilityManager.AddAbility(character, EAbilityPlace.Ability1, EAbility.SeriousPunch);
+	AbilityManager.AddAbility(character, EAbilityPlace.Ability2, EAbility.ElectricKick);
 });
-
-Players.PlayerRemoving.Connect((player) => {});

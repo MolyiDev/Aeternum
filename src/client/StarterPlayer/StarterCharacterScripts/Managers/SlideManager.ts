@@ -9,8 +9,6 @@ import { Tools } from "shared/Libraries/Tools";
 import { ControlManager } from "./ControlsManager";
 import { ESettingsControls } from "shared/Enums/Settings/ESettingsControls";
 import { CharacterManager } from "shared/Managers/CharacterManager";
-import { IModel } from "shared/Interfaces/IModel";
-import { AnimManager } from "shared/Managers/AnimManager";
 import { EAnimations } from "shared/Enums/EAnimations";
 
 // Constants
@@ -26,11 +24,12 @@ const JUMP_SLIDE_UP = 40;
 // Variables
 const Player = Players.LocalPlayer;
 const Camera = Workspace.CurrentCamera as Camera;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Animations = Character.Animations;
 const Attributes = Character.Attributes;
 const Humanoid = Character.Humanoid;
 const HumanoidRootPart = Character.HumanoidRootPart;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 const Model = Character.Model;
 
 const RightLeg = Model.WaitForChild("RightLowerLeg") as BasePart;
@@ -39,7 +38,7 @@ const LowerTorso = Model.WaitForChild("LowerTorso") as BasePart;
 const UpperTorso = Model.WaitForChild("UpperTorso") as BasePart;
 const Head = Model.WaitForChild("Head") as BasePart;
 
-const [SlideIdle, SlideJump] = AnimManager.GetAnimations(Character, EAnimations.SlideIdle, EAnimations.SlideJump);
+const [SlideIdle, SlideJump] = Animations.GetAnimations(EAnimations.SlideIdle, EAnimations.SlideJump);
 
 const RayParams = new RaycastParams();
 RayParams.FilterDescendantsInstances = [Model];
@@ -65,7 +64,7 @@ function ProjectOnPlane(vector: Vector3, planeNormal: Vector3) {
 	return vector.sub(planeNormal.mul(vector.Dot(planeNormal) / sqrMag));
 }
 
-let PostMovementEvent: RBXScriptConnection;
+let PostMovementEvent: RBXScriptConnection | undefined;
 let UngroundedConnection: RBXScriptConnection | undefined;
 let SlideHitbox: HitboxObject;
 
@@ -83,28 +82,26 @@ export class SlideManager {
 		timeSinceUngrounded = 0;
 
 		if (UngroundedConnection) {
-			UngroundedConnection.Disconnect();
+			Butler.Remove(UngroundedConnection);
 			UngroundedConnection = undefined;
 		}
 
-		UngroundedConnection = Janitor.Add(
-			RunService.Heartbeat.Connect((dt) => {
-				timeSinceUngrounded += dt;
+		UngroundedConnection = Butler.Connect(RunService.Heartbeat, (dt) => {
+			timeSinceUngrounded += dt;
 
-				if (IsGrounded) {
-					UngroundedConnection?.Disconnect();
-					UngroundedConnection = undefined;
-					return;
-				}
+			if (IsGrounded) {
+				UngroundedConnection?.Disconnect();
+				UngroundedConnection = undefined;
+				return;
+			}
 
-				if (timeSinceUngrounded >= AIR_TIME_BEFORE_SLIDE_STOP) {
-					if (!IsGrounded) this.SlideStop();
+			if (timeSinceUngrounded >= AIR_TIME_BEFORE_SLIDE_STOP) {
+				if (!IsGrounded) this.SlideStop();
 
-					UngroundedConnection?.Disconnect();
-					UngroundedConnection = undefined;
-				}
-			}),
-		);
+				UngroundedConnection?.Disconnect();
+				UngroundedConnection = undefined;
+			}
+		});
 	}
 
 	public static SlideStart() {
@@ -140,50 +137,48 @@ export class SlideManager {
 		HumanoidRootPart.AssemblyLinearVelocity = HumanoidRootPart.AssemblyLinearVelocity.mul(0.85);
 		HumanoidRootPart.ApplyImpulse(slopeVec.Unit.mul(HumanoidRootPart.AssemblyMass).mul(SLIDE_ACCELERATION));
 
-		PostMovementEvent = Janitor.Add(
-			RunService.Heartbeat.Connect((dt) => {
-				timeSinceSlideStart += dt;
+		PostMovementEvent = Butler.Connect(RunService.Heartbeat, (dt) => {
+			timeSinceSlideStart += dt;
 
-				const slideDirection = Attributes.IsCameraLocked()
-					? ProjectOnPlane(Camera.CFrame.LookVector, floorNormal).Unit
-					: ProjectOnPlane(HumanoidRootPart.CFrame.LookVector, floorNormal).Unit;
+			const slideDirection = Attributes.IsCameraLocked()
+				? ProjectOnPlane(Camera.CFrame.LookVector, floorNormal).Unit
+				: ProjectOnPlane(HumanoidRootPart.CFrame.LookVector, floorNormal).Unit;
 
-				if (IsGrounded) {
-					const LinearVelocity = ProjectOnPlane(HumanoidRootPart.AssemblyLinearVelocity, floorNormal);
-					const targetVelocity = slideDirection.mul(LinearVelocity.Magnitude);
-					const smoothedVelocity = LinearVelocity.Lerp(targetVelocity, TURN_SENSITIVITY * dt);
-					HumanoidRootPart.AssemblyLinearVelocity = smoothedVelocity.mul(SLIDE_DEACCELERATION);
-				}
+			if (IsGrounded) {
+				const LinearVelocity = ProjectOnPlane(HumanoidRootPart.AssemblyLinearVelocity, floorNormal);
+				const targetVelocity = slideDirection.mul(LinearVelocity.Magnitude);
+				const smoothedVelocity = LinearVelocity.Lerp(targetVelocity, TURN_SENSITIVITY * dt);
+				HumanoidRootPart.AssemblyLinearVelocity = smoothedVelocity.mul(SLIDE_DEACCELERATION);
+			}
 
-				AlignOrientation.CFrame = CFrame.lookAt(Vector3.zero, HumanoidRootPart.AssemblyLinearVelocity);
+			AlignOrientation.CFrame = CFrame.lookAt(Vector3.zero, HumanoidRootPart.AssemblyLinearVelocity);
 
-				if (timeSinceSlideStart >= 0.1) {
-					const rayResult = Workspace.Raycast(
-						LowerTorso.Position.add(LowerTorso.CFrame.UpVector.mul(-1)),
-						LowerTorso.CFrame.LookVector.mul(3).mul(-1),
-						RayParams,
-					);
+			if (timeSinceSlideStart >= 0.1) {
+				const rayResult = Workspace.Raycast(
+					LowerTorso.Position.add(LowerTorso.CFrame.UpVector.mul(-1)),
+					LowerTorso.CFrame.LookVector.mul(3).mul(-1),
+					RayParams,
+				);
 
-					if (rayResult) {
-						IsGrounded = true;
-						floorNormal = rayResult.Normal;
-					} else if (IsGrounded && !UngroundedConnection) this.OnHitNothing();
-				}
+				if (rayResult) {
+					IsGrounded = true;
+					floorNormal = rayResult.Normal;
+				} else if (IsGrounded && !UngroundedConnection) this.OnHitNothing();
+			}
 
-				if (
-					timeSinceSlideStart >= 0.2 &&
-					HumanoidRootPart.AssemblyLinearVelocity.Magnitude < EMovementSpeeds.Default
-				)
-					this.SlideStop(false, true);
-			}),
-		);
+			if (
+				timeSinceSlideStart >= 0.2 &&
+				HumanoidRootPart.AssemblyLinearVelocity.Magnitude < EMovementSpeeds.Default
+			)
+				this.SlideStop(false, true);
+		});
 
 		SlideHitbox = new RaycastHitbox(Model);
 		SlideHitbox.DetectionMode = RaycastHitbox.DetectionMode.PartMode;
 		SlideHitbox.RaycastParams = RayParams;
 		SlideHitbox.Visualizer = false;
 
-		Janitor.Add(
+		Butler.Add(
 			SlideHitbox.OnHit.Connect((hitPart, _, raycastResult) => {
 				SlideHitbox.HitStart();
 				const slopeVec = ProjectOnPlane(HumanoidRootPart.AssemblyLinearVelocity, raycastResult.Normal);
@@ -217,7 +212,10 @@ export class SlideManager {
 		}
 		SlideHitbox.Destroy();
 
-		PostMovementEvent.Disconnect();
+		if (PostMovementEvent) {
+			Butler.Remove(PostMovementEvent);
+			PostMovementEvent = undefined;
+		}
 		SlideIdle.Stop(0.25);
 	}
 
@@ -255,9 +253,7 @@ function StateChanged(oldState: Enum.HumanoidStateType, newState: Enum.HumanoidS
 	RunManager.RunResume();
 }
 
-Janitor.Add(
-	Humanoid.StateChanged.Connect((oldState: Enum.HumanoidStateType, newState: Enum.HumanoidStateType) =>
-		StateChanged(oldState, newState),
-	),
+Butler.Connect(Humanoid.StateChanged, (oldState: Enum.HumanoidStateType, newState: Enum.HumanoidStateType) =>
+	StateChanged(oldState, newState),
 );
-Janitor.Add(SlideJump.GetMarkerReachedSignal("End").Connect(() => SlideJump.Stop(0.15)));
+Butler.Connect(SlideJump.GetMarkerReachedSignal("End"), () => SlideJump.Stop(0.15));

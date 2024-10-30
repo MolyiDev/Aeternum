@@ -1,18 +1,19 @@
+/* eslint-disable roblox-ts/lua-truthiness */
 // Imports
 import { Players } from "@rbxts/services";
 import { StateManager } from "./StateManager";
 import { EMovementState } from "shared/Enums/Movement/EMovementState";
 import { CharacterManager } from "shared/Managers/CharacterManager";
-import { AnimManager } from "shared/Managers/AnimManager";
 import { EAnimations } from "shared/Enums/EAnimations";
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Animations = Character.Animations;
 const Humanoid = Character.Humanoid;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 
-const Fall = AnimManager.GetAnimation(Character, EAnimations.Fall);
+const Fall = Animations.GetAnimation(EAnimations.Fall);
 
 let IsFalling = false;
 
@@ -47,8 +48,6 @@ function StateChanged(oldState: Enum.HumanoidStateType, newState: Enum.HumanoidS
 	}
 }
 
-Janitor.Add(
-	Humanoid.StateChanged.Connect((oldState: Enum.HumanoidStateType, newState: Enum.HumanoidStateType) =>
-		StateChanged(oldState, newState),
-	),
+Butler.Connect(Humanoid.StateChanged, (oldState: Enum.HumanoidStateType, newState: Enum.HumanoidStateType) =>
+	StateChanged(oldState, newState),
 );

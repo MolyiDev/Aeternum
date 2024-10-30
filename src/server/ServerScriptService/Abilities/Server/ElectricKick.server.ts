@@ -1,16 +1,14 @@
 // Imports
 import { HitboxManager } from "server/ServerScriptService/Managers/HitboxManager";
 import { EAnimations } from "shared/Enums/EAnimations";
-import { IModel } from "shared/Interfaces/IModel";
 import { CharacterManager } from "shared/Managers/CharacterManager";
-import { AttributeManager } from "shared/Managers/AttributeManager";
 import { DamageManager } from "server/ServerScriptService/Managers/DamageManager";
 import { StunManager } from "server/ServerScriptService/Managers/StunManager";
 import { ReplicatedStorage } from "@rbxts/services";
 import { EStunType } from "shared/Enums/EStunType";
-import { AnimManager } from "shared/Managers/AnimManager";
 import { EAbilityInfo } from "shared/Enums/Abilities/EAbilityInfo";
 import { EAbility } from "shared/Enums/Abilities/EAbility";
+import { Character } from "shared/Classes/Character";
 
 // Events
 const Events = ReplicatedStorage.WaitForChild("Events").WaitForChild("Combat").WaitForChild("Abilities");
@@ -21,113 +19,103 @@ const Ability = EAbility.ElectricKick;
 const AbilityInfo = EAbilityInfo.ElectricKick;
 
 ElectricKickEvent.OnServerEvent.Connect((player) => {
-	const Character = player.Character as IModel;
-	const Humanoid = Character?.Humanoid;
-	if (!Humanoid || Humanoid.Health <= 0 || AttributeManager.IsStunned(Character)) return;
+	const Character = CharacterManager.GetCharacter(player.Character);
+	if (!Character) return;
+	const Attributes = Character.Attributes;
+	const Humanoid = Character.Humanoid;
+	if (!Humanoid || Humanoid.Health <= 0 || Attributes.IsStunned()) return;
 
-	const Time = tick() - AttributeManager.TickAbility(Character, Ability);
+	const Time = tick() - Attributes.TickAbility(Ability);
 	if (Time < AbilityInfo.Cooldown) return;
-	AttributeManager.SetTickAbility(Character, Ability, tick());
+	Attributes.SetTickAbility(Ability, tick());
 
-	const Janitor = CharacterManager.GetCharacterJanitor(Character);
+	const Animations = Character.Animations;
+	const Model = Character.Model;
+	const Butler = Character.Butler;
 
 	const overlapParams = new OverlapParams();
-	overlapParams.FilterDescendantsInstances = [Character];
+	overlapParams.FilterDescendantsInstances = [Model];
 	overlapParams.FilterType = Enum.RaycastFilterType.Exclude;
 
 	const HumanoidRootPart = Character.HumanoidRootPart;
 
 	StunManager.Stun(Character, 1, EStunType.Partial);
-	const ElectricKick = AnimManager.GetAnimation(Character, EAnimations.ElectricKick);
+	const ElectricKick = Animations.GetAnimation(EAnimations.ElectricKick);
 	ElectricKick.Play();
 
-	const AlreadyLooked: IModel[] = [];
-	const CharacterList: IModel[] = [];
+	const AlreadyLooked: Character[] = [];
+	const CharacterList: Character[] = [];
 
-	const markRockHand = Janitor.Add(
-		ElectricKick.GetMarkerReachedSignal("RockHand").Connect(() => {
-			HitboxManager.Create(
-				new Vector3(8, 6, 16),
-				HumanoidRootPart.CFrame.mul(new CFrame(0, 0, -12)),
-				0.2,
-				false,
-				overlapParams,
-				(part: BasePart) => {
-					const hitCharacter = part.Parent as IModel;
-					if (!hitCharacter || AlreadyLooked.includes(hitCharacter) || !hitCharacter.HasTag("Character"))
-						return;
-					AlreadyLooked.push(hitCharacter);
-					const hitHumanoid = hitCharacter.Humanoid;
-					if (!hitHumanoid) return;
+	const MarkRockHand = Butler.Connect(ElectricKick.GetMarkerReachedSignal("RockHand"), () => {
+		HitboxManager.Create(
+			new Vector3(8, 6, 16),
+			HumanoidRootPart.CFrame.mul(new CFrame(0, 0, -12)),
+			0.2,
+			false,
+			overlapParams,
+			(part: BasePart) => {
+				const hitCharacter = CharacterManager.GetCharacter(part.Parent);
+				if (!hitCharacter || AlreadyLooked.includes(hitCharacter)) return;
+				AlreadyLooked.push(hitCharacter);
+				const hitHumanoid = hitCharacter.Humanoid;
+				if (!hitHumanoid) return;
+				const hitAttributes = hitCharacter.Attributes;
 
-					if (AttributeManager.IsBlocking(hitCharacter)) {
-						if (AbilityInfo.Parryable) {
-							const TickParry = tick() - AttributeManager.TickParry(hitCharacter);
-							if (TickParry <= AbilityInfo.ParryTime) {
-								AttributeManager.SetTickParry(hitCharacter, tick());
-								StunManager.Stun(Character, AbilityInfo.ParryStunTime);
-								return;
-							}
-						}
-
-						if (AbilityInfo.Blockeable) {
-							DamageManager.Knockback(
-								hitCharacter,
-								HumanoidRootPart.CFrame.LookVector.mul(20).add(
-									HumanoidRootPart.CFrame.UpVector.mul(20),
-								),
-								0.5,
-							);
+				if (hitAttributes.IsBlocking()) {
+					if (AbilityInfo.Parryable) {
+						const TickParry = tick() - hitAttributes.TickParry();
+						if (TickParry <= AbilityInfo.ParryTime) {
+							hitAttributes.SetTickParry(tick());
+							StunManager.Stun(Character, AbilityInfo.ParryStunTime);
 							return;
 						}
 					}
 
-					CharacterList.push(hitCharacter);
+					if (AbilityInfo.Blockeable) {
+						DamageManager.Knockback(
+							hitCharacter,
+							HumanoidRootPart.CFrame.LookVector.mul(20).add(HumanoidRootPart.CFrame.UpVector.mul(20)),
+							0.5,
+						);
+						return;
+					}
+				}
 
-					StunManager.Stun(hitCharacter, 5);
-					const ReceiveElectricKick = AnimManager.GetAnimation(hitCharacter, EAnimations.ReceiveElectricKick);
-					ReceiveElectricKick.Play();
-					ReceiveElectricKick.TimePosition = ElectricKick.TimePosition;
-				},
-			);
+				const hitAnimations = hitCharacter.Animations;
 
-			task.wait(0.2);
-			if (CharacterList.size() === 0 || AttributeManager.IsStunnedFull(Character)) {
-				ElectricKick.Stop(0.4);
-				return;
-			}
+				CharacterList.push(hitCharacter);
 
-			StunManager.Stun(Character, 4, EStunType.Partial);
-		}),
-	);
+				StunManager.Stun(hitCharacter, 5);
+				const ReceiveElectricKick = hitAnimations.GetAnimation(EAnimations.ReceiveElectricKick);
+				ReceiveElectricKick.Play();
+				ReceiveElectricKick.TimePosition = ElectricKick.TimePosition;
+			},
+		);
 
-	const markDamage = Janitor.Add(
-		ElectricKick.GetMarkerReachedSignal("Damage").Connect(() => {
-			CharacterList.forEach((character) => DamageManager.Damage(character, 10));
-		}),
-	);
+		task.wait(0.2);
+		if (CharacterList.size() === 0 || Attributes.IsStunnedFull()) {
+			ElectricKick.Stop(0.4);
+			return;
+		}
 
-	const markDamageFinal = Janitor.Add(
-		ElectricKick.GetMarkerReachedSignal("DamageFinal").Connect(() => {
-			CharacterList.forEach((character) => {
-				const ReceiveElectricKick = AnimManager.GetAnimation(character, EAnimations.ReceiveElectricKick);
-				ReceiveElectricKick.Stop();
-				DamageManager.Damage(character, 20);
-				DamageManager.KnockbackRagdoll(
-					character,
-					Character.HumanoidRootPart.CFrame.LookVector.mul(100),
-					0.85,
-					5,
-				);
-			});
-		}),
-	);
+		StunManager.Stun(Character, 4, EStunType.Partial);
+	});
 
-	Janitor.Add(
-		ElectricKick.Stopped.Once(() => {
-			markRockHand.Disconnect();
-			markDamage.Disconnect();
-			markDamageFinal.Disconnect();
-		}),
-	);
+	const MarkDamage = Butler.Connect(ElectricKick.GetMarkerReachedSignal("Damage"), () => {
+		CharacterList.forEach((character) => DamageManager.Damage(character, 10));
+	});
+
+	const MarkDamageFinal = Butler.Connect(ElectricKick.GetMarkerReachedSignal("DamageFinal"), () => {
+		CharacterList.forEach((character) => {
+			const Animations = character.Animations;
+			const ReceiveElectricKick = Animations.GetAnimation(EAnimations.ReceiveElectricKick);
+			ReceiveElectricKick.Stop();
+			DamageManager.Damage(character, 20);
+			DamageManager.KnockbackRagdoll(character, Character.HumanoidRootPart.CFrame.LookVector.mul(100), 0.85, 5);
+		});
+	});
+
+	const Stop = Butler.Once(ElectricKick.Stopped, () => {
+		Butler.RemoveList(MarkRockHand, MarkDamage, MarkDamageFinal, Stop);
+	});
 });

@@ -11,9 +11,9 @@ const MAX_MOMENTUM = math.huge;
 const SPEED = 16;
 
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
 const Humanoid = Character.Humanoid;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 const HumanoidRootPart = Character.HumanoidRootPart;
 const Model = Character.Model;
 const M6D = Model.WaitForChild("LowerTorso").WaitForChild("Root") as Motor6D;
@@ -38,4 +38,4 @@ function Lean(deltaTime: number) {
 	M6D.C0 = M6D.C0.Lerp(OriginalM6DC0.mul(CFrame.Angles(-math.abs(z), 0, -x)), deltaTime * SPEED);
 }
 
-Janitor.Add(RunService.Heartbeat.Connect((deltaTime) => Lean(deltaTime)));
+Butler.Connect(RunService.Heartbeat, (deltaTime) => Lean(deltaTime));

@@ -1,7 +1,6 @@
 // Imports
 import { Players, ReplicatedStorage } from "@rbxts/services";
 import { EAbility } from "shared/Enums/Abilities/EAbility";
-import { IModel } from "shared/Interfaces/IModel";
 import { Tools } from "shared/Libraries/Tools";
 import { CharacterManager } from "shared/Managers/CharacterManager";
 
@@ -11,7 +10,7 @@ const ElectricKickEvent = Events.WaitForChild("ElectricKickEvent") as RemoteEven
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter((Player.Character ?? Player.CharacterAdded.Wait()[0]) as IModel);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
 const Attributes = Character.Attributes;
 const Humanoid = Character.Humanoid;
 

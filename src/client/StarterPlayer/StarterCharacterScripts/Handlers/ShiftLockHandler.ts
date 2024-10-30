@@ -26,11 +26,11 @@ let Enabled = false;
 let AutoRotate = true;
 const Player = Players.LocalPlayer;
 const Camera = Workspace.CurrentCamera as Camera;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
 const Attributes = Character.Attributes;
 const Humanoid = Character.Humanoid;
 const HumanoidRootPart = Character.HumanoidRootPart;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 const Mouse = Player.GetMouse();
 const CameraSpring = new Spring(new Vector3(0, 0, 0));
 CameraSpring.Damper = Config.TRANSITION_SPRING_DAMPER;
@@ -83,5 +83,5 @@ function RenderStepped(deltaTime: number) {
 	);
 }
 
-Janitor.Add(Attributes.AttributeChanged.Connect((attribute) => AttributeChanged(attribute)));
-Janitor.Add(RunService.RenderStepped.Connect((deltaTime) => RenderStepped(deltaTime)));
+Butler.Connect(Attributes.AttributeChanged, (attribute) => AttributeChanged(attribute));
+Butler.Connect(RunService.RenderStepped, (deltaTime) => RenderStepped(deltaTime));

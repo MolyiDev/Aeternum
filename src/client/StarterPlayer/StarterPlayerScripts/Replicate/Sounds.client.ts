@@ -16,20 +16,19 @@ function ReadSoundString(soundString: string) {
 	return [SoundName, Start, Volume, Speed];
 }
 
-AnimManager.AnimationPlayed.Connect((character, janitor, animName, animTrack) => {
+AnimManager.AnimationPlayOnce.Connect((character, animName, animTrack) => {
 	if (!AnimationList.has(animName)) return;
+	const Butler = character.Butler;
 	const HumanoidRootPart = character.HumanoidRootPart;
 
-	janitor.Add(
-		animTrack.GetMarkerReachedSignal("Sound").Connect((soundString?: string) => {
-			const [SoundName, Start, Volume, Speed] = ReadSoundString(soundString!);
-			const Sound = Tools.SoundNameToSound(SoundName as string);
-			const SoundClone = Sound.Clone();
-			SoundClone.Parent = HumanoidRootPart;
-			SoundClone.TimePosition = Start as number;
-			SoundClone.Volume = Volume as number;
-			SoundClone.PlaybackSpeed = Speed as number;
-			SoundClone.Destroy();
-		}),
-	);
+	Butler.Connect(animTrack.GetMarkerReachedSignal("Sound"), (soundString?: string) => {
+		const [SoundName, Start, Volume, Speed] = ReadSoundString(soundString!);
+		const Sound = Tools.SoundNameToSound(SoundName as string);
+		const SoundClone = Sound.Clone();
+		SoundClone.Parent = HumanoidRootPart;
+		SoundClone.TimePosition = Start as number;
+		SoundClone.Volume = Volume as number;
+		SoundClone.PlaybackSpeed = Speed as number;
+		SoundClone.Destroy();
+	});
 });

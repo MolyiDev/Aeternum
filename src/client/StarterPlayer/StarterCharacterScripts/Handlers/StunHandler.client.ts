@@ -8,9 +8,9 @@ import { EAttribute } from "shared/Enums/EAttribute";
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
 const Attributes = Character.Attributes;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 
 function AttributeChanged(attribute: string) {
 	if (attribute !== EAttribute.IsStunnedFull && attribute !== EAttribute.IsStunnedPartial) return;
@@ -21,4 +21,4 @@ function AttributeChanged(attribute: string) {
 	} else StateManager.SetState(EMovementState.Stunned, false);
 }
 
-Janitor.Add(Attributes.AttributeChanged.Connect((attribute) => AttributeChanged(attribute)));
+Butler.Connect(Attributes.AttributeChanged, (attribute) => AttributeChanged(attribute));

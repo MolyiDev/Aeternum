@@ -1,8 +1,7 @@
 // Imports
 import { RunService } from "@rbxts/services";
-import { IModel } from "shared/Interfaces/IModel";
 import { StunManager } from "server/ServerScriptService/Managers/StunManager";
-import { AttributeManager } from "shared/Managers/AttributeManager";
+import { Character } from "shared/Classes/Character";
 
 // Interfaces
 interface RagdollData {
@@ -19,7 +18,7 @@ let CheckConnection: RBXScriptConnection | undefined;
 let RagdollHumanoids: number;
 
 export class RagdollManager {
-	private static ActiveRagdolls = new Map<IModel, RagdollData>();
+	private static ActiveRagdolls = new Map<Character, RagdollData>();
 
 	private static RagdollChecker(deltaTime: number) {
 		RagdollHumanoids = 0;
@@ -37,35 +36,34 @@ export class RagdollManager {
 		}
 	}
 
-	public static UnRagdollCharacter(character: IModel) {
-		const ragdollData = this.ActiveRagdolls.get(character);
-		if (!ragdollData) return;
-		const { Motor6DList, SocketTable, Attachments } = ragdollData;
-		const humanoid = character.Humanoid;
+	public static UnRagdollCharacter(character: Character) {
+		const RagdollData = this.ActiveRagdolls.get(character);
+		if (!RagdollData) return;
+		const { Motor6DList, SocketTable, Attachments } = RagdollData;
+		const Attributes = character.Attributes;
+		const Humanoid = character.Humanoid;
 		const humanoidRootPart = character.HumanoidRootPart;
-		AttributeManager.SetIsRagdoll(character, false);
 
-		AttributeManager.SetAutoRotate(character, true);
-		humanoid.PlatformStand = false;
-		character.PrimaryPart!.CanCollide = true;
+		Attributes.SetIsRagdoll(false);
+		Attributes.SetAutoRotate(true);
+		Humanoid.PlatformStand = false;
+		character.HumanoidRootPart.CanCollide = true;
 
 		humanoidRootPart.FindFirstChild("HumWeld")?.Destroy();
 
 		for (const motor6d of Motor6DList) motor6d.Enabled = true;
 		for (const socket of SocketTable) socket.Destroy();
 		for (const attachment of Attachments) attachment.Destroy();
-		for (const part of character.GetChildren()) {
+		for (const part of character.Model.GetChildren()) {
 			if (!part.HasTag("Ragdoll")) continue;
 			(part as BasePart).CanCollide = false;
 		}
 
-		humanoid.ChangeState(Enum.HumanoidStateType.GettingUp);
+		Humanoid.ChangeState(Enum.HumanoidStateType.GettingUp);
 		this.ActiveRagdolls.delete(character);
 	}
 
-	public static RagdollCharacter(character: IModel, duration: number) {
-		const humanoid = character.Humanoid;
-		const humanoidRootPart = character.HumanoidRootPart;
+	public static RagdollCharacter(character: Character, duration: number) {
 		let ragdollData = this.ActiveRagdolls.get(character);
 		StunManager.Stun(character, duration);
 
@@ -74,17 +72,22 @@ export class RagdollManager {
 			return;
 		}
 
-		AttributeManager.SetIsRagdoll(character, true);
-		character.PrimaryPart!.CanCollide = false;
-		humanoid.PlatformStand = true;
-		AttributeManager.SetAutoRotate(character, false);
-		humanoid.ChangeState(Enum.HumanoidStateType.Physics);
+		const Attributes = character.Attributes;
+		const Humanoid = character.Humanoid;
+		const HumanoidRootPart = character.HumanoidRootPart;
+		const Model = character.Model;
+
+		Attributes.SetIsRagdoll(true);
+		Attributes.SetAutoRotate(false);
+		character.HumanoidRootPart.CanCollide = false;
+		Humanoid.PlatformStand = true;
+		Humanoid.ChangeState(Enum.HumanoidStateType.Physics);
 
 		const Motor6DList = new Array<Motor6D>();
 		const SocketTable = new Array<BallSocketConstraint>();
 		const Attachments = new Array<Attachment>();
 
-		for (const motor6d of character.GetDescendants()) {
+		for (const motor6d of Model.GetDescendants()) {
 			if (motor6d.HasTag("Ragdoll")) {
 				const part = motor6d as BasePart;
 				part.CanCollide = true;
@@ -116,10 +119,10 @@ export class RagdollManager {
 			Motor6DList.push(motor6d);
 		}
 
-		const weld = new Instance("Weld", humanoidRootPart);
+		const weld = new Instance("Weld", HumanoidRootPart);
 		weld.Name = "HumWeld";
-		weld.Part0 = humanoidRootPart;
-		weld.Part1 = character.LowerTorso;
+		weld.Part0 = HumanoidRootPart;
+		weld.Part1 = Model.LowerTorso;
 
 		ragdollData = {
 			Motor6DList,

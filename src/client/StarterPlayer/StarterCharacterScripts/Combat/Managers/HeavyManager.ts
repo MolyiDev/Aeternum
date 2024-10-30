@@ -3,7 +3,6 @@ import { Players } from "@rbxts/services";
 import { CharacterManager } from "shared/Managers/CharacterManager";
 import { StateManager } from "../../Managers/StateManager";
 import { EMovementState } from "shared/Enums/Movement/EMovementState";
-import { AnimManager } from "shared/Managers/AnimManager";
 import { EAnimations } from "shared/Enums/EAnimations";
 import { GuardManager } from "./GuardManager";
 
@@ -12,11 +11,12 @@ const HEAVYPUNCH_CD = 7.5;
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Animations = Character.Animations;
 const Attributes = Character.Attributes;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 
-const HeavyPunch = AnimManager.GetAnimation(Character, EAnimations.HeavyPunch);
+const HeavyPunch = Animations.GetAnimation(EAnimations.HeavyPunch);
 
 let CanHeavyPunch = true;
 
@@ -30,4 +30,4 @@ export class HeavyManager {
 	}
 }
 
-Janitor.Add(HeavyPunch.GetMarkerReachedSignal("End").Connect(() => GuardManager.Start()));
+Butler.Connect(HeavyPunch.GetMarkerReachedSignal("End"), () => GuardManager.Start());

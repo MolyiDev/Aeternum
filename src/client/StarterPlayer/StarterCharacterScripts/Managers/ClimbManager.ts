@@ -1,3 +1,4 @@
+/* eslint-disable roblox-ts/lua-truthiness */
 // Imports
 import { Players, RunService, Workspace } from "@rbxts/services";
 import { StateManager } from "./StateManager";
@@ -6,17 +7,17 @@ import { ControlManager } from "./ControlsManager";
 import { ESettingsControls } from "shared/Enums/Settings/ESettingsControls";
 import { IModel } from "shared/Interfaces/IModel";
 import { CharacterManager } from "shared/Managers/CharacterManager";
-import { AnimManager } from "shared/Managers/AnimManager";
 import { EAnimations } from "shared/Enums/EAnimations";
 
 // Variables
 const TemporalFolder = Workspace.WaitForChild("Temporal") as Folder;
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Animations = Character.Animations;
 const Attributes = Character.Attributes;
 const Humanoid = Character.Humanoid;
 const HumanoidRootPart = Character.HumanoidRootPart;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 const HumanoidRootAttachment = HumanoidRootPart.WaitForChild("RootAttachment") as Attachment;
 
 const AlignOrientationAttachment = HumanoidRootAttachment.Clone();
@@ -51,8 +52,7 @@ const [
 	ClimbImpulseLeft,
 	ClimbImpulseRight,
 	ClimbIdle,
-] = AnimManager.GetAnimations(
-	Character,
+] = Animations.GetAnimations(
 	EAnimations.ClimbMoveUp,
 	EAnimations.ClimbMoveDown,
 	EAnimations.ClimbMoveLeft,
@@ -136,37 +136,38 @@ export class ClimbManager {
 
 		ClimbIdle.Play(FADE_IN);
 
-		climbHeartbeatConnection = Janitor.Add(
-			RunService.Heartbeat.Connect(() => {
-				if (!IsClimbing || this.ClimbDirection === Vector3.zero) return;
+		climbHeartbeatConnection = Butler.Connect(RunService.Heartbeat, () => {
+			if (!IsClimbing || this.ClimbDirection === Vector3.zero) return;
 
-				const resultMiddle = this.DetectWall(
-					HumanoidRootPart.CFrame.add(HumanoidRootPart.CFrame.VectorToWorldSpace(this.ClimbDirection)),
-				);
+			const resultMiddle = this.DetectWall(
+				HumanoidRootPart.CFrame.add(HumanoidRootPart.CFrame.VectorToWorldSpace(this.ClimbDirection)),
+			);
 
-				if (!resultMiddle) {
-					if (ControlManager.IsKeyDown(ESettingsControls.Sprint)) this.ClimbImpulse();
-					return;
-				}
+			if (!resultMiddle) {
+				if (ControlManager.IsKeyDown(ESettingsControls.Sprint)) this.ClimbImpulse();
+				return;
+			}
 
-				const targetCFrame = CFrame.fromMatrix(
-					resultMiddle.Position.add(
-						HumanoidRootPart.CFrame.VectorToWorldSpace(this.ClimbDirection.mul(CLIMB_SPEED)),
-					).add(resultMiddle.Normal.mul(DISTANCE_FROM_SURFACE)),
-					resultMiddle.Normal.Cross(HumanoidRootPart.CFrame.UpVector).mul(-1),
-					resultMiddle.Normal.Cross(HumanoidRootPart.CFrame.RightVector),
-				);
+			const targetCFrame = CFrame.fromMatrix(
+				resultMiddle.Position.add(
+					HumanoidRootPart.CFrame.VectorToWorldSpace(this.ClimbDirection.mul(CLIMB_SPEED)),
+				).add(resultMiddle.Normal.mul(DISTANCE_FROM_SURFACE)),
+				resultMiddle.Normal.Cross(HumanoidRootPart.CFrame.UpVector).mul(-1),
+				resultMiddle.Normal.Cross(HumanoidRootPart.CFrame.RightVector),
+			);
 
-				AlignPart.CFrame = targetCFrame;
-			}),
-		);
+			AlignPart.CFrame = targetCFrame;
+		});
 	}
 
 	public static StopClimbing(full: boolean = false) {
 		if (!IsClimbing) return;
 		IsClimbing = false;
 		this.ClimbDirection = Vector3.zero;
-		climbHeartbeatConnection?.Disconnect();
+		if (climbHeartbeatConnection) {
+			Butler.Remove(climbHeartbeatConnection);
+			climbHeartbeatConnection = undefined;
+		}
 
 		ClimbIdle.Stop(FADE_OUT);
 		this.StopMovements(FADE_OUT);
@@ -242,10 +243,8 @@ function StateChanged(oldState: Enum.HumanoidStateType, newState: Enum.HumanoidS
 	if (newState === Enum.HumanoidStateType.Landed) ClimbManager.StopMovements(0.1);
 }
 
-Janitor.Add(
-	Humanoid.StateChanged.Connect((oldState: Enum.HumanoidStateType, newState: Enum.HumanoidStateType) =>
-		StateChanged(oldState, newState),
-	),
+Butler.Connect(Humanoid.StateChanged, (oldState: Enum.HumanoidStateType, newState: Enum.HumanoidStateType) =>
+	StateChanged(oldState, newState),
 );
 
 function Impulse() {
@@ -270,12 +269,12 @@ function Impulse() {
 	Humanoid.PlatformStand = false;
 }
 
-Janitor.Add(ClimbImpulseUp.GetMarkerReachedSignal("Impulse").Connect(() => Impulse()));
-Janitor.Add(ClimbImpulseLeft.GetMarkerReachedSignal("Impulse").Connect(() => Impulse()));
-Janitor.Add(ClimbImpulseRight.GetMarkerReachedSignal("Impulse").Connect(() => Impulse()));
-Janitor.Add(ClimbImpulseBack.GetMarkerReachedSignal("Impulse").Connect(() => Impulse()));
+Butler.Connect(ClimbImpulseUp.GetMarkerReachedSignal("Impulse"), () => Impulse());
+Butler.Connect(ClimbImpulseLeft.GetMarkerReachedSignal("Impulse"), () => Impulse());
+Butler.Connect(ClimbImpulseRight.GetMarkerReachedSignal("Impulse"), () => Impulse());
+Butler.Connect(ClimbImpulseBack.GetMarkerReachedSignal("Impulse"), () => Impulse());
 
-Janitor.Add(ClimbImpulseUp.GetMarkerReachedSignal("End").Connect(() => ClimbImpulseUp.Stop(0.125)));
-Janitor.Add(ClimbImpulseLeft.GetMarkerReachedSignal("End").Connect(() => ClimbImpulseLeft.Stop(0.125)));
-Janitor.Add(ClimbImpulseRight.GetMarkerReachedSignal("End").Connect(() => ClimbImpulseRight.Stop(0.125)));
-Janitor.Add(ClimbImpulseBack.GetMarkerReachedSignal("End").Connect(() => ClimbImpulseBack.Stop(0.125)));
+Butler.Connect(ClimbImpulseUp.GetMarkerReachedSignal("End"), () => ClimbImpulseUp.Stop(0.125));
+Butler.Connect(ClimbImpulseLeft.GetMarkerReachedSignal("End"), () => ClimbImpulseLeft.Stop(0.125));
+Butler.Connect(ClimbImpulseRight.GetMarkerReachedSignal("End"), () => ClimbImpulseRight.Stop(0.125));
+Butler.Connect(ClimbImpulseBack.GetMarkerReachedSignal("End"), () => ClimbImpulseBack.Stop(0.125));

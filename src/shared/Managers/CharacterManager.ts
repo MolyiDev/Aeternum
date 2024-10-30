@@ -1,13 +1,14 @@
 /* eslint-disable no-constant-condition */
 // Imports
-import { Janitor } from "@rbxts/janitor";
 import { Players, RunService } from "@rbxts/services";
 import { NPCManager } from "shared/Managers/NPCManager";
 import Signal from "@rbxts/lemon-signal";
 import { Character } from "shared/Classes/Character";
+import { IModel } from "shared/Interfaces/IModel";
+import { Butler } from "shared/Modules/Butler";
 
 // Variables
-const JanitorPerPlayer = new Map<Player, Janitor>();
+const ButlerPerPlayer = new Map<Player, Butler>();
 const CharacterPerModel = new Map<Model, Character>();
 
 const AddedCharacterSignal = new Signal<[character: Character]>();
@@ -17,7 +18,13 @@ export class CharacterManager {
 	public static AddedCharacter = AddedCharacterSignal;
 	public static RemovedCharacter = RemovedCharacterSignal;
 
-	public static GetCharacter(model: Model) {
+	public static GetCharacter(model: Model | Instance | undefined) {
+		if (!model || !model.IsA("Model")) return undefined;
+		const existingPlayer = CharacterPerModel.get(model);
+		return existingPlayer;
+	}
+
+	public static WaitCharacter(model: Model) {
 		const existingPlayer = CharacterPerModel.get(model);
 		if (existingPlayer) return existingPlayer;
 
@@ -29,7 +36,7 @@ export class CharacterManager {
 }
 
 function RegisterCharacter(model: Model) {
-	const character = new Character(model);
+	const character = new Character(model as IModel);
 	CharacterPerModel.set(model, character);
 
 	AddedCharacterSignal.Fire(character);
@@ -45,24 +52,24 @@ function UnRegisterCharacter(model: Model) {
 }
 
 function RegisterPlayer(player: Player) {
-	const janitor = new Janitor();
-	JanitorPerPlayer.set(player, janitor);
+	const butler = new Butler();
+	ButlerPerPlayer.set(player, butler);
 
 	const charLoaded = player.Character;
 	if (charLoaded) RegisterCharacter(charLoaded);
 
-	janitor.Add(player.CharacterAdded.Connect((model) => RegisterCharacter(model)));
-	janitor.Add(player.CharacterRemoving.Connect((model) => UnRegisterCharacter(model)));
+	butler.Connect(player.CharacterAdded, (model) => RegisterCharacter(model));
+	butler.Connect(player.CharacterRemoving, (model) => UnRegisterCharacter(model));
 }
 
 function UnRegisterPlayer(player: Player) {
 	const character = player.Character;
 	if (character) UnRegisterCharacter(character);
 
-	const janitor = JanitorPerPlayer.get(player);
-	if (!janitor) return;
-	janitor.Destroy();
-	JanitorPerPlayer.delete(player);
+	const butler = ButlerPerPlayer.get(player);
+	if (!butler) return;
+	butler.Destroy();
+	ButlerPerPlayer.delete(player);
 }
 
 Players.PlayerAdded.Connect((player) => RegisterPlayer(player));

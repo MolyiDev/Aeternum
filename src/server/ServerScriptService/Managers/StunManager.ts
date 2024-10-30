@@ -1,14 +1,14 @@
+/* eslint-disable roblox-ts/lua-truthiness */
 // Imports
 import { ReplicatedStorage, RunService } from "@rbxts/services";
 import { EMovementJumps } from "shared/Enums/Movement/EMovementJumps";
 import { EMovementSpeeds } from "shared/Enums/Movement/EMovementSpeeds";
 import { HaloManager } from "./HaloManager";
 import { EAnimations } from "shared/Enums/EAnimations";
-import { Tools } from "shared/Libraries/Tools";
 import { EStunType } from "shared/Enums/EStunType";
-import { IModel } from "shared/Interfaces/IModel";
-import { AttributeManager } from "shared/Managers/AttributeManager";
 import { CharacterManager } from "shared/Managers/CharacterManager";
+import { Character } from "shared/Classes/Character";
+import { AnimManager } from "shared/Managers/AnimManager";
 
 // Events
 const Events = ReplicatedStorage.WaitForChild("Events");
@@ -26,15 +26,15 @@ interface StunData {
 const MAX_DURATION = 300;
 
 // Variables
-const AnimationsStop = new Set<string>([
-	EAnimations.Punch0,
-	EAnimations.Punch1,
-	EAnimations.Punch2,
-	EAnimations.Punch3,
-	EAnimations.Block,
+const AnimationsStop = new Map<string, number>([
+	[EAnimations.Punch0, 0.25],
+	[EAnimations.Punch1, 0.25],
+	[EAnimations.Punch2, 0.25],
+	[EAnimations.Punch3, 0.25],
+	[EAnimations.Block, 0.25],
 ]);
 
-const Stunned = new Map<IModel, StunData>();
+const Stunned = new Map<Character, StunData>();
 let IsChecking = false;
 
 let CheckConnection: RBXScriptConnection | undefined;
@@ -47,7 +47,7 @@ SelfStun.OnServerEvent.Connect((player: Player, ...args: Array<unknown>) => {
 	if (Duration !== Duration || Type !== Type) return;
 	if (!typeIs(Duration, "number") || !typeIs(Type, "number")) return;
 	if (Duration < 0 || Duration > MAX_DURATION) return;
-	const Character = player.Character as IModel;
+	const Character = CharacterManager.GetCharacter(player.Character);
 	if (!Character) return;
 	StunManager.Stun(Character, Duration, Type);
 });
@@ -65,7 +65,7 @@ export class StunManager {
 			const humanoid = character.Humanoid;
 			humanoid.WalkSpeed = 0;
 			humanoid.JumpPower = 0;
-			AttributeManager.SetAutoRotate(character, false);
+			character.Attributes.SetAutoRotate(false);
 
 			if (data.Duration <= 0) this.UnStun(character, data);
 			else data.Duration -= deltaTime;
@@ -79,43 +79,46 @@ export class StunManager {
 		}
 	}
 
-	public static Stun(character: IModel, duration: number, stunType: number = EStunType.Default) {
-		const humanoid = character.Humanoid;
-		if (!humanoid || humanoid.Health <= 0) return;
+	public static Stun(character: Character, duration: number, stunType: number = EStunType.Default) {
+		const Humanoid = character.Humanoid;
+		if (!Humanoid || Humanoid.Health <= 0) return;
+
+		const Attributes = character.Attributes;
 
 		let stunData = Stunned.get(character);
 
 		if (stunData) {
 			stunData.Duration = duration;
 			if (stunType === EStunType.Partial) {
-				HaloManager.ChangeColor(humanoid, Color3.fromRGB(20, 120, 150));
-				AttributeManager.SetStunnedPartial(character, true);
+				HaloManager.ChangeColor(Humanoid, Color3.fromRGB(20, 120, 150));
+				Attributes.SetStunnedPartial(true);
 			} else {
-				HaloManager.ChangeColor(humanoid, Color3.fromRGB(255, 0, 0));
-				AttributeManager.SetStunnedFull(character, true);
+				HaloManager.ChangeColor(Humanoid, Color3.fromRGB(255, 0, 0));
+				Attributes.SetStunnedFull(true);
 			}
 			return;
 		}
 
 		if (stunType !== EStunType.Partial) {
-			const animator = humanoid.FindFirstChild("Animator") as Animator;
+			const animator = Humanoid.FindFirstChild("Animator") as Animator;
 			if (animator) {
 				for (const animation of animator.GetPlayingAnimationTracks()) {
-					if (!AnimationsStop.has(Tools.IdAnimToName(animation.Animation!.AnimationId))) continue;
-					animation.Stop(0.25);
+					const stopNumber = AnimationsStop.get(AnimManager.IdToName(animation.Animation!.AnimationId));
+					if (!stopNumber) continue;
+					animation.Stop(stopNumber);
 				}
 			}
 
-			HaloManager.ChangeColor(humanoid, Color3.fromRGB(255, 0, 0));
-			AttributeManager.SetStunnedFull(character, true);
+			HaloManager.ChangeColor(Humanoid, Color3.fromRGB(255, 0, 0));
+			Attributes.SetStunnedFull(true);
 		} else {
-			HaloManager.ChangeColor(humanoid, Color3.fromRGB(20, 120, 150));
-			AttributeManager.SetStunnedPartial(character, true);
+			HaloManager.ChangeColor(Humanoid, Color3.fromRGB(20, 120, 150));
+			Attributes.SetStunnedPartial(true);
 		}
 
-		humanoid.WalkSpeed = 0;
-		humanoid.JumpPower = 0;
-		AttributeManager.SetAutoRotate(character, false);
+		Humanoid.WalkSpeed = 0;
+		Humanoid.JumpPower = 0;
+		Attributes.SetAutoRotate(false);
 
 		stunData = {
 			Duration: duration,
@@ -123,37 +126,41 @@ export class StunManager {
 		};
 		Stunned.set(character, stunData);
 
-		const janitor = CharacterManager.GetCharacterJanitor(character);
+		const Butler = character.Butler;
 
-		stunData.ChangedConnection = janitor.Add(
-			(humanoid.Changed as RBXScriptSignal).Connect(() => {
-				humanoid.WalkSpeed = 0;
-				humanoid.JumpPower = 0;
-				AttributeManager.SetAutoRotate(character, false);
-			}),
-		);
+		stunData.ChangedConnection = Butler.Connect(Humanoid.Changed as RBXScriptSignal, () => {
+			Humanoid.WalkSpeed = 0;
+			Humanoid.JumpPower = 0;
+			Attributes.SetAutoRotate(false);
+		});
 
-		stunData.DiedConnection = janitor.Add(humanoid.AncestryChanged.Connect(() => this.UnStun(character, stunData)));
+		stunData.DiedConnection = Butler.Connect(Humanoid.AncestryChanged, () => this.UnStun(character, stunData));
 
 		if (!IsChecking) {
 			IsChecking = true;
-			CheckConnection = RunService.Heartbeat.Connect((deltaTime) => this.StunChecker(deltaTime));
+			CheckConnection = RunService.Heartbeat.ConnectParallel((deltaTime) => this.StunChecker(deltaTime));
 		}
 	}
 
-	public static UnStun(character: IModel, data: StunData) {
-		const humanoid = character.Humanoid;
-		data.ChangedConnection?.Disconnect();
-		data.DiedConnection?.Disconnect();
+	public static UnStun(character: Character, data: StunData) {
+		const Humanoid = character.Humanoid;
+		const Attributes = character.Attributes;
+		const Butler = character.Butler;
 
-		humanoid.WalkSpeed = EMovementSpeeds.Default;
-		humanoid.JumpPower = EMovementJumps.Default;
-		AttributeManager.SetAutoRotate(character, true);
+		if (data.ChangedConnection) Butler.Remove(data.ChangedConnection);
+		if (data.DiedConnection) Butler.Remove(data.DiedConnection);
 
-		AttributeManager.SetStunnedFull(character, false);
-		AttributeManager.SetStunnedPartial(character, false);
+		if (Humanoid && Humanoid.Health > 0) {
+			Humanoid.WalkSpeed = EMovementSpeeds.Default;
+			Humanoid.JumpPower = EMovementJumps.Default;
+		}
+
+		Attributes.SetAutoRotate(true);
+
+		Attributes.SetStunnedFull(false);
+		Attributes.SetStunnedPartial(false);
 		Stunned.delete(character);
 
-		HaloManager.DefaultColor(humanoid);
+		HaloManager.DefaultColor(Humanoid);
 	}
 }

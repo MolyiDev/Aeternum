@@ -3,16 +3,16 @@ import { Players } from "@rbxts/services";
 import { StateManager } from "../../Managers/StateManager";
 import { EMovementState } from "shared/Enums/Movement/EMovementState";
 import { Tools } from "shared/Libraries/Tools";
-import { AnimManager } from "shared/Managers/AnimManager";
 import { EAnimations } from "shared/Enums/EAnimations";
 import { CharacterManager } from "shared/Managers/CharacterManager";
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Animations = Character.Animations;
 const Humanoid = Character.Humanoid;
 
-const Guard = AnimManager.GetAnimation(Character, EAnimations.Guard);
+const Guard = Animations.GetAnimation(EAnimations.Guard);
 
 let IsGuarding = false;
 

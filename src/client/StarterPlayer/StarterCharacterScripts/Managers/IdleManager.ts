@@ -4,17 +4,17 @@ import { StateManager } from "./StateManager";
 import { EMovementState } from "shared/Enums/Movement/EMovementState";
 import { CharacterManager } from "shared/Managers/CharacterManager";
 import { EAnimations } from "shared/Enums/EAnimations";
-import { AnimManager } from "shared/Managers/AnimManager";
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
-const Janitor = Character.Janitor;
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Animations = Character.Animations;
+const Butler = Character.Butler;
 
-const Animations = ReplicatedStorage.WaitForChild("Animations").WaitForChild("Idle");
-const AnimationsVariants = Animations.WaitForChild("Variants");
+const IdleAnimations = ReplicatedStorage.WaitForChild("Animations").WaitForChild("Idle");
+const AnimationsVariants = IdleAnimations.WaitForChild("Variants");
 
-const IdleDefault = AnimManager.GetAnimation(Character, EAnimations.IdleDefault);
+const IdleDefault = Animations.GetAnimation(EAnimations.IdleDefault);
 const LoadedVariants: AnimationTrack[] = [];
 
 const VARIANT_COOLDOWN = 20;
@@ -24,14 +24,12 @@ let IsIdle = false;
 
 for (const variant of AnimationsVariants.GetChildren()) {
 	if (!variant.IsA("Animation")) continue;
-	const animVariant = AnimManager.GetAnimation(Character, variant.Name);
+	const animVariant = Animations.GetAnimation(variant.Name);
 	LoadedVariants.push(animVariant);
-	Janitor.Add(
-		animVariant.GetMarkerReachedSignal("End").Connect(() => {
-			IdleDefault.Play(0.25, 1, 0.65);
-			animVariant.Stop(0.3);
-		}),
-	);
+	Butler.Connect(animVariant.GetMarkerReachedSignal("End"), () => {
+		IdleDefault.Play(0.25, 1, 0.65);
+		animVariant.Stop(0.3);
+	});
 }
 
 export class IdleManager {

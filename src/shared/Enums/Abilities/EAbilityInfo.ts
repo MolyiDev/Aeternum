@@ -1,7 +1,7 @@
 import { IAbilityInfo } from "shared/Interfaces/IAbilityInfo";
 import { EAbility } from "./EAbility";
 
-export const EAbilityInfo: { [key in EAbility]: IAbilityInfo } = {
+export const EAbilityInfo: { [key in string]: IAbilityInfo } = {
 	[EAbility.SeriousPunch]: {
 		Cooldown: 5,
 		Damage: [40, 35, 30, 20],

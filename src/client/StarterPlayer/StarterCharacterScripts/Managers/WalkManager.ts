@@ -1,3 +1,4 @@
+/* eslint-disable roblox-ts/lua-truthiness */
 // Imports
 import { Players } from "@rbxts/services";
 import { StateManager } from "./StateManager";
@@ -6,7 +7,6 @@ import { Tools } from "shared/Libraries/Tools";
 import { EMovementSpeeds } from "shared/Enums/Movement/EMovementSpeeds";
 import { CharacterManager } from "shared/Managers/CharacterManager";
 import { EAttribute } from "shared/Enums/EAttribute";
-import { AnimManager } from "shared/Managers/AnimManager";
 import { EAnimations } from "shared/Enums/EAnimations";
 
 // Constants
@@ -30,14 +30,14 @@ const ExcludeStates = new Set<EMovementState>([]);
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Animations = Character.Animations;
 const Attributes = Character.Attributes;
 const Humanoid = Character.Humanoid;
 const HumanoidRootPart = Character.HumanoidRootPart;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 
-const [WalkForward, WalkBack, WalkRight, WalkLeft] = AnimManager.GetAnimations(
-	Character,
+const [WalkForward, WalkBack, WalkRight, WalkLeft] = Animations.GetAnimations(
 	EAnimations.WalkForward,
 	EAnimations.WalkBack,
 	EAnimations.WalkRight,
@@ -168,7 +168,7 @@ function WalkSpeed() {
 	WalkBack.AdjustSpeed(WalkManager.AnimBackSpeed());
 }
 
-Janitor.Add(Attributes.AttributeChanged.Connect((attribute) => AttributeChanged(attribute)));
-Janitor.Add(Humanoid.GetPropertyChangedSignal("MoveDirection").Connect(() => MoveDirection()));
-Janitor.Add(HumanoidRootPart.GetPropertyChangedSignal("CFrame").Connect(() => MoveDirection()));
-Janitor.Add(Humanoid.GetPropertyChangedSignal("WalkSpeed").Connect(() => WalkSpeed()));
+Butler.Connect(Attributes.AttributeChanged, (attribute) => AttributeChanged(attribute));
+Butler.Connect(Humanoid.GetPropertyChangedSignal("MoveDirection"), () => MoveDirection());
+Butler.Connect(HumanoidRootPart.GetPropertyChangedSignal("CFrame"), () => MoveDirection());
+Butler.Connect(Humanoid.GetPropertyChangedSignal("WalkSpeed"), () => WalkSpeed());

@@ -15,10 +15,10 @@ const ExcludeStates = new Set<EMovementState>([]);
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
 const Humanoid = Character.Humanoid;
 const HumanoidRootPart = Character.HumanoidRootPart;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 const Model = Character.Model;
 const HeadPart = Model.WaitForChild("HeadPart") as BasePart;
 let Vaulting = false;
@@ -63,4 +63,4 @@ function RenderStepped() {
 	Humanoid.SetStateEnabled(Enum.HumanoidStateType.Jumping, true);
 }
 
-Janitor.Add(RunService.RenderStepped.Connect(() => RenderStepped()));
+Butler.Connect(RunService.RenderStepped, () => RenderStepped());

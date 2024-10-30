@@ -8,9 +8,9 @@ import { EMovementSpeeds } from "shared/Enums/Movement/EMovementSpeeds";
 // Variables
 const Player = Players.LocalPlayer;
 const Camera = Workspace.CurrentCamera as Camera;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
 const Humanoid = Character.Humanoid;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 
 Humanoid.WalkSpeed = EMovementSpeeds.Default;
 Humanoid.JumpPower = EMovementJumps.Default;
@@ -100,4 +100,4 @@ function Hearbeat(deltaTime: number) {
 	}
 }
 
-Janitor.Add(RunService.Heartbeat.Connect((deltaTime) => Hearbeat(deltaTime)));
+Butler.Connect(RunService.Heartbeat, (deltaTime) => Hearbeat(deltaTime));

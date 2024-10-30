@@ -10,7 +10,6 @@ import { ControlManager } from "./ControlsManager";
 import { ESettingsControls } from "shared/Enums/Settings/ESettingsControls";
 import { CharacterManager } from "shared/Managers/CharacterManager";
 import { TweenManager } from "./TweenManager";
-import { AnimManager } from "shared/Managers/AnimManager";
 import { EAnimations } from "shared/Enums/EAnimations";
 
 // States
@@ -19,13 +18,14 @@ const ExcludeStates = new Set<EMovementState>([]);
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Animations = Character.Animations;
 const Attributes = Character.Attributes;
 const Humanoid = Character.Humanoid;
 const HumanoidRootPart = Character.HumanoidRootPart;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 
-const Run = AnimManager.GetAnimation(Character, EAnimations.Run);
+const Run = Animations.GetAnimation(EAnimations.Run);
 
 const ANIM_SPEED = 2.35;
 const MOMENTUM_FINALIZE_DURATION = 10;
@@ -120,8 +120,6 @@ function MoveDirection() {
 	RunManager.RunStart();
 }
 
-Janitor.Add(Humanoid.GetPropertyChangedSignal("MoveDirection").Connect(() => MoveDirection()));
-Janitor.Add(HumanoidRootPart.GetPropertyChangedSignal("CFrame").Connect(() => MoveDirection()));
-Janitor.Add(
-	Humanoid.GetPropertyChangedSignal("WalkSpeed").Connect(() => Run.AdjustSpeed(RunManager.AnimForwardSpeed())),
-);
+Butler.Connect(Humanoid.GetPropertyChangedSignal("MoveDirection"), () => MoveDirection());
+Butler.Connect(HumanoidRootPart.GetPropertyChangedSignal("CFrame"), () => MoveDirection());
+Butler.Connect(Humanoid.GetPropertyChangedSignal("WalkSpeed"), () => Run.AdjustSpeed(RunManager.AnimForwardSpeed()));

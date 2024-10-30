@@ -1,13 +1,14 @@
 // Imports
 import { EAnimations } from "shared/Enums/EAnimations";
 import { Tools } from "shared/Libraries/Tools";
-import { AnimManager } from "shared/Managers/AnimManager";
+import { CharacterManager } from "shared/Managers/CharacterManager";
 
 // Variables
-const Character = script.Parent!.Parent!.Parent as Model;
-const Humanoid = Character.WaitForChild("Humanoid") as Humanoid;
+const Character = CharacterManager.GetCharacter(script.Parent!.Parent!.Parent)!;
+const Animations = Character.Animations;
+const Humanoid = Character.Humanoid;
 
-const Guard = AnimManager.GetAnimation(Character, EAnimations.Guard);
+const Guard = Animations.GetAnimation(EAnimations.Guard);
 
 let IsGuarding = false;
 

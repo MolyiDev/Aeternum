@@ -1,34 +1,26 @@
-// Imports
+/*// Imports
 import { HitboxManager } from "server/ServerScriptService/Managers/HitboxManager";
-import { EAnimations } from "shared/Enums/EAnimations";
 import { IModel } from "shared/Interfaces/IModel";
-import { AttributeManager } from "shared/Managers/AttributeManager";
 import { DamageManager } from "server/ServerScriptService/Managers/DamageManager";
 import { StunManager } from "server/ServerScriptService/Managers/StunManager";
 import { EAbilityInfo } from "shared/Enums/Abilities/EAbilityInfo";
 import { EAbility } from "shared/Enums/Abilities/EAbility";
 import { AnimManager } from "shared/Managers/AnimManager";
-import { CCharacter } from "shared/Classes/Character";
 
 // Variables
 const Ability = EAbility.SeriousPunch;
 const AbilityInfo = EAbilityInfo.SeriousPunch;
 
-AnimManager.AnimationPlayed.Connect((character, janitor, animName, animTrack) => {
-	if (animName !== Ability || AttributeManager.IsStunnedFull(character)) return;
-
-	const Character = new CCharacter(character) as IModel & CCharacter;
-	print(Character.Head.Name);
-	Character.customMethod();
-
-	const Time = tick() - AttributeManager.TickAbility(character, Ability);
-	if (Time < AbilityInfo.Cooldown) return;
-	AttributeManager.SetTickAbility(character, Ability, tick());
+AnimManager.AnimationPlayOnce.Connect((character, animName, animTrack) => {
+	if (animName !== Ability) return;
+	const Attributes = character.Attributes;
+	const Butler = character.Butler;
+	const Model = character.Model;
 
 	const HumanoidRootPart = character.HumanoidRootPart;
 
 	const overlapParams = new OverlapParams();
-	overlapParams.FilterDescendantsInstances = [character];
+	overlapParams.FilterDescendantsInstances = [Model];
 	overlapParams.FilterType = Enum.RaycastFilterType.Exclude;
 
 	let PlayersDamaged: Humanoid[] = [];
@@ -68,7 +60,7 @@ AnimManager.AnimationPlayed.Connect((character, janitor, animName, animTrack) =>
 		else DamageManager.KnockbackRagdoll(hitCharacter, HumanoidRootPart.CFrame.LookVector.mul(Velocity), 1, 4);
 	}
 
-	janitor.Add(
+	Butler.Add(
 		animTrack.GetMarkerReachedSignal("Damage").Connect(() => {
 			PlayersDamaged = [];
 
@@ -85,4 +77,4 @@ AnimManager.AnimationPlayed.Connect((character, janitor, animName, animTrack) =>
 			);
 		}),
 	);
-});
+});*/

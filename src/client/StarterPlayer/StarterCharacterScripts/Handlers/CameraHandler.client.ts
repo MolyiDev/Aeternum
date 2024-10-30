@@ -2,8 +2,8 @@ import { RunService, Players } from "@rbxts/services";
 import { CharacterManager } from "shared/Managers/CharacterManager";
 
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
-const Janitor = Character.Janitor;
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Butler = Character.Butler;
 const Humanoid = Character.Humanoid;
 
 function CameraMovement() {
@@ -18,4 +18,4 @@ function CameraMovement() {
 	} else Humanoid.CameraOffset = Humanoid.CameraOffset.mul(0.75);
 }
 
-Janitor.Add(RunService.RenderStepped.Connect(() => CameraMovement()));
+Butler.Connect(RunService.RenderStepped, () => CameraMovement());

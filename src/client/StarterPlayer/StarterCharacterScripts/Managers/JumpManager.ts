@@ -1,21 +1,21 @@
+/* eslint-disable roblox-ts/lua-truthiness */
 // Imports
 import { Players } from "@rbxts/services";
 import { Tools } from "shared/Libraries/Tools";
 import { StateManager } from "./StateManager";
 import { EMovementState } from "shared/Enums/Movement/EMovementState";
 import { CharacterManager } from "shared/Managers/CharacterManager";
-import { AnimManager } from "shared/Managers/AnimManager";
 import { EAnimations } from "shared/Enums/EAnimations";
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Animations = Character.Animations;
 const Humanoid = Character.Humanoid;
 const HumanoidRootPart = Character.HumanoidRootPart;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 
-const [WalkJump, RunJump, DoubleJump] = AnimManager.GetAnimations(
-	Character,
+const [WalkJump, RunJump, DoubleJump] = Animations.GetAnimations(
 	EAnimations.WalkJump,
 	EAnimations.RunJump,
 	EAnimations.DoubleJump,
@@ -79,23 +79,17 @@ function StateChanged(oldState: Enum.HumanoidStateType, newState: Enum.HumanoidS
 	}
 }
 
-Janitor.Add(
-	Humanoid.StateChanged.Connect((oldState: Enum.HumanoidStateType, newState: Enum.HumanoidStateType) =>
-		StateChanged(oldState, newState),
-	),
+Butler.Connect(Humanoid.StateChanged, (oldState: Enum.HumanoidStateType, newState: Enum.HumanoidStateType) =>
+	StateChanged(oldState, newState),
 );
 
-Janitor.Add(WalkJump.GetMarkerReachedSignal("End").Connect(() => WalkJump.Stop(0.2)));
-Janitor.Add(RunJump.GetMarkerReachedSignal("End").Connect(() => RunJump.Stop(0.2)));
-Janitor.Add(
-	DoubleJump.GetMarkerReachedSignal("EndForward").Connect(() => {
-		if (JumpType !== "Forward") return;
-		DoubleJump.Stop(0.3);
-	}),
-);
-Janitor.Add(
-	DoubleJump.GetMarkerReachedSignal("EndBack").Connect(() => {
-		if (JumpType !== "Back") return;
-		DoubleJump.Stop(0.3);
-	}),
-);
+Butler.Connect(WalkJump.GetMarkerReachedSignal("End"), () => WalkJump.Stop(0.2));
+Butler.Connect(RunJump.GetMarkerReachedSignal("End"), () => RunJump.Stop(0.2));
+Butler.Connect(DoubleJump.GetMarkerReachedSignal("EndForward"), () => {
+	if (JumpType !== "Forward") return;
+	DoubleJump.Stop(0.3);
+});
+Butler.Connect(DoubleJump.GetMarkerReachedSignal("EndBack"), () => {
+	if (JumpType !== "Back") return;
+	DoubleJump.Stop(0.3);
+});

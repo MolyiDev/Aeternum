@@ -11,7 +11,7 @@ const SelfStun = Events.WaitForChild("SelfStun") as RemoteEvent;
 
 export class Attributes {
 	public Model: IModel;
-	public AttributeChanged: Signal<[attribute: string]>;
+	public AttributeChanged: Signal<string>;
 
 	constructor(model: IModel) {
 		this.Model = model;
@@ -58,6 +58,9 @@ export class Attributes {
 	public SetAutoRotate = (bool: boolean) => this.Model.SetAttribute(EAttribute.AutoRotate, bool);
 
 	// Ticks
+
+	public TickAnim = (anim: string) => (this.Model.GetAttribute(anim) as number) ?? 0;
+	public SetTickAnim = (anim: string, tick: number | undefined) => this.Model.SetAttribute(anim, tick);
 
 	public TickParry = () => this.Model.GetAttribute(EAttribute.Tick_Parry) as number;
 

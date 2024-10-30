@@ -5,9 +5,9 @@ import { EMovementSpeeds } from "shared/Enums/Movement/EMovementSpeeds";
 import { CharacterManager } from "shared/Managers/CharacterManager";
 
 // Variables
-const Character = CharacterManager.GetCharacter(script.Parent!.Parent!.Parent as Model);
+const Character = CharacterManager.GetCharacter(script.Parent!.Parent!.Parent)!;
 const Humanoid = Character.Humanoid;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 
 Humanoid.WalkSpeed = EMovementSpeeds.Default;
 Humanoid.JumpPower = EMovementJumps.Default;
@@ -46,7 +46,7 @@ function Hearbeat(deltaTime: number) {
 	}
 
 	if (TimeElapsedSpeed === InfoSpeed.Time && TimeElapsedJump === InfoJump.Time) {
-		HeartbeatConnection!.Disconnect();
+		if (HeartbeatConnection) Butler.Remove(HeartbeatConnection);
 		HeartbeatConnection = undefined;
 	}
 }
@@ -65,7 +65,7 @@ export = {
 		InfoSpeed = new TweenInfo(time, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut);
 		TimeElapsedSpeed = 0;
 		this.Resume();
-		if (!HeartbeatConnection) HeartbeatConnection = Janitor.Add(RunService.Heartbeat.Connect((dt) => Hearbeat(dt)));
+		if (!HeartbeatConnection) HeartbeatConnection = Butler.Connect(RunService.Heartbeat, (dt) => Hearbeat(dt));
 	},
 
 	SetJump(jump: number, time: number) {
@@ -74,6 +74,6 @@ export = {
 		InfoJump = new TweenInfo(time, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut);
 		TimeElapsedJump = 0;
 		this.Resume();
-		if (!HeartbeatConnection) HeartbeatConnection = Janitor.Add(RunService.Heartbeat.Connect((dt) => Hearbeat(dt)));
+		if (!HeartbeatConnection) HeartbeatConnection = Butler.Connect(RunService.Heartbeat, (dt) => Hearbeat(dt));
 	},
 };

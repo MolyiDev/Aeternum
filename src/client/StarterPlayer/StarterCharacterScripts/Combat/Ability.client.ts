@@ -15,10 +15,10 @@ const AbilityAddedEvent = Events.WaitForChild("AbilityAdded") as RemoteEvent;
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
 const Model = Character.Model;
 const Attributes = Character.Attributes;
-const Janitor = Character.Janitor;
+const Butler = Character.Butler;
 
 const ModuleAbilities = new Map<EAbilityPlace, IAbility>();
 
@@ -94,13 +94,11 @@ function AbilityRemoved(abilityPlace: string) {
 	}
 }
 
-Janitor.Add(
-	ControlManager.LocalInputBegan.Connect(
-		(control: [string, number] | undefined, input: InputObject, doublePressed: boolean) =>
-			InputBegan(control, input, doublePressed),
-	),
-	"Disconnect",
+Butler.Connect(
+	ControlManager.LocalInputBegan,
+	(control: [string, number] | undefined, input: InputObject, doublePressed: boolean) =>
+		InputBegan(control, input, doublePressed),
 );
 
-Janitor.Add(AbilityAddedEvent.OnClientEvent.Connect((abilityPlace: string) => AbilityAdded(abilityPlace)));
-Janitor.Add(AbilityRemovedEvent.OnClientEvent.Connect((abilityPlace: string) => AbilityRemoved(abilityPlace)));
+Butler.Connect(AbilityAddedEvent.OnClientEvent, (abilityPlace: string) => AbilityAdded(abilityPlace));
+Butler.Connect(AbilityRemovedEvent.OnClientEvent, (abilityPlace: string) => AbilityRemoved(abilityPlace));

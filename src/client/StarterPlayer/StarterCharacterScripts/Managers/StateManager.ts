@@ -9,7 +9,7 @@ const StateChangedSignal = new Signal<(oldState: EMovementState, newState: EMove
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = CharacterManager.GetCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
 const Humanoid = Character.Humanoid;
 
 export class StateManager {

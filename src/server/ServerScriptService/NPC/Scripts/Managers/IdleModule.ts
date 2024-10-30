@@ -1,19 +1,17 @@
 // Imports
 import { ReplicatedStorage } from "@rbxts/services";
 import { EAnimations } from "shared/Enums/EAnimations";
-import { AnimManager } from "shared/Managers/AnimManager";
 import { CharacterManager } from "shared/Managers/CharacterManager";
 
 // Variables
-const Character = script.Parent!.Parent!.Parent as Model;
-const Humanoid = Character.WaitForChild("Humanoid") as Humanoid;
-const Animator = Humanoid.WaitForChild("Animator") as Animator;
-const Janitor = CharacterManager.GetCharacterJanitor(Character);
+const Character = CharacterManager.GetCharacter(script.Parent!.Parent!.Parent)!;
+const Animations = Character.Animations;
+const Butler = Character?.Butler;
 
-const Animations = ReplicatedStorage.WaitForChild("Animations").WaitForChild("Idle");
-const AnimationsVariants = Animations.WaitForChild("Variants");
+const IdleAnimations = ReplicatedStorage.WaitForChild("Animations").WaitForChild("Idle");
+const AnimationsVariants = IdleAnimations.WaitForChild("Variants");
 
-const IdleDefault = AnimManager.GetAnimation(Character, EAnimations.IdleDefault);
+const IdleDefault = Animations.GetAnimation(EAnimations.IdleDefault);
 const LoadedVariants: AnimationTrack[] = [];
 
 const VARIANT_COOLDOWN = 20;
@@ -23,14 +21,12 @@ let IsIdle = false;
 
 for (const variant of AnimationsVariants.GetChildren()) {
 	if (!variant.IsA("Animation")) continue;
-	const animVariant = Animator.LoadAnimation(variant);
+	const animVariant = Animations.GetAnimation(variant.Name);
 	LoadedVariants.push(animVariant);
-	Janitor.Add(
-		animVariant.GetMarkerReachedSignal("End").Connect(() => {
-			IdleDefault.Play(0.25, 1, 0.65);
-			animVariant.Stop(0.3);
-		}),
-	);
+	Butler.Connect(animVariant.GetMarkerReachedSignal("End"), () => {
+		IdleDefault.Play(0.25, 1, 0.65);
+		animVariant.Stop(0.3);
+	});
 }
 
 export = {

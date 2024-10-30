@@ -74,7 +74,6 @@ interface ServerScriptService extends Instance {
 		Moderation: ModuleScript;
 	};
 	Managers: Folder & {
-		JanitorManager: ModuleScript;
 		StunManager: ModuleScript;
 		NPCManager: ModuleScript;
 		DamageManager: ModuleScript;

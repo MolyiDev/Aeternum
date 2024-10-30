@@ -2,15 +2,8 @@
 import { ReplicatedStorage, RunService, TweenService } from "@rbxts/services";
 
 // Variables
-const AnimsFolder = ReplicatedStorage.WaitForChild("Animations");
 const SoundsFolder = ReplicatedStorage.WaitForChild("Sounds");
-const AnimIdToName = new Map<string, string>();
 const SoundNameToSound = new Map<string, Sound>();
-
-for (const anim of AnimsFolder.GetDescendants()) {
-	if (!anim.IsA("Animation")) continue;
-	AnimIdToName.set(anim.AnimationId, anim.Name);
-}
 
 for (const sound of SoundsFolder.GetDescendants()) {
 	if (!sound.IsA("Sound")) continue;
@@ -23,7 +16,6 @@ export class Tools {
 		return new Color3(c1.R + (c2.R - c1.R) * alpha, c1.G + (c2.G - c1.G) * alpha, c1.B + (c2.B - c1.B) * alpha);
 	}
 
-	public static IdAnimToName = (name: string) => AnimIdToName.get(name) as string;
 	public static SoundNameToSound = (name: string) => SoundNameToSound.get(name) as Sound;
 
 	public static Vector3(replicate: number) {

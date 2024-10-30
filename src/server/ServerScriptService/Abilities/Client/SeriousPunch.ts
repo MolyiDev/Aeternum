@@ -3,25 +3,25 @@ import { Players } from "@rbxts/services";
 import { EAbility } from "shared/Enums/Abilities/EAbility";
 import { EAnimations } from "shared/Enums/EAnimations";
 import { EStunType } from "shared/Enums/EStunType";
-import { IModel } from "shared/Interfaces/IModel";
 import { Tools } from "shared/Libraries/Tools";
-import { AnimManager } from "shared/Managers/AnimManager";
-import { AttributeManager } from "shared/Managers/AttributeManager";
+import { CharacterManager } from "shared/Managers/CharacterManager";
 
 // Variables
 const Player = Players.LocalPlayer;
-const Character = (Player.Character ?? Player.CharacterAdded.Wait()[0]) as IModel;
-const Humanoid = Character.WaitForChild("Humanoid") as Humanoid;
+const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Animations = Character.Animations;
+const Attributes = Character.Attributes;
+const Humanoid = Character.Humanoid;
 
-const SeriousPunch = AnimManager.GetAnimation(Character, EAnimations.SeriousPunch);
+const SeriousPunch = Animations.GetAnimation(EAnimations.SeriousPunch);
 
 const Ability = EAbility.SeriousPunch;
 
 export = {
 	Start() {
-		if (AttributeManager.IsStunned(Character) || !Tools.IsTouchingGround(Humanoid, true)) return;
+		if (Attributes.IsStunned() || !Tools.IsTouchingGround(Humanoid, true)) return;
 
-		AttributeManager.SelfStun(Character, 1.45, EStunType.Partial);
+		Attributes.SelfStun(1.45, EStunType.Partial);
 		SeriousPunch.Play();
 	},
 
