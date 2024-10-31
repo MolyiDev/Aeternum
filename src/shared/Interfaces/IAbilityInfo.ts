@@ -1,4 +1,7 @@
+import { EWeapons } from "shared/Enums/EWeapons";
+
 export interface IAbilityInfo {
+	Weapon: EWeapons;
 	Cooldown: number;
 	Damage: number[];
 	ParryStunTime: number;

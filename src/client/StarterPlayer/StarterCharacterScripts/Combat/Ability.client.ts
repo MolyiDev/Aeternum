@@ -7,6 +7,7 @@ import { ControlManager } from "../Managers/ControlsManager";
 import { EAbilityPlace } from "shared/Enums/Abilities/EAbilityPlace";
 import { IAbility } from "shared/Interfaces/IAbility";
 import { EAbilityInfo } from "shared/Enums/Abilities/EAbilityInfo";
+import { EAbility } from "shared/Enums/Abilities/EAbility";
 
 // Events
 const Events = ReplicatedStorage.WaitForChild("Events").WaitForChild("Combat");
@@ -16,6 +17,7 @@ const AbilityAddedEvent = Events.WaitForChild("AbilityAdded") as RemoteEvent;
 // Variables
 const Player = Players.LocalPlayer;
 const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Abilities = Character.Abilities;
 const Model = Character.Model;
 const Attributes = Character.Attributes;
 const Butler = Character.Butler;
@@ -34,12 +36,12 @@ function AbilityStart(ability: EAbilityPlace) {
 	AbilityModule.Start();
 }
 
-function AbilityAdd(ability: EAbilityPlace) {
-	ModuleAbilities.set(ability, require(Model.Abilities.WaitForChild(ability) as ModuleScript) as IAbility);
+function AbilityAdd(abilityPlace: EAbilityPlace, ability: EAbility) {
+	ModuleAbilities.set(abilityPlace, require(Model.Abilities.WaitForChild(abilityPlace) as ModuleScript) as IAbility);
 }
 
-function AbilityRemove(ability: EAbilityPlace) {
-	ModuleAbilities.delete(EAbilityPlace.Ability1);
+function AbilityRemove(abilityPlace: EAbilityPlace) {
+	ModuleAbilities.delete(abilityPlace);
 }
 
 function InputBegan(control: [string, number] | undefined, input: InputObject, doublePressed: boolean) {
@@ -60,45 +62,13 @@ function InputBegan(control: [string, number] | undefined, input: InputObject, d
 	}
 }
 
-function AbilityAdded(abilityPlace: string) {
-	switch (abilityPlace) {
-		case EAbilityPlace.Ability1:
-			AbilityAdd(EAbilityPlace.Ability1);
-			break;
-		case EAbilityPlace.Ability2:
-			AbilityAdd(EAbilityPlace.Ability2);
-			break;
-		case EAbilityPlace.Ability3:
-			AbilityAdd(EAbilityPlace.Ability3);
-			break;
-		case EAbilityPlace.Ability4:
-			AbilityAdd(EAbilityPlace.Ability4);
-			break;
-	}
-}
-
-function AbilityRemoved(abilityPlace: string) {
-	switch (abilityPlace) {
-		case EAbilityPlace.Ability1:
-			AbilityRemove(EAbilityPlace.Ability1);
-			break;
-		case EAbilityPlace.Ability2:
-			AbilityRemove(EAbilityPlace.Ability2);
-			break;
-		case EAbilityPlace.Ability3:
-			AbilityRemove(EAbilityPlace.Ability3);
-			break;
-		case EAbilityPlace.Ability4:
-			AbilityRemove(EAbilityPlace.Ability4);
-			break;
-	}
-}
-
 Butler.Connect(
 	ControlManager.LocalInputBegan,
 	(control: [string, number] | undefined, input: InputObject, doublePressed: boolean) =>
 		InputBegan(control, input, doublePressed),
 );
 
-Butler.Connect(AbilityAddedEvent.OnClientEvent, (abilityPlace: string) => AbilityAdded(abilityPlace));
-Butler.Connect(AbilityRemovedEvent.OnClientEvent, (abilityPlace: string) => AbilityRemoved(abilityPlace));
+Butler.Connect(AbilityAddedEvent.OnClientEvent, (abilityPlace: EAbilityPlace, ability: EAbility) =>
+	AbilityAdd(abilityPlace, ability),
+);
+Butler.Connect(AbilityRemovedEvent.OnClientEvent, (abilityPlace: EAbilityPlace) => AbilityRemove(abilityPlace));

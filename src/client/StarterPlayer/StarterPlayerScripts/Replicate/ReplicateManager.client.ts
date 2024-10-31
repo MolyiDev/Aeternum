@@ -3,6 +3,8 @@ import { EAnimations } from "shared/Enums/EAnimations";
 import { AnimManager } from "shared/Managers/AnimManager";
 import { CharacterManager } from "shared/Managers/CharacterManager";
 import { ElectricKick } from "./Abilities/ElectricKick";
+import { EAbilityInfo } from "shared/Enums/Abilities/EAbilityInfo";
+import { EAbility } from "shared/Enums/Abilities/EAbility";
 
 interface IReplicateInfo {
 	Ability: boolean;
@@ -11,6 +13,7 @@ interface IReplicateInfo {
 	RemovedCharacter?: Callback;
 	AnimPlayOnce?: Callback;
 	AnimPlay?: Callback;
+	AnimStop?: Callback;
 }
 
 const Replicates = new Map<string, IReplicateInfo>([
@@ -18,11 +21,12 @@ const Replicates = new Map<string, IReplicateInfo>([
 		EAnimations.ElectricKick,
 		{
 			Ability: true,
-			Cooldown: 5,
+			Cooldown: EAbilityInfo[EAbility.ElectricKick].Cooldown,
 			AddedCharacter: undefined,
 			RemovedCharacter: undefined,
 			AnimPlayOnce: (character, animTrack) => ElectricKick.AnimPlay(character, animTrack),
 			AnimPlay: undefined,
+			AnimStop: undefined,
 		},
 	],
 ]);
@@ -37,6 +41,7 @@ Replicates.forEach((replicatedInfo) => {
 
 CharacterManager.AddedCharacter.Connect((character: Character) => {
 	const PlayedAnimations = new Set<string>();
+	const ReplicatesPlaying = new Map<string, IReplicateInfo>();
 	const Attributes = character.Attributes;
 	const Abilities = character.Abilities;
 	const Animator = character.Humanoid.Animator;
@@ -63,11 +68,23 @@ CharacterManager.AddedCharacter.Connect((character: Character) => {
 			Attributes.SetTickAnim(AnimName, Replicate.Cooldown);
 		}
 
+		if (!PlayedAnimations.has(AnimName)) {
+			PlayedAnimations.add(AnimName);
+			if (Replicate.AnimPlayOnce) Replicate.AnimPlayOnce(character);
+			if (Replicate.AnimStop)
+				Butler.Connect(animTrack.Stopped, () => {
+					Replicate.AnimStop!(character);
+					ReplicatesPlaying.delete(AnimName);
+				});
+			else Butler.Connect(animTrack.Stopped, () => ReplicatesPlaying.delete(AnimName));
+		}
+
 		if (Replicate.AnimPlayOnce && !PlayedAnimations.has(AnimName)) {
 			PlayedAnimations.add(AnimName);
 			Replicate.AnimPlayOnce(character);
 		}
 
+		ReplicatesPlaying.set(AnimName, Replicate);
 		if (Replicate.AnimPlay) Replicate.AnimPlay(character);
 	});
 });

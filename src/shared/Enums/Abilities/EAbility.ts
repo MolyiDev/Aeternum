@@ -3,3 +3,5 @@ export enum EAbility {
 	ElectricKick = "ElectricKick",
 	GroundSmash = "GroundSmash",
 }
+
+export type EAbilityString = `${EAbility}`;

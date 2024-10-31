@@ -1,5 +1,5 @@
 // Imports
-import { ReplicatedStorage, ServerScriptService } from "@rbxts/services";
+import { Players, ReplicatedStorage, ServerScriptService } from "@rbxts/services";
 import { Character } from "shared/Classes/Character";
 import { EAbility } from "shared/Enums/Abilities/EAbility";
 import { EAbilityPlace } from "shared/Enums/Abilities/EAbilityPlace";
@@ -21,23 +21,23 @@ for (const ability of AbilitiesFolder.GetDescendants()) {
 export class AbilityManager {
 	public static RemoveAbility(character: Character, abilityPlace: EAbilityPlace) {
 		const Model = character.Model;
-		const Abilities = character.Abilities;
 
 		Model.Abilities.FindFirstChild(abilityPlace)?.Destroy();
-		Abilities.Remove(abilityPlace);
 
-		AbilityRemoved.FireAllClients(character, abilityPlace);
+		const Player = Players.GetPlayerFromCharacter(character.Model);
+		if (!Player) return;
+		AbilityRemoved.FireClient(Player, abilityPlace);
 	}
 
 	public static AddAbility(character: Character, abilityPlace: EAbilityPlace, ability: EAbility) {
 		const Model = character.Model;
-		const Abilities = character.Abilities;
 		const AbilityModule = AbilitiesPerName.get(ability)!.Clone();
 
 		AbilityModule.Name = abilityPlace;
 		AbilityModule.Parent = Model.Abilities;
-		Abilities.Add(abilityPlace, ability);
 
-		AbilityAdded.FireAllClients(character, abilityPlace, ability);
+		const Player = Players.GetPlayerFromCharacter(character.Model);
+		if (!Player) return;
+		AbilityAdded.FireClient(Player, abilityPlace, ability);
 	}
 }

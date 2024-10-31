@@ -49,7 +49,6 @@ function RenderStepped() {
 	if (VaultCastHead) return;
 	if (!VaultCastRoot) return;
 
-	print(2);
 	Vaulting = true;
 	Humanoid.SetStateEnabled(Enum.HumanoidStateType.Jumping, false);
 

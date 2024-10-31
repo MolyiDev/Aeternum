@@ -138,7 +138,7 @@ export class StunManager {
 
 		if (!IsChecking) {
 			IsChecking = true;
-			CheckConnection = RunService.Heartbeat.ConnectParallel((deltaTime) => this.StunChecker(deltaTime));
+			CheckConnection = RunService.Heartbeat.Connect((deltaTime) => this.StunChecker(deltaTime));
 		}
 	}
 

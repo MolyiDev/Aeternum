@@ -20,7 +20,7 @@ export class Character {
 		this.HumanoidRootPart = model.WaitForChild("HumanoidRootPart") as BasePart;
 		this.Butler = new Butler();
 		this.Attributes = new Attributes(model);
-		this.Abilities = new Abilities();
+		this.Abilities = new Abilities(this);
 		this.Animations = new Animations(this);
 	}
 

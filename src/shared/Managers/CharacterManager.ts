@@ -57,6 +57,7 @@ function RegisterPlayer(player: Player) {
 
 	const charLoaded = player.Character;
 	if (charLoaded) RegisterCharacter(charLoaded);
+	else RegisterCharacter(player.CharacterAdded.Wait()[0]);
 
 	butler.Connect(player.CharacterAdded, (model) => RegisterCharacter(model));
 	butler.Connect(player.CharacterRemoving, (model) => UnRegisterCharacter(model));

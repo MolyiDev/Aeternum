@@ -28,6 +28,8 @@ task.delay(5, () => {
 
 CharacterManager.AddedCharacter.Connect((character) => {
 	character.Model.Parent = PlayersFolder;
+	const AbilitiesFolder = new Instance("Folder", character.Model);
+	AbilitiesFolder.Name = "Abilities";
 	AbilityManager.AddAbility(character, EAbilityPlace.Ability1, EAbility.SeriousPunch);
 	AbilityManager.AddAbility(character, EAbilityPlace.Ability2, EAbility.ElectricKick);
 });

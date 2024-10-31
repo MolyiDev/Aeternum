@@ -1,8 +1,10 @@
 import { IAbilityInfo } from "shared/Interfaces/IAbilityInfo";
 import { EAbility } from "./EAbility";
+import { EWeapons } from "../EWeapons";
 
 export const EAbilityInfo: { [key in string]: IAbilityInfo } = {
 	[EAbility.SeriousPunch]: {
+		Weapon: EWeapons.Hands,
 		Cooldown: 5,
 		Damage: [40, 35, 30, 20],
 		ParryStunTime: 0.25,
@@ -14,6 +16,7 @@ export const EAbilityInfo: { [key in string]: IAbilityInfo } = {
 	},
 
 	[EAbility.ElectricKick]: {
+		Weapon: EWeapons.Hands,
 		Cooldown: 5,
 		Damage: [10, 10, 20],
 		ParryStunTime: 0.85,
@@ -25,6 +28,7 @@ export const EAbilityInfo: { [key in string]: IAbilityInfo } = {
 	},
 
 	[EAbility.GroundSmash]: {
+		Weapon: EWeapons.Hands,
 		Cooldown: 5,
 		Damage: [50, 30, 10],
 		ParryStunTime: 0.85,
