@@ -1,17 +1,18 @@
 // Imports
 import Signal from "@rbxts/lemon-signal";
 import { ReplicatedStorage, RunService, ServerScriptService, Workspace } from "@rbxts/services";
+import { IModel } from "shared/Interfaces/IModel";
 
 // Events
 const Events = ReplicatedStorage.WaitForChild("Events").WaitForChild("NPC");
 const NPCAddedEvent = Events.WaitForChild("NPCAdded") as RemoteEvent;
-const NPCRemovedEvent = Events.WaitForChild("NPCAdded") as RemoteEvent;
+const NPCRemovedEvent = Events.WaitForChild("NPCRemoved") as RemoteEvent;
 
 const NPCAddedSignal = new Signal<(model: Model) => void>();
 const NPCRemovedSignal = new Signal<(model: Model) => void>();
 
 // Variables
-const NPCFolder = Workspace.WaitForChild("NPC") as Folder;
+const NPCFolder = Workspace.WaitForChild("Characters").WaitForChild("NPC") as Folder;
 
 export class NPCManager {
 	public static NPCAddedClient = NPCAddedEvent;
@@ -33,6 +34,7 @@ export class NPCManager {
 
 		NPCAddedSignal.Fire(model);
 		NPCAddedEvent.FireAllClients(model);
+
 		model.Destroying.Once(() => {
 			NPCRemovedSignal.Fire(model);
 			NPCRemovedEvent.FireAllClients(model);

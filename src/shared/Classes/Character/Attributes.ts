@@ -47,6 +47,14 @@ export class Attributes {
 
 	public SetIsRagdoll = (bool: boolean) => this.Model.SetAttribute(EAttribute.IsRagdoll, bool);
 
+	// Using
+
+	public UsingAbility = () => this.Model.GetAttribute(EAttribute.UsingAbility) as string | undefined;
+	public SetUsingAbility = (ability: string | undefined) => this.Model.SetAttribute(EAttribute.UsingAbility, ability);
+
+	public UsingMove = () => this.Model.GetAttribute(EAttribute.UsingMove) as string | undefined;
+	public SetUsingMove = (move: string | undefined) => this.Model.SetAttribute(EAttribute.UsingMove, move);
+
 	// IsCamera
 
 	public IsCameraLocked = () => this.Model.GetAttribute(EAttribute.IsCameraLocked) as boolean;
@@ -92,6 +100,7 @@ export class Attributes {
 	// Destroy
 
 	public Destroy() {
+		this.Model = undefined!;
 		this.AttributeChanged.Destroy();
 	}
 }

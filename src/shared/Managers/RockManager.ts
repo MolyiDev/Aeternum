@@ -3,8 +3,7 @@ import { TweenService, Debris, Workspace } from "@rbxts/services";
 import { Tools } from "shared/Libraries/Tools";
 
 // Variables
-const PlayersFolder = Workspace.WaitForChild("Players");
-const NPCFolder = Workspace.WaitForChild("NPC");
+const CharactersFolder = Workspace.WaitForChild("Characters");
 const DebrisFolder = Workspace.WaitForChild("Debris");
 const HitboxFolder = Workspace.WaitForChild("Hitbox");
 
@@ -12,7 +11,7 @@ const CraterInfo = new TweenInfo(5, Enum.EasingStyle.Sine, Enum.EasingDirection.
 const ExplosionInfo = new TweenInfo(0.75, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut);
 
 const RayParams = new RaycastParams();
-RayParams.FilterDescendantsInstances = [PlayersFolder, NPCFolder, DebrisFolder, HitboxFolder];
+RayParams.FilterDescendantsInstances = [CharactersFolder, DebrisFolder, HitboxFolder];
 RayParams.FilterType = Enum.RaycastFilterType.Exclude;
 RayParams.IgnoreWater = true;
 

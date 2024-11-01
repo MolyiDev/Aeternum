@@ -1,18 +1,11 @@
 // Imports
 import { Workspace } from "@rbxts/services";
-import { EAnimations } from "shared/Enums/EAnimations";
+import { Character } from "shared/Classes/Character";
+import { IReplicateClass } from "shared/Interfaces/IReplicateClass";
 import { Tools } from "shared/Libraries/Tools";
-import { CharacterManager } from "shared/Managers/CharacterManager";
+import { Butler } from "shared/Modules/Butler";
 
 // Variables
-const AnimationList = new Set<string>([
-	EAnimations.WalkForward,
-	EAnimations.WalkBack,
-	EAnimations.WalkLeft,
-	EAnimations.WalkRight,
-	EAnimations.Run,
-]);
-
 const TemporalFolder = Workspace.WaitForChild("Temporal");
 const FootprintMaterials = new Set<Enum.Material>([Enum.Material.Sand, Enum.Material.Snow, Enum.Material.Mud]);
 
@@ -32,39 +25,71 @@ const MAX_TREMOLO = 0.95;
 const MIN_SPEED = 0.94;
 const MAX_SPEED = 1.06;
 
-CharacterManager.AddedCharacter.Connect((character) => {
-	const Animations = character.Animations;
-	const Humanoid = character.Humanoid;
-	const Butler = character.Butler;
-	const Model = character.Model;
+export class Footsteps implements IReplicateClass {
+	public Butler: Butler;
+	public Humanoid: Humanoid;
+	public SFXOrigin: Attachment;
+	public LeftFootAttachment: Attachment;
+	public RightFootAttachment: Attachment;
+	public RayParams: RaycastParams;
+	public OnceConnections: Set<RBXScriptConnection>;
+	public FootstepConnection: RBXScriptConnection = undefined!;
 
-	const SFXOrigin = new Instance("Attachment");
-	SFXOrigin.CFrame = new CFrame(0, -2.875, 0);
-	SFXOrigin.Parent = character.HumanoidRootPart;
+	constructor(character: Character) {
+		this.Butler = character.Butler;
+		this.Humanoid = character.Humanoid;
+		const Model = character.Model;
 
-	const LeftFootAttachment = new Instance("Attachment");
-	LeftFootAttachment.CFrame = new CFrame(0, -0.075, 0);
-	LeftFootAttachment.Parent = Model.WaitForChild("LeftFoot");
+		const SFXOrigin = new Instance("Attachment");
+		SFXOrigin.CFrame = new CFrame(0, -2.875, 0);
+		SFXOrigin.Parent = character.HumanoidRootPart;
+		this.SFXOrigin = SFXOrigin;
 
-	const RightFootAttachment = new Instance("Attachment");
-	RightFootAttachment.CFrame = new CFrame(0, -0.075, 0);
-	RightFootAttachment.Parent = Model.WaitForChild("RightFoot");
+		const LeftFootAttachment = new Instance("Attachment");
+		LeftFootAttachment.CFrame = new CFrame(0, -0.075, 0);
+		LeftFootAttachment.Parent = Model.LeftFoot;
+		this.LeftFootAttachment = LeftFootAttachment;
 
-	const RayParams = new RaycastParams();
-	RayParams.FilterType = Enum.RaycastFilterType.Exclude;
-	RayParams.FilterDescendantsInstances = [Model];
-	RayParams.IgnoreWater = true;
+		const RightFootAttachment = new Instance("Attachment");
+		RightFootAttachment.CFrame = new CFrame(0, -0.075, 0);
+		RightFootAttachment.Parent = Model.RightFoot;
+		this.RightFootAttachment = RightFootAttachment;
 
-	Animations.AnimationPlayOnce.Connect((animName, animTrack) => {
-		if (!AnimationList.has(animName)) return;
+		const RayParams = new RaycastParams();
+		RayParams.FilterType = Enum.RaycastFilterType.Exclude;
+		RayParams.FilterDescendantsInstances = [Model];
+		RayParams.IgnoreWater = true;
+		this.RayParams = RayParams;
 
-		Butler.Connect(animTrack.GetMarkerReachedSignal("Footstep"), (FootEnum?: string) => {
+		this.OnceConnections = new Set();
+	}
+
+	public Stop() {
+		this.Butler.RemoveList(this.OnceConnections);
+		this.Butler.Remove(this.FootstepConnection);
+
+		this.Butler = undefined!;
+		this.Humanoid = undefined!;
+		this.SFXOrigin = undefined!;
+		this.LeftFootAttachment = undefined!;
+		this.RightFootAttachment = undefined!;
+		this.RayParams = undefined!;
+		this.FootstepConnection = undefined!;
+		this.OnceConnections.clear();
+		this.OnceConnections = undefined!;
+	}
+
+	public AnimPlayOnce(animTrack: AnimationTrack) {
+		const Butler = this.Butler;
+		const Humanoid = this.Humanoid;
+
+		this.FootstepConnection = Butler.Connect(animTrack.GetMarkerReachedSignal("Footstep"), (FootEnum?: string) => {
 			const MaterialName = Humanoid.FloorMaterial.Name;
 			if (!LoadedSFX[MaterialName]) return;
 
 			const SelectedSound = LoadedSFX[MaterialName][math.random(0, LoadedSFX[MaterialName].size() - 1)];
 			const PlayingSound = SelectedSound.Clone();
-			PlayingSound.Parent = SFXOrigin;
+			PlayingSound.Parent = this.SFXOrigin;
 
 			PlayingSound.SoundGroup = FootstepsGroup;
 
@@ -90,8 +115,8 @@ CharacterManager.AddedCharacter.Connect((character) => {
 			if (!FootprintMaterials.has(Humanoid.FloorMaterial)) return;
 
 			const FootPrintOrigin =
-				FootEnum === "0" ? LeftFootAttachment.WorldPosition : RightFootAttachment.WorldPosition;
-			const FootPrintResult = Workspace.Raycast(FootPrintOrigin, new Vector3(0, -100, 0), RayParams);
+				FootEnum === "0" ? this.LeftFootAttachment.WorldPosition : this.RightFootAttachment.WorldPosition;
+			const FootPrintResult = Workspace.Raycast(FootPrintOrigin, new Vector3(0, -100, 0), this.RayParams);
 
 			if (!FootPrintResult) return;
 
@@ -112,7 +137,12 @@ CharacterManager.AddedCharacter.Connect((character) => {
 			const ModelFadeOut = Tools.TweenPlay(FootprintClone, FADE_OUT, { Transparency: 1 });
 			Tools.TweenPlay(ShadowDecal, FADE_OUT, { Transparency: 1 });
 
-			Butler.Once(ModelFadeOut.Completed, () => FootprintClone.Destroy());
+			const FadeOut = Butler.Once(ModelFadeOut.Completed, () => {
+				FootprintClone.Destroy();
+				this.OnceConnections.delete(FadeOut);
+			});
+
+			this.OnceConnections.add(FadeOut);
 		});
-	});
-});
+	}
+}

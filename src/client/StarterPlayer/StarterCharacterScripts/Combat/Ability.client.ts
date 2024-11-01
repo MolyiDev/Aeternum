@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 // Imports
-import { Players, ReplicatedStorage } from "@rbxts/services";
+import { Players } from "@rbxts/services";
 import { ESettingsControls } from "shared/Enums/Settings/ESettingsControls";
 import { CharacterManager } from "shared/Managers/CharacterManager";
 import { ControlManager } from "../Managers/ControlsManager";
@@ -8,11 +8,7 @@ import { EAbilityPlace } from "shared/Enums/Abilities/EAbilityPlace";
 import { IAbility } from "shared/Interfaces/IAbility";
 import { EAbilityInfo } from "shared/Enums/Abilities/EAbilityInfo";
 import { EAbility } from "shared/Enums/Abilities/EAbility";
-
-// Events
-const Events = ReplicatedStorage.WaitForChild("Events").WaitForChild("Combat");
-const AbilityRemovedEvent = Events.WaitForChild("AbilityRemoved") as RemoteEvent;
-const AbilityAddedEvent = Events.WaitForChild("AbilityAdded") as RemoteEvent;
+import { EWeapons } from "shared/Enums/EWeapons";
 
 // Variables
 const Player = Players.LocalPlayer;
@@ -22,10 +18,12 @@ const Model = Character.Model;
 const Attributes = Character.Attributes;
 const Butler = Character.Butler;
 
-const ModuleAbilities = new Map<EAbilityPlace, IAbility>();
+const ModuleAbilities = new Map<EAbilityPlace, Map<EWeapons, IAbility>>();
 
 function AbilityStart(ability: EAbilityPlace) {
-	const AbilityModule = ModuleAbilities.get(ability);
+	const AbilityPerWeapon = ModuleAbilities.get(ability);
+	if (!AbilityPerWeapon) return;
+	const AbilityModule = AbilityPerWeapon.get(EWeapons.Hands);
 	if (!AbilityModule) return;
 
 	const Ability = AbilityModule.GetAbility();
@@ -36,12 +34,17 @@ function AbilityStart(ability: EAbilityPlace) {
 	AbilityModule.Start();
 }
 
-function AbilityAdd(abilityPlace: EAbilityPlace, ability: EAbility) {
-	ModuleAbilities.set(abilityPlace, require(Model.Abilities.WaitForChild(abilityPlace) as ModuleScript) as IAbility);
+function AbilityAdd(abilityPlace: EAbilityPlace, weapon: EWeapons, ability: EAbility) {
+	let AbilityPlaces = ModuleAbilities.get(abilityPlace);
+	if (!AbilityPlaces) {
+		ModuleAbilities.set(abilityPlace, new Map<EWeapons, IAbility>());
+		AbilityPlaces = ModuleAbilities.get(abilityPlace)!;
+	}
+	AbilityPlaces.set(weapon, require(Model.Abilities.WaitForChild(ability) as ModuleScript) as IAbility);
 }
 
-function AbilityRemove(abilityPlace: EAbilityPlace) {
-	ModuleAbilities.delete(abilityPlace);
+function AbilityRemove(abilityPlace: EAbilityPlace, weapon: EWeapons) {
+	ModuleAbilities.get(abilityPlace)?.delete(weapon);
 }
 
 function InputBegan(control: [string, number] | undefined, input: InputObject, doublePressed: boolean) {
@@ -68,7 +71,10 @@ Butler.Connect(
 		InputBegan(control, input, doublePressed),
 );
 
-Butler.Connect(AbilityAddedEvent.OnClientEvent, (abilityPlace: EAbilityPlace, ability: EAbility) =>
-	AbilityAdd(abilityPlace, ability),
+Butler.Connect(Abilities.AbilityAdded, (abilityPlace: EAbilityPlace, weapon: EWeapons, ability: EAbility) =>
+	AbilityAdd(abilityPlace, weapon, ability),
 );
-Butler.Connect(AbilityRemovedEvent.OnClientEvent, (abilityPlace: EAbilityPlace) => AbilityRemove(abilityPlace));
+
+Butler.Connect(Abilities.AbilityRemoved, (abilityPlace: EAbilityPlace, weapon: EWeapons) =>
+	AbilityRemove(abilityPlace, weapon),
+);

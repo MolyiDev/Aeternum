@@ -3,17 +3,22 @@ import { EAbilityPlace } from "shared/Enums/Abilities/EAbilityPlace";
 import { Character } from ".";
 import { EWeapons } from "shared/Enums/EWeapons";
 import { EAbilityInfo } from "shared/Enums/Abilities/EAbilityInfo";
+import Signal from "@rbxts/lemon-signal";
 
 interface PlaceWeapon {
-	Place: EAbilityPlace | string;
+	Place: EAbilityPlace;
 	Weapon: EWeapons;
 }
 
 export class Abilities {
 	private AbilitiesFolder: Folder;
+
 	private AbilitiesPerPlace: Map<EAbilityPlace | string, Map<EWeapons | string, EAbility | string>>;
 	private PlacesPerAbility: Map<EAbility | string, PlaceWeapon>; // Reverse to clean AbilitiesPerPlace on undefined
 	private Abilities: Set<EAbility | string>;
+
+	public AbilityAdded: Signal<[EAbilityPlace, EWeapons, EAbility]>;
+	public AbilityRemoved: Signal<[EAbilityPlace, EWeapons, EAbility]>;
 
 	constructor(character: Character) {
 		const Model = character.Model;
@@ -25,20 +30,17 @@ export class Abilities {
 		this.AbilitiesPerPlace = new Map();
 		this.PlacesPerAbility = new Map();
 		this.Abilities = new Set();
+
+		this.AbilityAdded = new Signal();
+		this.AbilityRemoved = new Signal();
 	}
 
 	public Has = (ability: string) => this.Abilities.has(ability);
-	public GetAbilityInPlace = (ability: EAbilityPlace) => this.AbilitiesPerPlace.get(ability);
-
-	public IsOnCooldown(ability: EAbility) {}
-
-	public IsUsing(ability: EAbility) {}
 
 	public CanFeint(ability: EAbility) {}
 
 	public AbilitiesChanged(attribute: string) {
 		// Attribute is the name of the ability (EAbility) and getAtt is the place of the ability (EAbilityPlace)
-
 		const getAtt = this.AbilitiesFolder.GetAttribute(attribute) as string;
 		if (!getAtt) {
 			this.Abilities.delete(attribute);
@@ -47,6 +49,7 @@ export class Abilities {
 				const AbilityPlace = this.AbilitiesPerPlace.get(PlacesPerAbility.Place);
 				if (AbilityPlace) {
 					AbilityPlace.delete(PlacesPerAbility.Weapon);
+					this.AbilityRemoved.Fire(PlacesPerAbility.Place, PlacesPerAbility.Weapon, attribute as EAbility);
 					this.AbilitiesPerPlace.delete(PlacesPerAbility.Place);
 				}
 
@@ -65,10 +68,22 @@ export class Abilities {
 			AbilityPlace = this.AbilitiesPerPlace.get(getAtt)!;
 		}
 
+		if (!this.Abilities.has(attribute)) this.Abilities.add(attribute);
+
 		AbilityPlace.delete(AbilityInfo.Weapon);
 		AbilityPlace.set(AbilityInfo.Weapon, attribute);
 
 		this.PlacesPerAbility.delete(attribute);
-		this.PlacesPerAbility.set(attribute, { Weapon: AbilityInfo.Weapon, Place: getAtt });
+		this.PlacesPerAbility.set(attribute, { Weapon: AbilityInfo.Weapon, Place: getAtt as EAbilityPlace });
+
+		this.AbilityAdded.Fire(getAtt as EAbilityPlace, AbilityInfo.Weapon, attribute as EAbility);
+	}
+
+	public Destroy() {
+		this.AbilitiesPerPlace.clear();
+		this.PlacesPerAbility.clear();
+		this.Abilities.clear();
+		this.AbilityAdded.Destroy();
+		this.AbilityRemoved.Destroy();
 	}
 }

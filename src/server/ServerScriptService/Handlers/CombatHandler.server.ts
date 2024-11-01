@@ -1,9 +1,7 @@
 // Imports
-import { Workspace } from "@rbxts/services";
 import { EAnimations } from "shared/Enums/EAnimations";
 import { StunManager } from "server/ServerScriptService/Managers/StunManager";
 import { DamageManager } from "../Managers/DamageManager";
-import { IModel } from "shared/Interfaces/IModel";
 import { CharacterManager } from "shared/Managers/CharacterManager";
 import { HitboxManager } from "../Managers/HitboxManager";
 import { AnimManager } from "shared/Managers/AnimManager";
@@ -51,7 +49,7 @@ CharacterManager.AddedCharacter.Connect((character) => {
 				overlapParams,
 				(part: Part) => {
 					const hitCharacter = CharacterManager.GetCharacter(part.Parent);
-					if (!hitCharacter || CharactersDamaged.includes(character)) return;
+					if (!hitCharacter || CharactersDamaged.includes(hitCharacter)) return;
 					CharactersDamaged.push(hitCharacter);
 
 					const hitHumanoid = hitCharacter.Humanoid;

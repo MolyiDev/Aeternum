@@ -35,8 +35,9 @@ export class CharacterManager {
 	}
 }
 
-function RegisterCharacter(model: Model) {
+function RegisterCharacter(model: Model, player: boolean = false) {
 	const character = new Character(model as IModel);
+	character.IsPlayer = player;
 	CharacterPerModel.set(model, character);
 
 	AddedCharacterSignal.Fire(character);
@@ -55,11 +56,9 @@ function RegisterPlayer(player: Player) {
 	const butler = new Butler();
 	ButlerPerPlayer.set(player, butler);
 
-	const charLoaded = player.Character;
-	if (charLoaded) RegisterCharacter(charLoaded);
-	else RegisterCharacter(player.CharacterAdded.Wait()[0]);
+	RegisterCharacter(player.Character ?? player.CharacterAdded.Wait()[0], true);
 
-	butler.Connect(player.CharacterAdded, (model) => RegisterCharacter(model));
+	butler.Connect(player.CharacterAdded, (model) => RegisterCharacter(model, true));
 	butler.Connect(player.CharacterRemoving, (model) => UnRegisterCharacter(model));
 }
 
@@ -77,11 +76,15 @@ Players.PlayerAdded.Connect((player) => RegisterPlayer(player));
 Players.PlayerRemoving.Connect((player) => UnRegisterPlayer(player));
 
 if (RunService.IsClient()) {
-	NPCManager.NPCAddedClient.OnClientEvent.Connect((character) => RegisterCharacter(character));
-	NPCManager.NPCRemovedClient.OnClientEvent.Connect((character) => UnRegisterCharacter(character));
+	if (!game.IsLoaded()) game.Loaded.Wait();
 
-	for (const player of Players.GetPlayers()) RegisterPlayer(player);
-	for (const npc of NPCManager.GetNPCs()) RegisterCharacter(npc);
+	task.delay(2, () => {
+		NPCManager.NPCAddedClient.OnClientEvent.Connect((character) => RegisterCharacter(character));
+		NPCManager.NPCRemovedClient.OnClientEvent.Connect((character) => UnRegisterCharacter(character));
+
+		for (const player of Players.GetPlayers()) RegisterPlayer(player);
+		for (const npc of NPCManager.GetNPCs()) RegisterCharacter(npc);
+	});
 } else {
 	NPCManager.NPCAddedServer.Connect((model) => RegisterCharacter(model));
 	NPCManager.NPCRemovedServer.Connect((model) => UnRegisterCharacter(model));

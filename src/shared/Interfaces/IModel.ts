@@ -1,5 +1,8 @@
+import { IHumanoid } from "./IHumanoid";
+
 export interface IModel extends Model {
 	Abilities: Folder;
+	Humanoid: IHumanoid;
 	Head: BasePart;
 	Neck: BasePart;
 	Waist: BasePart;

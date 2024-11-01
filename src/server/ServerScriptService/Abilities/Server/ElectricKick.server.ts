@@ -27,7 +27,8 @@ ElectricKickEvent.OnServerEvent.Connect((player) => {
 
 	const Time = tick() - Attributes.TickAbility(Ability);
 	if (Time < AbilityInfo.Cooldown) return;
-	Attributes.SetTickAbility(Ability, tick());
+
+	Attributes.SetUsingAbility(Ability);
 
 	const Animations = Character.Animations;
 	const Model = Character.Model;
@@ -117,5 +118,7 @@ ElectricKickEvent.OnServerEvent.Connect((player) => {
 
 	const Stop = Butler.Once(ElectricKick.Stopped, () => {
 		Butler.RemoveList(MarkRockHand, MarkDamage, MarkDamageFinal, Stop);
+		Attributes.SetTickAbility(Ability, tick());
+		Attributes.SetUsingAbility(undefined);
 	});
 });
