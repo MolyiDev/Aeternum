@@ -8,15 +8,18 @@
 		"$className": "DataModel",
 		"ServerScriptService": {
 			"$className": "ServerScriptService",
-			"$path": "out/server/ServerScriptService"
+			"$path": "out/ServerScriptService",
+			"$ignoreUnknownInstances": true
 		},
 		"ServerStorage": {
 			"$className": "ServerStorage",
-			"$path": "out/server/ServerStorage"
+			"$path": "out/ServerStorage",
+			"$ignoreUnknownInstances": true
 		},
 		"ReplicatedFirst": {
 			"$className": "ReplicatedFirst",
-			"$path": "out/sharedFirst"
+			"$path": "out/ReplicatedFirst",
+			"$ignoreUnknownInstances": true
 		},
 		"ReplicatedStorage": {
 			"$className": "ReplicatedStorage",
@@ -29,27 +32,34 @@
 					}
 				}
 			},
-			"$path": "out/shared"
+
+			"$path": "out/ReplicatedStorage",
+			"$ignoreUnknownInstances": true
 		},
 		"StarterGui": {
 			"$className": "StarterGui",
-			"$path": "out/client/StarterGui"
+			"$path": "out/StarterGui",
+			"$ignoreUnknownInstances": true
 		},
 		"StarterPack": {
 			"$className": "StarterPack",
-			"$path": "out/client/StarterPack"
+			"$path": "out/StarterPack",
+			"$ignoreUnknownInstances": true
 		},
 		"StarterPlayer": {
 			"$className": "StarterPlayer",
 			"StarterPlayerScripts": {
 				"$className": "StarterPlayerScripts",
-				"$path": "out/client/StarterPlayer/StarterPlayerScripts"
+				"$path": "out/StarterPlayer/StarterPlayerScripts",
+				"$ignoreUnknownInstances": true
 			},
 			"StarterCharacterScripts": {
 				"$className": "StarterCharacterScripts",
-				"$path": "out/client/StarterPlayer/StarterCharacterScripts"
+				"$path": "out/StarterPlayer/StarterCharacterScripts",
+				"$ignoreUnknownInstances": true
 			},
-			"$path": "out/client/StarterPlayer"
+			"$path": "out/StarterPlayer",
+			"$ignoreUnknownInstances": true
 		},
 		"Workspace": {
 			"$className": "Workspace",
