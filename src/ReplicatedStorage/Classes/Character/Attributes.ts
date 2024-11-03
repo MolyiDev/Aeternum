@@ -78,10 +78,6 @@ export class Attributes {
 
 	public SetTickAttackStealth = (tick: number) => this.Model.SetAttribute(EAttribute.Tick_AttackStealth, tick);
 
-	public TickAbility = (ability: EAbility) => (this.Model.GetAttribute(ability) as number) ?? 0;
-
-	public SetTickAbility = (ability: EAbility, tick: number | undefined) => this.Model.SetAttribute(ability, tick);
-
 	// Other
 
 	public SelfStun(time: number, stunType: EStunType = EStunType.Default) {

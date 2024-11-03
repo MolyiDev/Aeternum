@@ -13,6 +13,7 @@ PhysicsService.RegisterCollisionGroup(ECollisionGroup.RockDebris);
 PhysicsService.RegisterCollisionGroup(ECollisionGroup.Player);
 PhysicsService.CollisionGroupSetCollidable(ECollisionGroup.Player, ECollisionGroup.Player, true);
 PhysicsService.CollisionGroupSetCollidable(ECollisionGroup.RockDebris, ECollisionGroup.Player, false);
+PhysicsService.CollisionGroupSetCollidable(ECollisionGroup.RockDebris, ECollisionGroup.RockDebris, false);
 SettingsManager.Initialize();
 
 // Variables
@@ -33,4 +34,5 @@ CharacterManager.AddedCharacter.Connect((character) => {
 	task.wait(5);
 	AbilityManager.AddAbility(character, EAbilityPlace.Ability1, EAbility.SeriousPunch);
 	AbilityManager.AddAbility(character, EAbilityPlace.Ability2, EAbility.ElectricKick);
+	AbilityManager.AddAbility(character, EAbilityPlace.Ability3, EAbility.GroundSmash);
 });

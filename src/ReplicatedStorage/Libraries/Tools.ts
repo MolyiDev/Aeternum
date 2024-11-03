@@ -3,11 +3,19 @@ import { ReplicatedStorage, RunService, TweenService } from "@rbxts/services";
 
 // Variables
 const SoundsFolder = ReplicatedStorage.WaitForChild("Sounds");
+const AnimsFolder = ReplicatedStorage.WaitForChild("Animations");
+
 const SoundNameToSound = new Map<string, Sound>();
+const AnimIdToName = new Map<string, string>();
 
 for (const sound of SoundsFolder.GetDescendants()) {
 	if (!sound.IsA("Sound")) continue;
 	SoundNameToSound.set(sound.Name, sound);
+}
+
+for (const anim of AnimsFolder.GetDescendants()) {
+	if (!anim.IsA("Animation")) continue;
+	AnimIdToName.set(anim.AnimationId, anim.Name);
 }
 
 // Tools class
@@ -15,6 +23,8 @@ export class Tools {
 	private static LerpColor(c1: Color3, c2: Color3, alpha: number): Color3 {
 		return new Color3(c1.R + (c2.R - c1.R) * alpha, c1.G + (c2.G - c1.G) * alpha, c1.B + (c2.B - c1.B) * alpha);
 	}
+
+	public static IdToName = (name: string) => AnimIdToName.get(name) as string;
 
 	public static SoundNameToSound = (name: string) => SoundNameToSound.get(name) as Sound;
 
@@ -112,8 +122,11 @@ export class Tools {
 		return new UDim2(scaleXSize, 0, scaleYSize, 0);
 	}
 
-	public static WaitFrames(frames: number) {
-		for (let i = 0; i < frames; i++) RunService.RenderStepped.Wait();
+	public static RandomOutsideRange(min: number, max: number, excludeRangeMin: number, excludeRangeMax: number) {
+		const range1 = math.random(min, excludeRangeMin);
+		const range2 = math.random(excludeRangeMax, max);
+
+		return math.random() < 0.5 ? range1 : range2;
 	}
 
 	public static WorldMovingDirection(dir: Vector3): Vector3 {

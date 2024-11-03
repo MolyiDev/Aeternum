@@ -1,33 +1,33 @@
 // Imports
-import { ServerScriptService } from "@rbxts/services";
+import { ReplicatedStorage } from "@rbxts/services";
 import { Character } from "ReplicatedStorage/Classes/Character";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
 import { EAbilityPlace } from "ReplicatedStorage/Enums/Abilities/EAbilityPlace";
+import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 
-// Variables
-const AbilitiesFolder = ServerScriptService.WaitForChild("Abilities").WaitForChild("Client");
-const AbilitiesPerName = new Map<string, ModuleScript>();
+// Events
+const Events = ReplicatedStorage.WaitForChild("Events").WaitForChild("Combat");
+const AbilityUse = Events.WaitForChild("AbilityUse") as RemoteEvent;
 
-for (const ability of AbilitiesFolder.GetDescendants()) {
-	if (!ability.IsA("ModuleScript")) continue;
-	AbilitiesPerName.set(ability.Name, ability);
-}
+AbilityUse.OnServerEvent.Connect((player, ...args: Array<unknown>) => {
+	if (args.size() < 1) return;
+	const Ability = args[0] as EAbility;
+	if (Ability !== Ability || !typeIs(Ability, "string")) return;
+	const Character = CharacterManager.GetCharacter(player.Character);
+	if (!Character) return;
+	const Abilities = Character.Abilities;
+	if (!Abilities.Has(Ability)) return;
+	Character.ReplicateServer.SignalFired(Ability);
+});
 
 export class AbilityManager {
 	public static RemoveAbility(character: Character, ability: EAbility) {
 		const Model = character.Model;
-
-		Model.Abilities.FindFirstChild(ability)?.Destroy();
 		Model.Abilities.SetAttribute(ability, undefined);
 	}
 
 	public static AddAbility(character: Character, abilityPlace: EAbilityPlace, ability: EAbility) {
 		const Model = character.Model;
-		const AbilityModule = AbilitiesPerName.get(ability)!.Clone();
-
-		AbilityModule.Name = ability;
-		AbilityModule.Parent = Model.Abilities;
-
 		Model.Abilities.SetAttribute(ability, abilityPlace);
 	}
 }

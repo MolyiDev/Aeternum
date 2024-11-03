@@ -8,7 +8,7 @@ import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 import { EStunType } from "ReplicatedStorage/Enums/EStunType";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { Character } from "ReplicatedStorage/Classes/Character";
-import { AnimManager } from "ReplicatedStorage/Managers/AnimManager";
+import { Tools } from "ReplicatedStorage/Libraries/Tools";
 
 // Events
 const Events = ReplicatedStorage.WaitForChild("Events");
@@ -103,7 +103,7 @@ export class StunManager {
 			const animator = Humanoid.FindFirstChild("Animator") as Animator;
 			if (animator) {
 				for (const animation of animator.GetPlayingAnimationTracks()) {
-					const stopNumber = AnimationsStop.get(AnimManager.IdToName(animation.Animation!.AnimationId));
+					const stopNumber = AnimationsStop.get(Tools.IdToName(animation.Animation!.AnimationId));
 					if (!stopNumber) continue;
 					animation.Stop(stopNumber);
 				}

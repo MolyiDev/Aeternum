@@ -1,6 +1,7 @@
 export interface IReplicateClass {
-	Stop?(): void;
-	AnimPlay?(animTrack: AnimationTrack): void;
-	AnimPlayOnce?(animTrack: AnimationTrack): void;
-	AnimStop?(animTrack: AnimationTrack): void;
+	Signal?(): void;
+	AnimPlay?(animTrack: AnimationTrack, animName: string): void;
+	AnimPlayOnce?(animTrack: AnimationTrack, animName: string): void;
+	AnimStop?(animTrack: AnimationTrack, animName: string): void;
+	Destroy?(): void;
 }

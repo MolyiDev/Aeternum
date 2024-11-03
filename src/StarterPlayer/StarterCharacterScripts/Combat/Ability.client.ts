@@ -9,12 +9,12 @@ import { IAbility } from "ReplicatedStorage/Interfaces/IAbility";
 import { EAbilityInfo } from "ReplicatedStorage/Enums/Abilities/EAbilityInfo";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
 import { EWeapons } from "ReplicatedStorage/Enums/EWeapons";
+import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
 
 // Variables
 const Player = Players.LocalPlayer;
 const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
 const Abilities = Character.Abilities;
-const Model = Character.Model;
 const Attributes = Character.Attributes;
 const Butler = Character.Butler;
 
@@ -27,7 +27,7 @@ function AbilityStart(ability: EAbilityPlace) {
 	if (!AbilityModule) return;
 
 	const Ability = AbilityModule.GetAbility();
-	const UsedTick = Attributes.TickAbility(Ability);
+	const UsedTick = Attributes.TickAnim(Ability);
 
 	if (tick() - UsedTick < EAbilityInfo[Ability].Cooldown) return;
 
@@ -40,7 +40,10 @@ function AbilityAdd(abilityPlace: EAbilityPlace, weapon: EWeapons, ability: EAbi
 		ModuleAbilities.set(abilityPlace, new Map<EWeapons, IAbility>());
 		AbilityPlaces = ModuleAbilities.get(abilityPlace)!;
 	}
-	AbilityPlaces.set(weapon, require(Model.Abilities.WaitForChild(ability) as ModuleScript) as IAbility);
+
+	const Ability = new (ModuleManager.GetAbility(ability))(Character);
+
+	AbilityPlaces.set(weapon, Ability);
 }
 
 function AbilityRemove(abilityPlace: EAbilityPlace, weapon: EWeapons) {

@@ -118,6 +118,7 @@ export class Butler<U extends object | void = void> {
 	}
 
 	private _Remove(object: object) {
+		if (!object) return;
 		const CleanMethod = this.Objects.get(object);
 
 		if (CleanMethod) this.CleanObject(object, CleanMethod);

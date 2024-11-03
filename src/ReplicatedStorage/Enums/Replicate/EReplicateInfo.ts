@@ -1,11 +1,7 @@
-import { ElectricKick } from "ReplicatedStorage/Classes/Replicate/Abilities/ElectricKick";
 import { EAbility } from "../Abilities/EAbility";
 import { EAbilityInfo } from "../Abilities/EAbilityInfo";
 import { EAnimations } from "../EAnimations";
 import { IReplicateInfo } from "ReplicatedStorage/Interfaces/IReplicateInfo";
-import { SeriousPunch } from "ReplicatedStorage/Classes/Replicate/Abilities/SeriousPunch";
-import { Dash } from "ReplicatedStorage/Classes/Replicate/Dash";
-import { Footsteps } from "ReplicatedStorage/Classes/Replicate/Footsteps";
 
 export const EReplicateInfo = new Map<EAnimations | string, IReplicateInfo>([
 	// Abilities
@@ -14,16 +10,48 @@ export const EReplicateInfo = new Map<EAnimations | string, IReplicateInfo>([
 		EAnimations.ElectricKick,
 		{
 			Ability: true,
+			Signal: true,
+			CanUseStunned: false,
 			Cooldown: EAbilityInfo[EAbility.ElectricKick].Cooldown,
-			Class: ElectricKick,
 		},
 	],
 	[
 		EAnimations.SeriousPunch,
 		{
 			Ability: true,
+			Signal: false,
+			CanUseStunned: false,
 			Cooldown: EAbilityInfo[EAbility.SeriousPunch].Cooldown,
-			Class: SeriousPunch,
+		},
+	],
+	[
+		EAnimations.GroundSmash,
+		{
+			Ability: true,
+			Signal: false,
+			CanUseStunned: false,
+			Cooldown: EAbilityInfo[EAbility.GroundSmash].Cooldown,
+			Class: "GroundSmash",
+		},
+	],
+	[
+		EAnimations.GroundSmashIdle,
+		{
+			Ability: true,
+			Signal: false,
+			CanUseStunned: false,
+			Cooldown: EAbilityInfo[EAbility.GroundSmash].Cooldown,
+			Class: "GroundSmash",
+		},
+	],
+	[
+		EAnimations.GroundSmashLand,
+		{
+			Ability: true,
+			Signal: false,
+			CanUseStunned: false,
+			Cooldown: EAbilityInfo[EAbility.GroundSmash].Cooldown,
+			Class: "GroundSmash",
 		},
 	],
 
@@ -33,32 +61,36 @@ export const EReplicateInfo = new Map<EAnimations | string, IReplicateInfo>([
 		EAnimations.DashForward,
 		{
 			Ability: false,
-			Cooldown: 0,
-			Class: Dash,
+			Signal: false,
+			CanUseStunned: false,
+			Cooldown: 2.5,
 		},
 	],
 	[
 		EAnimations.DashBack,
 		{
 			Ability: false,
-			Cooldown: 0,
-			Class: Dash,
+			Signal: false,
+			CanUseStunned: false,
+			Cooldown: 2.5,
 		},
 	],
 	[
 		EAnimations.DashLeft,
 		{
 			Ability: false,
-			Cooldown: 0,
-			Class: Dash,
+			Signal: false,
+			CanUseStunned: false,
+			Cooldown: 2.5,
 		},
 	],
 	[
 		EAnimations.DashRight,
 		{
 			Ability: false,
-			Cooldown: 0,
-			Class: Dash,
+			Signal: false,
+			CanUseStunned: false,
+			Cooldown: 2.5,
 		},
 	],
 
@@ -68,40 +100,45 @@ export const EReplicateInfo = new Map<EAnimations | string, IReplicateInfo>([
 		EAnimations.WalkForward,
 		{
 			Ability: false,
+			Signal: false,
+			CanUseStunned: false,
 			Cooldown: 0,
-			Class: Footsteps,
 		},
 	],
 	[
 		EAnimations.WalkBack,
 		{
 			Ability: false,
+			Signal: false,
+			CanUseStunned: false,
 			Cooldown: 0,
-			Class: Footsteps,
 		},
 	],
 	[
 		EAnimations.WalkLeft,
 		{
 			Ability: false,
+			Signal: false,
+			CanUseStunned: false,
 			Cooldown: 0,
-			Class: Footsteps,
 		},
 	],
 	[
 		EAnimations.WalkRight,
 		{
 			Ability: false,
+			Signal: false,
+			CanUseStunned: false,
 			Cooldown: 0,
-			Class: Footsteps,
 		},
 	],
 	[
 		EAnimations.Run,
 		{
 			Ability: false,
+			Signal: false,
+			CanUseStunned: false,
 			Cooldown: 0,
-			Class: Footsteps,
 		},
 	],
 ]);

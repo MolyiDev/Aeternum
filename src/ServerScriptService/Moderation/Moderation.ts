@@ -1,6 +1,6 @@
 // Imports
 import { DataStoreService, Players } from "@rbxts/services";
-import { BanInfo } from "./Interfaces/BanInfo.server";
+import { BanInfo } from "./Interfaces/BanInfo";
 
 // Variables
 const BannedPlayersList = DataStoreService.GetDataStore("BannedPlayers");

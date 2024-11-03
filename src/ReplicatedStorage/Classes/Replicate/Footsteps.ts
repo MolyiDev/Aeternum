@@ -15,10 +15,6 @@ const LoadedSFX = ReplicatedStorage.WaitForChild("Sounds").WaitForChild("Footste
 	[key: string]: Folder;
 };
 
-/*const LoadedSFX: { [key: string]: Sound[] } = {};
-
-SFX.GetChildren().forEach((folder) => (LoadedSFX[folder.Name] = folder.GetChildren() as Sound[]));*/
-
 const FADE_OUT = new TweenInfo(1.5, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, 0, false, 4);
 const MIN_PITCH = 0.92;
 const MAX_PITCH = 1.08;
@@ -66,7 +62,7 @@ export class Footsteps implements IReplicateClass {
 		this.OnceConnections = new Set();
 	}
 
-	public Stop() {
+	public Destroy() {
 		this.Butler.RemoveList(this.OnceConnections);
 		this.Butler.Remove(this.FootstepConnection);
 
@@ -77,7 +73,6 @@ export class Footsteps implements IReplicateClass {
 		this.RightFootAttachment = undefined!;
 		this.RayParams = undefined!;
 		this.FootstepConnection = undefined!;
-		this.OnceConnections.clear();
 		this.OnceConnections = undefined!;
 	}
 

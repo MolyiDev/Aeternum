@@ -12,7 +12,7 @@ export class ElectricKick implements IReplicateClass {
 		this.Character = character;
 	}
 
-	Stop() {
+	Destroy() {
 		this.Character.Butler.RemoveList(this.MarkerRockHand, this.MarkerRockDown);
 
 		this.Character = undefined!;
@@ -28,14 +28,14 @@ export class ElectricKick implements IReplicateClass {
 		this.MarkerRockHand = Butler.Connect(animTrack.GetMarkerReachedSignal("RockHand"), () => {
 			const CF = Model.RightHand.CFrame;
 			RockManager.Crater(CF, 0, 0.35, 2, 8, 2, 0.05);
-			RockManager.Explosion(CF.Position, 0.3, 2, 2, 10);
+			RockManager.Explosion(CF.Position, 0.35, 1, 2, 20);
 
 			RockManager.Trail(Character.HumanoidRootPart.CFrame, 10, 20, 1, Vector3.one, 2, 8, 0.35, 4, false, 8, 3);
 		});
 
 		this.MarkerRockDown = Butler.Connect(animTrack.GetMarkerReachedSignal("RockDown"), () => {
 			const CF = Character.HumanoidRootPart.CFrame;
-			RockManager.Explosion(CF.Position, 0.35, 2, 3, 30);
+			RockManager.Explosion(CF.Position, 0.45, 1, 3, 30);
 			RockManager.Crater(CF, 0, 0.75, 4, 8, 2, 0.25);
 			delay(0.05, () => RockManager.Crater(CF, 0, 0.45, 8, 20, 2, 0.25));
 		});

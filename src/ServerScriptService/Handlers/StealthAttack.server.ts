@@ -1,9 +1,7 @@
 // Imports
 import { PhysicsService, ReplicatedStorage, Workspace } from "@rbxts/services";
 import { ECollisionGroup } from "ReplicatedStorage/Enums/ECollisionGroup";
-import { IModel } from "ReplicatedStorage/Interfaces/IModel";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
-import { AnimManager } from "../../ReplicatedStorage/Managers/AnimManager";
 import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 import { StunManager } from "../Managers/StunManager";
 import { EStunType } from "ReplicatedStorage/Enums/EStunType";

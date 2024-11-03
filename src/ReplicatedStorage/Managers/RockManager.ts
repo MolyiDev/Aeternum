@@ -1,5 +1,5 @@
 // Imports
-import { TweenService, Debris, Workspace } from "@rbxts/services";
+import { Debris, Workspace } from "@rbxts/services";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
 
 // Variables
@@ -15,29 +15,6 @@ RayParams.FilterDescendantsInstances = [CharactersFolder, DebrisFolder, HitboxFo
 RayParams.FilterType = Enum.RaycastFilterType.Exclude;
 RayParams.IgnoreWater = true;
 
-function SpawnPart(
-	initialCF: CFrame,
-	finalCF: CFrame,
-	size: Vector3,
-	material: Enum.Material,
-	trasparency: number,
-	color: Color3,
-	anchored: boolean,
-	collide: boolean,
-	tInfo: TweenInfo,
-) {
-	const part = new Instance("Part", DebrisFolder);
-	part.CFrame = initialCF;
-	part.Size = new Vector3(0, 0, 0);
-	part.Material = material;
-	part.Transparency = trasparency;
-	part.Anchored = anchored;
-	part.CanCollide = collide;
-	part.Color = color;
-	Tools.TweenPlay(part, tInfo, { Size: size, CFrame: finalCF });
-	return part;
-}
-
 function RandomAngle() {
 	return CFrame.Angles(math.rad(math.random(0, 360)), math.rad(math.random(0, 360)), math.rad(math.random(0, 360)));
 }
@@ -51,6 +28,8 @@ export class RockManager {
 		Rocks = 10,
 		DoubleMax = 2,
 		UpTime = 0.35,
+		Irregular = false,
+		IrregularSize = 1,
 	) {
 		const ray = Workspace.Raycast(Center.Position.add(new Vector3(0, 10, 0)), new Vector3(0, -20, 0), RayParams);
 		if (!ray) return;
@@ -62,18 +41,26 @@ export class RockManager {
 		for (let i = 0; i < Rocks; i++) {
 			let cf = newCframe.mul(CFrame.Angles(0, math.rad(angle), 0)).mul(new CFrame(0, 0, -Radius));
 
-			// Verificar la distancia del punto cf.Position al noSpawnPosition
 			if (cf.Position.sub(noSpawnPosition).Magnitude < NoSpawnRadius) {
 				angle += 360 / Rocks;
-				continue; // Saltar esta iteración si está dentro del NoSpawnRadius
+				continue;
 			}
 
-			const newRay = Workspace.Raycast(cf.Position.add(ray.Normal.mul(6)), ray.Normal.mul(-20), RayParams);
+			let newRay: RaycastResult | undefined;
+			if (Irregular)
+				newRay = Workspace.Raycast(
+					cf.Position.add(ray.Normal.mul(6)).add(
+						new Vector3(math.random(-1, 1), 0, math.random(-1, 1)).mul(IrregularSize),
+					),
+					ray.Normal.mul(-20),
+					RayParams,
+				);
+			else newRay = Workspace.Raycast(cf.Position.add(ray.Normal.mul(6)), ray.Normal.mul(-20), RayParams);
 			if (!newRay) continue;
-			cf = new CFrame(newRay.Position, ray.Position.add(new Vector3(0, 2, 0).mul(Size)));
+			cf = new CFrame(newRay.Position, ray.Position.add(new Vector3(0, 1, 0).mul(Radius / 3)));
 
 			const Rock = new Instance("Part", DebrisFolder);
-			Rock.Size = new Vector3(math.random(3, 5), math.random(2, 3), math.random(2, 4)).mul(Size);
+			Rock.Size = new Vector3(math.random(4, 8), math.random(3, 6), math.random(3, 6)).mul(Size);
 			Rock.CFrame = cf.sub(new Vector3(0, 5, 0));
 
 			Rock.Material = newRay.Material;
@@ -110,7 +97,7 @@ export class RockManager {
 			Debris.AddItem(Rock, 10);
 
 			Tools.TweenPlay(Rock, new TweenInfo(UpTime, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-				CFrame: cf,
+				CFrame: cf.sub(new Vector3(0, 0.3, 0)),
 			});
 
 			task.delay(math.random(250, 450) / 100, () => {
@@ -131,7 +118,12 @@ export class RockManager {
 		Rocks = 10,
 		DoubleMax = 2,
 		UpTime = 0.35,
-	) => task.spawn(() => this._Crater(Center, NoSpawnRadius, Size, Radius, Rocks, DoubleMax, UpTime));
+		Irregular = false,
+		IrregularSize = 1,
+	) =>
+		task.spawn(() =>
+			this._Crater(Center, NoSpawnRadius, Size, Radius, Rocks, DoubleMax, UpTime, Irregular, IrregularSize),
+		);
 
 	private static _Explosion(Center: Vector3, Size = 1, Velocity = 1, Radius = 3, TotalRocks = 7) {
 		const rayResult = Workspace.Raycast(Center, new Vector3(0, -5, 0), RayParams);
@@ -157,6 +149,8 @@ export class RockManager {
 			rayColors.push(color);
 		}
 
+		let velocity = Vector3.zero;
+
 		for (let i = 0; i < TotalRocks; i++) {
 			const Rock = new Instance("Part", DebrisFolder);
 
@@ -179,13 +173,16 @@ export class RockManager {
 
 			Debris.AddItem(Rock, 5);
 
-			const velocitySpread = 32;
-			const upwardForce = 22;
-			const velocity = new Vector3(
-				math.random(-velocitySpread, velocitySpread),
-				upwardForce,
-				math.random(-velocitySpread, velocitySpread),
+			const velocitySpread = 28;
+
+			velocity = new Vector3(
+				Tools.RandomOutsideRange(-velocitySpread, velocitySpread, -8, 8),
+				math.random(15, 30),
+				Tools.RandomOutsideRange(-velocitySpread, velocitySpread, -8, 8),
 			);
+
+			velocity = i % 2 === 0 ? velocity : velocity.mul(new Vector3(-1, 1, -1));
+
 			Rock.ApplyImpulse(velocity.mul(Rock.AssemblyMass).mul(Velocity));
 
 			task.delay(math.random(250, 450) / 100, () => {
@@ -376,15 +373,188 @@ export class RockManager {
 			),
 		);
 
-	public static ClearDebris() {
-		DebrisFolder.GetChildren().forEach((v) => {
-			if (v.IsA("BasePart")) {
-				TweenService.Create(v, new TweenInfo(0.75, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
-					Size: new Vector3(0.1, 0.1, 0.1),
-					Transparency: 1,
-				}).Play();
-				Debris.AddItem(v, 1);
+	private static _RandomTrail(
+		origin: CFrame,
+		randomMultiplier: number,
+		rocks: number,
+		distance: number,
+		width: number,
+		size: Vector3,
+		widthFinal: number,
+		sizeFinal: number,
+		speedIn: number,
+		speedOut: number,
+		rounded: boolean,
+		segmentSize: number,
+		lifeTime: number,
+		waitInterval: number,
+	) {
+		const tInfo = new TweenInfo(speedIn, Enum.EasingStyle.Back, Enum.EasingDirection.Out);
+
+		let c1: CFrame = new CFrame();
+		let c2: CFrame = new CFrame();
+
+		const spacing = distance / rocks;
+		const widthIncrement = (widthFinal - width) / rocks;
+		const sizeIncrement = (sizeFinal - 1) / rocks;
+		let Origin = origin;
+
+		for (let i = 0; i < rocks; i++) {
+			const currentWidth = width + i * widthIncrement;
+			const currentSize = size.mul(1 + i * sizeIncrement);
+
+			c1 = Origin.mul(new CFrame(currentWidth, 5, -i * spacing));
+			let newRay = Workspace.Raycast(c1.Position.add(new Vector3(0, 20, 0)), new Vector3(0, -100, 0), RayParams);
+			if (newRay) {
+				c1 = new CFrame(newRay.Position).mul(RandomAngle());
+
+				const Rock = new Instance("Part", DebrisFolder);
+				Rock.Size = currentSize;
+				const c1Pos = c1.sub(new Vector3(0, 1 * Rock.Size.Y, 0));
+				Rock.CFrame = c1Pos;
+
+				Rock.Material = newRay.Material;
+				Rock.Color = newRay.Instance.IsA("Terrain")
+					? Workspace.Terrain.GetMaterialColor(newRay.Material)
+					: newRay.Instance.Color;
+
+				Rock.Anchored = true;
+				Rock.CanCollide = false;
+				Rock.CanQuery = false;
+				Rock.CanTouch = false;
+
+				Tools.TweenPlay(Rock, tInfo, {
+					CFrame: c1,
+				});
+
+				const randomTime = math.random(50, 150) / 100;
+				Debris.AddItem(Rock, lifeTime + speedOut + randomTime);
+				task.delay(lifeTime + randomTime, () => {
+					Tools.TweenPlay(Rock, new TweenInfo(speedOut, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+						CFrame: c1Pos,
+					});
+				});
 			}
-		});
+
+			c2 = Origin.mul(new CFrame(-currentWidth, 5, -i * spacing));
+			newRay = Workspace.Raycast(c2.Position.add(new Vector3(0, 20, 0)), new Vector3(0, -100, 0), RayParams);
+			if (newRay) {
+				c2 = new CFrame(newRay.Position).mul(RandomAngle());
+
+				const Rock = new Instance("Part", DebrisFolder);
+				Rock.Size = currentSize;
+				const c2Pos = c2.sub(new Vector3(0, 1 * Rock.Size.Y, 0));
+				Rock.CFrame = c2Pos;
+
+				Rock.Material = newRay.Material;
+				Rock.Color = newRay.Instance.IsA("Terrain")
+					? Workspace.Terrain.GetMaterialColor(newRay.Material)
+					: newRay.Instance.Color;
+
+				Rock.Anchored = true;
+				Rock.CanCollide = false;
+				Rock.CanQuery = false;
+				Rock.CanTouch = false;
+
+				Tools.TweenPlay(Rock, tInfo, {
+					CFrame: c2,
+				});
+
+				const randomTime = math.random(50, 150) / 100;
+				Debris.AddItem(Rock, lifeTime + speedOut + randomTime);
+				task.delay(lifeTime + randomTime, () => {
+					Tools.TweenPlay(Rock, new TweenInfo(speedOut, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+						CFrame: c2Pos,
+					});
+				});
+			}
+
+			Origin = Origin.mul(new CFrame(math.random(-randomMultiplier, randomMultiplier), 0, 0));
+			if (i % segmentSize === 0) task.wait(waitInterval);
+		}
+
+		if (!rounded) return;
+
+		const dist = c1.Position.sub(c2.Position).Magnitude;
+		const segments = math.min(rocks / 2, math.ceil(dist));
+
+		const center = new CFrame(
+			c1.Position.add(c2.Position).div(2),
+			c1.Position.add(c2.Position).div(2).add(Origin.LookVector),
+		).mul(CFrame.Angles(0, math.rad(-90), 0));
+		const angle = 180 / segments;
+
+		for (let i = 0; i < segments; i++) {
+			let r1 = center.mul(CFrame.Angles(0, math.rad((i - 1) * angle), 0)).mul(new CFrame(0, 0, -dist / 2));
+			const newRay = Workspace.Raycast(
+				r1.Position.add(new Vector3(0, 20, 0)),
+				new Vector3(0, -100, 0),
+				RayParams,
+			);
+			if (!newRay) continue;
+			r1 = new CFrame(newRay.Position).mul(RandomAngle());
+
+			const Rock = new Instance("Part", DebrisFolder);
+			Rock.Size = size.mul(1 + sizeFinal);
+			const r1Pos = r1.sub(new Vector3(0, 1 * Rock.Size.Y, 0));
+			Rock.CFrame = r1Pos;
+
+			Rock.Material = newRay.Material;
+			Rock.Color = newRay.Instance.IsA("Terrain")
+				? Workspace.Terrain.GetMaterialColor(newRay.Material)
+				: newRay.Instance.Color;
+
+			Rock.Anchored = true;
+			Rock.CanCollide = false;
+			Rock.CanQuery = false;
+			Rock.CanTouch = false;
+
+			Tools.TweenPlay(Rock, tInfo, {
+				CFrame: r1,
+			});
+
+			const randomTime = math.random(50, 150) / 100;
+			Debris.AddItem(Rock, lifeTime + speedOut + randomTime);
+			task.delay(lifeTime + randomTime, () => {
+				Tools.TweenPlay(Rock, new TweenInfo(speedOut, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+					CFrame: r1Pos,
+				});
+			});
+		}
 	}
+
+	public static RandomTrail = (
+		origin: CFrame,
+		randomMultiplier: number,
+		rocks: number,
+		distance: number,
+		width: number,
+		size: Vector3,
+		widthFinal: number,
+		sizeFinal: number,
+		speedIn: number,
+		speedOut: number,
+		rounded: boolean,
+		segmentSize: number,
+		lifeTime: number,
+		waitInterval: number,
+	) =>
+		task.spawn(() =>
+			this._RandomTrail(
+				origin,
+				randomMultiplier,
+				rocks,
+				distance,
+				width,
+				size,
+				widthFinal,
+				sizeFinal,
+				speedIn,
+				speedOut,
+				rounded,
+				segmentSize,
+				lifeTime,
+				waitInterval,
+			),
+		);
 }

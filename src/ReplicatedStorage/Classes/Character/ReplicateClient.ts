@@ -1,3 +1,4 @@
+/* eslint-disable roblox-ts/lua-truthiness */
 import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 import { Character } from ".";
 import { EAbilityPlace } from "ReplicatedStorage/Enums/Abilities/EAbilityPlace";
@@ -5,9 +6,9 @@ import { EWeapons } from "ReplicatedStorage/Enums/EWeapons";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
 import { EReplicateInfo } from "ReplicatedStorage/Enums/Replicate/EReplicateInfo";
 import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
-import { AnimManager } from "ReplicatedStorage/Managers/AnimManager";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
 import { EReplicateSound } from "ReplicatedStorage/Enums/Replicate/EReplicateSound";
+import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
 
 export class ReplicateClient {
 	public Character: Character;
@@ -41,43 +42,42 @@ export class ReplicateClient {
 	}
 
 	public InitializeDefaultModules() {
-		const classDash = new (EReplicateInfo.get(EAnimations.DashForward)!.Class)(this.Character);
-		const classFootstep = new (EReplicateInfo.get(EAnimations.WalkForward)!.Class)(this.Character);
+		const ClassDash = new (ModuleManager.GetReplicate("Dash"))(this.Character);
+		const ClassFottsteps = new (ModuleManager.GetReplicate("Footsteps"))(this.Character);
 
-		this.StopModules.add(classDash);
-		this.StopModules.add(classFootstep);
+		this.StopModules.add(ClassDash);
+		this.StopModules.add(ClassFottsteps);
 
-		this.ReplicateModules.set(EAnimations.DashForward, classDash);
-		this.ReplicateModules.set(EAnimations.DashBack, classDash);
-		this.ReplicateModules.set(EAnimations.DashLeft, classDash);
-		this.ReplicateModules.set(EAnimations.DashRight, classDash);
+		this.ReplicateModules.set(EAnimations.DashForward, ClassDash);
+		this.ReplicateModules.set(EAnimations.DashBack, ClassDash);
+		this.ReplicateModules.set(EAnimations.DashLeft, ClassDash);
+		this.ReplicateModules.set(EAnimations.DashRight, ClassDash);
 
-		this.ReplicateModules.set(EAnimations.WalkForward, classFootstep);
-		this.ReplicateModules.set(EAnimations.WalkBack, classFootstep);
-		this.ReplicateModules.set(EAnimations.WalkLeft, classFootstep);
-		this.ReplicateModules.set(EAnimations.WalkRight, classFootstep);
-		this.ReplicateModules.set(EAnimations.Run, classFootstep);
+		this.ReplicateModules.set(EAnimations.WalkForward, ClassFottsteps);
+		this.ReplicateModules.set(EAnimations.WalkBack, ClassFottsteps);
+		this.ReplicateModules.set(EAnimations.WalkLeft, ClassFottsteps);
+		this.ReplicateModules.set(EAnimations.WalkRight, ClassFottsteps);
+		this.ReplicateModules.set(EAnimations.Run, ClassFottsteps);
 
 		this.Character.Model.Abilities.GetAttributes().forEach((attributeValue, ability) => {
-			const classByName = new (EReplicateInfo.get(ability)!.Class)(this.Character);
-			this.ReplicateModules.set(ability, classByName);
-			if ("Stop" in classByName) this.StopModules.add(classByName);
+			this.AbilityAdded(
+				undefined as unknown as EAbilityPlace,
+				undefined as unknown as EWeapons,
+				ability as EAbility,
+			);
 		});
 	}
 
 	public AbilityAdded(abilityPlace: EAbilityPlace, weapon: EWeapons, ability: EAbility) {
-		const classByName = new (EReplicateInfo.get(ability)!.Class)(this.Character);
+		const classByName = new (ModuleManager.GetReplicate(ability))(this.Character);
 		this.ReplicateModules.set(ability, classByName);
-		if ("Stop" in classByName) this.StopModules.add(classByName);
+		if ("Destroy" in classByName) this.StopModules.add(classByName);
 	}
 
 	public AbilityRemoved(abilityPlace: EAbilityPlace, weapon: EWeapons, ability: EAbility) {
 		const ReplicateClass = this.ReplicateModules.get(ability);
 		if (!ReplicateClass) return;
-		if ("Stop" in ReplicateClass) {
-			this.StopModules.delete(ReplicateClass);
-			ReplicateClass.Stop!();
-		}
+		if (this.StopModules.delete(ReplicateClass)) ReplicateClass.Destroy!();
 
 		this.ReplicateModules.delete(ability);
 	}
@@ -93,10 +93,12 @@ export class ReplicateClient {
 	}
 
 	public AnimationPlayed(animTrack: AnimationTrack) {
-		const AnimName = AnimManager.IdToName(animTrack.Animation!.AnimationId);
-		const ReplicateClass = this.ReplicateModules.get(AnimName);
+		const AnimName = Tools.IdToName(animTrack.Animation!.AnimationId);
+		const ReplicateInfo = EReplicateInfo.get(AnimName);
+		if (!ReplicateInfo) return;
+		const ReplicateName = ReplicateInfo.Class ? ReplicateInfo.Class : AnimName;
+		const ReplicateClass = this.ReplicateModules.get(ReplicateName);
 		if (!ReplicateClass) return;
-		const ReplicateInfo = EReplicateInfo.get(AnimName)!;
 
 		const Character = this.Character;
 		const Butler = Character.Butler;
@@ -105,16 +107,18 @@ export class ReplicateClient {
 
 		if (
 			ReplicateInfo.Ability &&
-			(!Abilities.Has(AnimName) ||
-				(Attributes.UsingAbility() && Attributes.UsingAbility() !== AnimName) ||
+			(!Abilities.Has(ReplicateName) ||
+				(Attributes.UsingAbility() && Attributes.UsingAbility() !== ReplicateName) ||
 				Attributes.UsingMove())
 		) {
 			animTrack.Stop();
 			return;
 		}
 
+		if (!ReplicateInfo.CanUseStunned && Attributes.IsStunnedFull()) return;
+
 		if (ReplicateInfo.Cooldown > 0) {
-			const time = tick() - Attributes.TickAnim(AnimName);
+			const time = tick() - Attributes.TickAnim(ReplicateName);
 			if (time < ReplicateInfo.Cooldown) {
 				animTrack.Stop();
 				return;
@@ -123,10 +127,10 @@ export class ReplicateClient {
 
 		if (!this.ReplicatesPlayed.has(AnimName)) {
 			this.ReplicatesPlayed.add(AnimName);
-			ReplicateClass.AnimPlayOnce?.(animTrack);
+			ReplicateClass.AnimPlayOnce?.(animTrack, AnimName);
 			if ("AnimStop" in ReplicateClass)
 				Butler.Connect(animTrack.Stopped, () => {
-					ReplicateClass.AnimStop!(animTrack);
+					ReplicateClass.AnimStop!(animTrack, AnimName);
 					this.ReplicatesPlaying.delete(AnimName);
 				});
 			else Butler.Connect(animTrack.Stopped, () => this.ReplicatesPlaying.delete(AnimName));
@@ -147,18 +151,18 @@ export class ReplicateClient {
 
 		if (!this.ReplicatesPlayed.has(AnimName)) {
 			this.ReplicatesPlayed.add(AnimName);
-			ReplicateClass.AnimPlayOnce?.(animTrack);
+			ReplicateClass.AnimPlayOnce?.(animTrack, AnimName);
 		}
 
 		this.ReplicatesPlaying.add(AnimName);
-		ReplicateClass.AnimPlay?.(animTrack);
+		ReplicateClass.AnimPlay?.(animTrack, AnimName);
 	}
 
 	public Destroy() {
 		this.ReplicateModules.clear();
 
 		this.StopModules.forEach((replicateClass) => {
-			replicateClass.Stop!();
+			replicateClass.Destroy!();
 			this.StopModules.delete(replicateClass);
 		});
 

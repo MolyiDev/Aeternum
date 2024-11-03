@@ -15,7 +15,7 @@ export class Dash implements IReplicateClass {
 		this.Highlight = character.Model.Highlight;
 	}
 
-	Stop() {
+	Destroy() {
 		this.Butler.RemoveList(this.MarkerStart, this.MarkerEnd);
 
 		this.Butler = undefined!;

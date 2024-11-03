@@ -39,22 +39,28 @@ export class Character {
 
 	public Destroy() {
 		task.spawn(() => {
-			this.Butler.Destroy();
-			this.Attributes.Destroy();
-			this.Abilities.Destroy();
-			this.Animations.Destroy();
 			if (RunService.IsClient()) {
 				this.ReplicateClient.Destroy();
 				this.ReplicateClient = undefined!;
+			} else {
+				this.ReplicateServer.Destroy();
+				this.ReplicateServer = undefined!;
 			}
 
-			this.Model = undefined!;
-			this.Humanoid = undefined!;
-			this.HumanoidRootPart = undefined!;
-			this.Butler = undefined!;
+			this.Attributes.Destroy();
+			this.Abilities.Destroy();
+			this.Animations.Destroy();
+
 			this.Attributes = undefined!;
 			this.Abilities = undefined!;
 			this.Animations = undefined!;
+			this.Model = undefined!;
+			this.Humanoid = undefined!;
+			this.HumanoidRootPart = undefined!;
+
+			task.wait(1);
+			this.Butler.Destroy();
+			this.Butler = undefined!;
 		});
 	}
 }

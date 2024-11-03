@@ -4,8 +4,8 @@ import { StunManager } from "ServerScriptService/Managers/StunManager";
 import { DamageManager } from "../Managers/DamageManager";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { HitboxManager } from "../Managers/HitboxManager";
-import { AnimManager } from "ReplicatedStorage/Managers/AnimManager";
 import { Character } from "ReplicatedStorage/Classes/Character";
+import { Tools } from "ReplicatedStorage/Libraries/Tools";
 
 // Constants
 const PARRY_TIME = 0.2;
@@ -35,7 +35,7 @@ CharacterManager.AddedCharacter.Connect((character) => {
 	overlapParams.FilterType = Enum.RaycastFilterType.Exclude;
 
 	Butler.Connect(Animator.AnimationPlayed, (animationTrack: AnimationTrack) => {
-		const animName = AnimManager.IdToName(animationTrack.Animation!.AnimationId);
+		const animName = Tools.IdToName(animationTrack.Animation!.AnimationId);
 		if (!AnimationList.has(animName) || Attributes.IsStunnedFull()) return;
 
 		const CharactersDamaged: Character[] = [];
