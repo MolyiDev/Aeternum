@@ -62,10 +62,9 @@ export class GroundSmash implements IReplicateClass {
 					const CF = HumanoidRootPart.CFrame;
 					const Directions = [
 						CF,
-						CF.mul(CFrame.Angles(0, math.rad(140), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(-140), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(85), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(-85), 0)),
+						CF.mul(CFrame.Angles(0, math.rad(90), 0)),
+						CF.mul(CFrame.Angles(0, math.rad(-90), 0)),
+						CF.mul(CFrame.Angles(0, math.rad(180), 0)),
 					];
 
 					RockManager.Crater(CF, 0, 0.7, 5, 12, 2, 0.15, true);
@@ -94,11 +93,10 @@ export class GroundSmash implements IReplicateClass {
 					const CF = HumanoidRootPart.CFrame;
 					const Directions = [
 						CF,
-						CF.mul(CFrame.Angles(0, math.rad(55), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(-55), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(120), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(-120), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(180), 0)),
+						CF.mul(CFrame.Angles(0, math.rad(140), 0)),
+						CF.mul(CFrame.Angles(0, math.rad(-140), 0)),
+						CF.mul(CFrame.Angles(0, math.rad(85), 0)),
+						CF.mul(CFrame.Angles(0, math.rad(-85), 0)),
 					];
 
 					RockManager.Crater(CF, 0, 0.9, 6, 12, 2, 0.15, true);
@@ -128,13 +126,11 @@ export class GroundSmash implements IReplicateClass {
 					const CF = HumanoidRootPart.CFrame;
 					const Directions = [
 						CF,
-						CF.mul(CFrame.Angles(0, math.rad(90), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(-90), 0)),
+						CF.mul(CFrame.Angles(0, math.rad(55), 0)),
+						CF.mul(CFrame.Angles(0, math.rad(-55), 0)),
+						CF.mul(CFrame.Angles(0, math.rad(120), 0)),
+						CF.mul(CFrame.Angles(0, math.rad(-120), 0)),
 						CF.mul(CFrame.Angles(0, math.rad(180), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(45), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(-45), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(135), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(-135), 0)),
 					];
 
 					RockManager.Crater(CF, 0, 1.1, 7, 14, 2, 0.15, true);

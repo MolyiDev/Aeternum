@@ -27,7 +27,7 @@ export class GroundSmash implements IAbility {
 		if (this.Attributes.IsStunned()) return;
 		const TouchGround = Tools.IsTouchingGround(this.Humanoid, true);
 		if (TouchGround) {
-			this.Attributes.SelfStun(1.5, EStunType.Partial);
+			this.Attributes.SelfStun(4.5, EStunType.Partial);
 			this.GroundSmash.Play();
 		} else this.GroundSmashIdle.Play();
 	}

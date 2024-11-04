@@ -36,7 +36,21 @@ export class SeriousPunch implements IReplicateClass {
 			RockManager.Crater(CF, 6, 0.75, 4, 8, 2, 0.25);
 			RockManager.Explosion(CF.Position, 0.45, 1, 3, 30);
 			delay(0.05, () => RockManager.Crater(CF, 6, 0.45, 8, 20, 2, 0.25));
-			RockManager.Trail(Character.HumanoidRootPart.CFrame, 20, 70, 4.5, Vector3.one, 18, 12, 0.35, 4, true, 8, 3);
+			RockManager.Trail(
+				Character.HumanoidRootPart.CFrame,
+				20,
+				70,
+				4.5,
+				Vector3.one,
+				18,
+				12,
+				0.4,
+				4,
+				true,
+				8,
+				3,
+				0.02,
+			);
 		});
 	}
 }

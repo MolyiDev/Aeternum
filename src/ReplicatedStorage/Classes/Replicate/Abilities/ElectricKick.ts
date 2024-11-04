@@ -30,7 +30,21 @@ export class ElectricKick implements IReplicateClass {
 			RockManager.Crater(CF, 0, 0.35, 2, 8, 2, 0.05);
 			RockManager.Explosion(CF.Position, 0.35, 1, 2, 20);
 
-			RockManager.Trail(Character.HumanoidRootPart.CFrame, 10, 20, 1, Vector3.one, 2, 8, 0.35, 4, false, 8, 3);
+			RockManager.Trail(
+				Character.HumanoidRootPart.CFrame,
+				10,
+				20,
+				1,
+				Vector3.one,
+				2,
+				8,
+				0.4,
+				4,
+				false,
+				8,
+				3,
+				0.01,
+			);
 		});
 
 		this.MarkerRockDown = Butler.Connect(animTrack.GetMarkerReachedSignal("RockDown"), () => {

@@ -209,6 +209,7 @@ export class RockManager {
 		rounded: boolean,
 		segmentSize: number,
 		lifeTime: number,
+		waitInterval: number,
 	) {
 		const tInfo = new TweenInfo(speedIn, Enum.EasingStyle.Back, Enum.EasingDirection.Out);
 
@@ -289,7 +290,7 @@ export class RockManager {
 				});
 			}
 
-			if (i % segmentSize === 0) task.wait();
+			if (i % segmentSize === 0) task.wait(waitInterval);
 		}
 
 		if (!rounded) return;
@@ -355,6 +356,7 @@ export class RockManager {
 		rounded: boolean,
 		segmentSize: number,
 		lifeTime: number,
+		waitInterval: number,
 	) =>
 		task.spawn(() =>
 			this._Trail(
@@ -370,6 +372,7 @@ export class RockManager {
 				rounded,
 				segmentSize,
 				lifeTime,
+				waitInterval,
 			),
 		);
 
