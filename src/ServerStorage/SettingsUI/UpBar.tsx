@@ -1,14 +1,11 @@
-import Vide from "@rbxts/vide";
+import { AnchorPoints, CanvasGroup, Frame, GridLayout, Image } from "@rbxts/better-react-components";
+import { createColorSequence, GradientElement } from "@rbxts/better-react-components/out/helpers/Gradient";
+import React from "@rbxts/react";
 import { ImageButtonShadow, TextLabelShadow } from "ServerStorage/Components/Shadows";
 
 export function UpBar() {
 	return (
-		<canvasgroup
-			Name={"UpBar"}
-			AnchorPoint={new Vector2(0, 0)}
-			BackgroundTransparency={1}
-			Size={UDim2.fromScale(1, 0.15)}
-		>
+		<CanvasGroup noBackground size={UDim2.fromScale(1, 0.15)}>
 			<ImageButtonShadow
 				AnchorPoint={new Vector2(1, 0.5)}
 				BackgroundTransparency={1}
@@ -22,7 +19,7 @@ export function UpBar() {
 				BackgroundTransparency={1}
 				Position={UDim2.fromScale(0.0125, 0.11)}
 				Size={UDim2.fromScale(0.24, 0.55)}
-				FontFace={Font.fromId(12187372175, Enum.FontWeight.Regular)}
+				FontFace={Font.fromName("TitilliumWeb", Enum.FontWeight.Bold)}
 				Text={"Visuals"}
 				TextColor3={Color3.fromRGB(255, 255, 255)}
 				TextScaled={true}
@@ -32,76 +29,70 @@ export function UpBar() {
 				ShadowDistance={0.0075}
 			/>
 
-			<frame
-				Name={"Line"}
-				AnchorPoint={new Vector2(0.5, 1)}
-				Position={UDim2.fromScale(0.5, 0.78)}
-				Size={UDim2.fromScale(1, 0.035)}
+			<Frame
+				anchorPoint={AnchorPoints.Bottom}
+				position={UDim2.fromScale(0.5, 0.78)}
+				size={UDim2.fromScale(1, 0.035)}
 			>
-				<uigradient
-					Color={
-						new ColorSequence([
-							new ColorSequenceKeypoint(0, Color3.fromRGB(167, 59, 73)),
-							new ColorSequenceKeypoint(0.15, Color3.fromRGB(230, 230, 230)),
-							new ColorSequenceKeypoint(0.85, Color3.fromRGB(230, 230, 230)),
-							new ColorSequenceKeypoint(1, Color3.fromRGB(167, 59, 73)),
-						])
-					}
+				<GradientElement
+					color={createColorSequence([
+						new ColorSequenceKeypoint(0, Color3.fromRGB(167, 59, 73)),
+						new ColorSequenceKeypoint(0.15, Color3.fromRGB(230, 230, 230)),
+						new ColorSequenceKeypoint(0.85, Color3.fromRGB(230, 230, 230)),
+						new ColorSequenceKeypoint(1, Color3.fromRGB(167, 59, 73)),
+					])}
 				/>
 
-				<uigridlayout
-					CellPadding={new UDim2(0.049, 0, 0.048, 0)}
-					CellSize={UDim2.fromScale(0.021, 7.061)}
-					FillDirection={"Vertical"}
-					HorizontalAlignment={"Center"}
-					VerticalAlignment={"Center"}
+				<GridLayout
+					cellPadding={new UDim2(0.049, 0, 0.048, 0)}
+					cellSize={UDim2.fromScale(0.021, 7.061)}
+					direction={"Vertical"}
+					horizontalAlign={"Center"}
+					verticalAlign={"Center"}
 				/>
-				<imagelabel
-					Name={"Audio"}
-					AnchorPoint={new Vector2(0.5, 0.5)}
-					BackgroundTransparency={1}
-					Image={"rbxassetid://109254184865400"}
-				/>
-				<imagelabel
-					Name={"Controls"}
-					AnchorPoint={new Vector2(0.5, 0.5)}
-					BackgroundTransparency={1}
-					Image={"rbxassetid://109254184865400"}
-				/>
-				<imagelabel
-					Name={"General"}
-					AnchorPoint={new Vector2(0.5, 0.5)}
-					BackgroundTransparency={1}
-					Image={"rbxassetid://109254184865400"}
-				/>
-				<imagelabel
-					Name={"Visual"}
-					AnchorPoint={new Vector2(0.5, 0.5)}
-					BackgroundTransparency={1}
-					Image={"rbxassetid://109254184865400"}
-				/>
-			</frame>
 
-			<frame
-				Name={"Order"}
-				AnchorPoint={new Vector2(0.5, 0)}
-				BackgroundTransparency={1}
-				Position={UDim2.fromScale(0.5, 0)}
-				Size={UDim2.fromScale(1, 0.75)}
-			>
-				<uigridlayout
-					CellPadding={UDim2.fromScale(0.02, 0.02)}
-					CellSize={UDim2.fromScale(0.05, 0.783)}
-					FillDirectionMaxCells={4}
-					HorizontalAlignment={"Center"}
-					VerticalAlignment={"Center"}
+				<Image
+					/* Audio */
+					noBackground
+					anchorPoint={AnchorPoints.Middle}
+					image={"rbxassetid://109254184865400"}
 				/>
-				<canvasgroup
-					Name={"Audio"}
-					AnchorPoint={new Vector2(0.5, 0.5)}
-					BackgroundTransparency={1}
-					LayoutOrder={4}
-				>
+
+				<Image
+					/* Controls */
+					noBackground
+					anchorPoint={AnchorPoints.Middle}
+					image={"rbxassetid://109254184865400"}
+				/>
+
+				<Image
+					/* General */
+					noBackground
+					anchorPoint={AnchorPoints.Middle}
+					image={"rbxassetid://109254184865400"}
+				/>
+
+				<Image
+					/* Visual */
+					noBackground
+					anchorPoint={AnchorPoints.Middle}
+					image={"rbxassetid://109254184865400"}
+				/>
+			</Frame>
+
+			<Frame
+				noBackground
+				anchorPoint={AnchorPoints.Top}
+				position={UDim2.fromScale(0.5, 0)}
+				size={UDim2.fromScale(1, 0.75)}
+			>
+				<GridLayout
+					cellPadding={UDim2.fromScale(0.02, 0.02)}
+					cellSize={UDim2.fromScale(0.05, 0.783)}
+					horizontalAlign={"Center"}
+					verticalAlign={"Center"}
+				/>
+				<CanvasGroup /* Audio */ noBackground anchorPoint={AnchorPoints.Middle} layoutOrder={4}>
 					<ImageButtonShadow
 						AnchorPoint={new Vector2(0.5, 0.5)}
 						AutoButtonColor={false}
@@ -110,14 +101,9 @@ export function UpBar() {
 						Size={UDim2.fromScale(0.85, 0.85)}
 						Image={"rbxassetid://72441646416779"}
 					/>
-				</canvasgroup>
+				</CanvasGroup>
 
-				<canvasgroup
-					Name={"Controls"}
-					AnchorPoint={new Vector2(0.5, 0.5)}
-					BackgroundTransparency={1}
-					LayoutOrder={3}
-				>
+				<CanvasGroup /* Controls */ noBackground anchorPoint={AnchorPoints.Middle} layoutOrder={3}>
 					<ImageButtonShadow
 						AnchorPoint={new Vector2(0.5, 0.5)}
 						AutoButtonColor={false}
@@ -126,14 +112,9 @@ export function UpBar() {
 						Size={UDim2.fromScale(0.9, 0.9)}
 						Image={"rbxassetid://90196346676136"}
 					/>
-				</canvasgroup>
+				</CanvasGroup>
 
-				<canvasgroup
-					Name={"Visual"}
-					AnchorPoint={new Vector2(0.5, 0.5)}
-					BackgroundTransparency={1}
-					LayoutOrder={2}
-				>
+				<CanvasGroup /* Visual */ noBackground anchorPoint={AnchorPoints.Middle} layoutOrder={2}>
 					<ImageButtonShadow
 						AnchorPoint={new Vector2(0.5, 0.5)}
 						AutoButtonColor={false}
@@ -142,14 +123,9 @@ export function UpBar() {
 						Size={UDim2.fromScale(0.75, 0.75)}
 						Image={"rbxassetid://91690284827643"}
 					/>
-				</canvasgroup>
+				</CanvasGroup>
 
-				<canvasgroup
-					Name={"General"}
-					AnchorPoint={new Vector2(0.5, 0.5)}
-					BackgroundTransparency={1}
-					LayoutOrder={1}
-				>
+				<CanvasGroup /* General */ noBackground anchorPoint={AnchorPoints.Middle} layoutOrder={1}>
 					<ImageButtonShadow
 						AnchorPoint={new Vector2(0.5, 0.5)}
 						AutoButtonColor={false}
@@ -158,8 +134,8 @@ export function UpBar() {
 						Size={UDim2.fromScale(0.7, 0.7)}
 						Image={"rbxassetid://117575756600362"}
 					/>
-				</canvasgroup>
-			</frame>
-		</canvasgroup>
+				</CanvasGroup>
+			</Frame>
+		</CanvasGroup>
 	);
 }

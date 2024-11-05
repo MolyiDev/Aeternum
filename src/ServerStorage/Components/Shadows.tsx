@@ -1,13 +1,13 @@
 /* eslint-disable prefer-const */
-import Vide from "@rbxts/vide";
+import React from "@rbxts/react";
 
-interface IImageButtonShadow extends Vide.InstanceAttributes<ImageButton> {
+interface IImageButtonShadow extends React.InstanceProps<ImageButton> {
 	ShadowTransparency?: number;
 	ShadowAngle?: number;
 	ShadowDistance?: number;
 }
 
-interface ITextLabelShadow extends Vide.InstanceAttributes<TextLabel> {
+interface ITextLabelShadow extends React.InstanceProps<TextLabel> {
 	ShadowTransparency?: number;
 	ShadowAngle?: number;
 	ShadowDistance?: number;
@@ -28,10 +28,11 @@ function TextLabelShadow({
 	TextSize,
 	TextStrokeTransparency,
 	TextXAlignment,
+	TextYAlignment,
 	ZIndex,
 }: ITextLabelShadow) {
-	const positionValue = typeIs(Position, "function") ? Position() : Position;
-	const ShadowIndex = (typeIs(ZIndex, "function") ? ZIndex() : (ZIndex ?? 1)) - 1;
+	const positionValue = (typeIs(Position, "function") ? Position() : Position) as UDim2;
+	const ShadowIndex = ((typeIs(ZIndex, "function") ? ZIndex() : (ZIndex ?? 1)) as number) - 1;
 
 	const radians = math.rad(ShadowAngle);
 	const offsetX = ShadowDistance * math.cos(radians);
@@ -55,10 +56,10 @@ function TextLabelShadow({
 				TextSize={TextSize}
 				TextStrokeTransparency={TextStrokeTransparency}
 				TextXAlignment={TextXAlignment}
+				TextYAlignment={TextYAlignment}
 				ZIndex={ZIndex}
 			/>
 			<textlabel
-				Name={"Shadow"}
 				Position={ShadowPosition}
 				TextColor3={Color3.fromRGB(0, 0, 0)}
 				TextStrokeTransparency={1}
@@ -72,6 +73,7 @@ function TextLabelShadow({
 				TextScaled={TextScaled}
 				TextSize={TextSize}
 				TextXAlignment={TextXAlignment}
+				TextYAlignment={TextYAlignment}
 			/>
 		</>
 	);
@@ -90,8 +92,8 @@ function ImageButtonShadow(props: IImageButtonShadow) {
 		ShadowDistance = 0.09,
 	} = props;
 
-	const positionValue = typeIs(Position, "function") ? Position() : Position;
-	const ShadowIndex = (typeIs(ZIndex, "function") ? ZIndex() : (ZIndex ?? 1)) - 1;
+	const positionValue = (typeIs(Position, "function") ? Position() : Position) as UDim2;
+	const ShadowIndex = ((typeIs(ZIndex, "function") ? ZIndex() : (ZIndex ?? 1)) as number) - 1;
 
 	const radians = math.rad(ShadowAngle);
 	const offsetX = ShadowDistance * math.cos(radians);
@@ -103,7 +105,6 @@ function ImageButtonShadow(props: IImageButtonShadow) {
 		<>
 			<imagebutton {...props} />
 			<imagelabel
-				Name={"Shadow"}
 				AnchorPoint={AnchorPoint}
 				BackgroundTransparency={BackgroundTransparency}
 				Position={ShadowPosition}

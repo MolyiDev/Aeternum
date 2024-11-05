@@ -1,64 +1,64 @@
-import { CreateVideStory, InferVideControls } from "@rbxts/ui-labs";
-import Vide from "@rbxts/vide";
+import { CreateReactStory } from "@rbxts/ui-labs";
 import { UpBar } from "./UpBar";
+import React from "@rbxts/react";
+import { AnchorPoints, CanvasGroup, Frame } from "@rbxts/better-react-components";
+import {
+	createColorSequence,
+	createNumberSequence,
+	GradientElement,
+} from "@rbxts/better-react-components/out/helpers/Gradient";
+import ReactRoblox from "@rbxts/react-roblox";
+import { Settings } from "./Settings";
 
-const Controls = {
-	Visible: true,
-};
-
-function UI(controls: InferVideControls<typeof Controls>) {
+function UI() {
 	return (
-		<canvasgroup
-			Name={"SettingsGUI"}
-			BackgroundTransparency={1}
-			AnchorPoint={new Vector2(0.5, 0.5)}
-			Position={UDim2.fromScale(0.5, 0.5)}
-			Size={UDim2.fromScale(1, 1)}
+		<CanvasGroup
+			noBackground
+			anchorPoint={AnchorPoints.Middle}
+			position={UDim2.fromScale(0.5, 0.5)}
+			size={UDim2.fromScale(1, 1)}
 		>
-			<frame
-				Name={"Background"}
-				AnchorPoint={new Vector2(0.5, 0.5)}
-				BackgroundTransparency={0.1}
-				Position={UDim2.fromScale(0.5, 0.5)}
-				Size={UDim2.fromScale(1, 1)}
+			<Frame
+				backgroundTransparency={0.1}
+				anchorPoint={AnchorPoints.Middle}
+				position={UDim2.fromScale(0.5, 0.5)}
+				size={UDim2.fromScale(1, 1)}
 			>
-				<uigradient
-					Color={new ColorSequence(Color3.fromRGB(22, 22, 22), Color3.fromRGB(49, 49, 49))}
-					Rotation={90}
+				<GradientElement
+					color={createColorSequence([Color3.fromRGB(22, 22, 22), Color3.fromRGB(49, 49, 49)])}
+					rotation={90}
 				/>
-			</frame>
+			</Frame>
 
-			<frame
-				Name={"TopFade"}
-				AnchorPoint={new Vector2(0.5, 0)}
-				Position={UDim2.fromScale(0.5, 0.002)}
-				Size={UDim2.fromScale(1, 0.225)}
+			<Frame
+				anchorPoint={AnchorPoints.Top}
+				position={UDim2.fromScale(0.5, 0.002)}
+				size={UDim2.fromScale(1, 0.225)}
 			>
-				<uigradient
-					Color={new ColorSequence(Color3.fromRGB(0, 0, 0), Color3.fromRGB(26, 26, 26))}
-					Rotation={90}
-					Transparency={
-						new NumberSequence([
-							new NumberSequenceKeypoint(0, 0.3, 0),
-							new NumberSequenceKeypoint(0.535, 0.475, 0),
-							new NumberSequenceKeypoint(1, 1, 1),
-						])
-					}
+				<GradientElement
+					color={createColorSequence([Color3.fromRGB(0, 0, 0), Color3.fromRGB(26, 26, 26)])}
+					rotation={90}
+					transparency={createNumberSequence([
+						new NumberSequenceKeypoint(0, 0.3, 0),
+						new NumberSequenceKeypoint(0.535, 0.475, 0),
+						new NumberSequenceKeypoint(1, 1, 1),
+					])}
 				/>
-			</frame>
+			</Frame>
 
 			<UpBar />
-		</canvasgroup>
+			<Settings />
+		</CanvasGroup>
 	);
 }
 
-const story = CreateVideStory(
+const story = CreateReactStory(
 	{
-		vide: Vide,
-		controls: Controls,
+		react: React,
+		reactRoblox: ReactRoblox,
 	},
-	(props) => {
-		return UI(props.controls);
+	() => {
+		return UI();
 	},
 );
 
