@@ -1,8 +1,12 @@
 // Imports
-import { Debris, Workspace } from "@rbxts/services";
+import { Debris, Players, Workspace } from "@rbxts/services";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
+import { SettingsManager } from "./SettingsManager";
+import { ESettingsVisual } from "ReplicatedStorage/Enums/Settings/ESettingsVisual";
 
 // Variables
+const Player = Players.LocalPlayer;
+
 const CharactersFolder = Workspace.WaitForChild("Characters");
 const DebrisFolder = Workspace.WaitForChild("Debris");
 const HitboxFolder = Workspace.WaitForChild("Hitbox");
@@ -26,13 +30,15 @@ export class RockManager {
 		Size = 1,
 		Radius = 7,
 		Rocks = 10,
-		DoubleMax = 2,
+		SubRocks = 2,
 		UpTime = 0.35,
 		Irregular = false,
 		IrregularSize = 1,
 	) {
 		const ray = Workspace.Raycast(Center.Position.add(new Vector3(0, 10, 0)), new Vector3(0, -20, 0), RayParams);
 		if (!ray) return;
+		Rocks = Rocks * ((SettingsManager.GetSetting(Player, ESettingsVisual.Debris) as number) ?? 1);
+		SubRocks = SubRocks * ((SettingsManager.GetSetting(Player, ESettingsVisual.SubDebris) as number) ?? 1);
 		const newCframe = new CFrame(ray.Position);
 		let angle = 0;
 
@@ -73,7 +79,7 @@ export class RockManager {
 			Rock.CanQuery = false;
 			Rock.CanTouch = false;
 
-			const randomNumber = math.random(0, DoubleMax);
+			const randomNumber = math.random(0, SubRocks);
 			for (let j = 0; j < randomNumber; j++) {
 				const rockClone = new Instance("Part", Rock);
 				rockClone.CFrame = Rock.CFrame.add(
@@ -116,18 +122,19 @@ export class RockManager {
 		Size = 1,
 		Radius = 7,
 		Rocks = 10,
-		DoubleMax = 2,
+		SubRocks = 2,
 		UpTime = 0.35,
 		Irregular = false,
 		IrregularSize = 1,
 	) =>
 		task.spawn(() =>
-			this._Crater(Center, NoSpawnRadius, Size, Radius, Rocks, DoubleMax, UpTime, Irregular, IrregularSize),
+			this._Crater(Center, NoSpawnRadius, Size, Radius, Rocks, SubRocks, UpTime, Irregular, IrregularSize),
 		);
 
 	private static _Explosion(Center: Vector3, Size = 1, Velocity = 1, Radius = 3, TotalRocks = 7) {
 		const rayResult = Workspace.Raycast(Center, new Vector3(0, -5, 0), RayParams);
 		if (!rayResult) return;
+		TotalRocks = TotalRocks * ((SettingsManager.GetSetting(Player, ESettingsVisual.Debris) as number) ?? 1);
 		const rayDirections = [
 			new Vector3(Radius, 10, 0),
 			new Vector3(-Radius, 10, 0),
@@ -211,6 +218,8 @@ export class RockManager {
 		lifeTime: number,
 		waitInterval: number,
 	) {
+		rocks = rocks * ((SettingsManager.GetSetting(Player, ESettingsVisual.Debris) as number) ?? 1);
+
 		const tInfo = new TweenInfo(speedIn, Enum.EasingStyle.Back, Enum.EasingDirection.Out);
 
 		let c1: CFrame = new CFrame();
@@ -392,6 +401,7 @@ export class RockManager {
 		lifeTime: number,
 		waitInterval: number,
 	) {
+		rocks = rocks * ((SettingsManager.GetSetting(Player, ESettingsVisual.Debris) as number) ?? 1);
 		const tInfo = new TweenInfo(speedIn, Enum.EasingStyle.Back, Enum.EasingDirection.Out);
 
 		let c1: CFrame = new CFrame();

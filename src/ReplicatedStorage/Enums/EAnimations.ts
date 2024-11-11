@@ -5,9 +5,13 @@ export enum EAnimations {
 
 	// Walk
 	WalkForward = "WalkForward",
+	WalkForwardLeft = "WalkForwardLeft",
+	WalkForwardRight = "WalkForwardRight",
+	WalkBack = "WalkBack",
+	WalkBackLeft = "WalkBackLeft",
+	WalkBackRight = "WalkBackRight",
 	WalkLeft = "WalkLeft",
 	WalkRight = "WalkRight",
-	WalkBack = "WalkBack",
 
 	// Run
 	Run = "Run",

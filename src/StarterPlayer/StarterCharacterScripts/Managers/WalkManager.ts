@@ -8,15 +8,18 @@ import { EMovementSpeeds } from "ReplicatedStorage/Enums/Movement/EMovementSpeed
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { EAttribute } from "ReplicatedStorage/Enums/EAttribute";
 import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
+import { ShiftLockHandler } from "../Handlers/ShiftLockHandler";
 
 // Constants
-const FADE_IN = 0.25;
-const FADE_OUT = 0.25;
+const FADE_IN = 0.3;
+const FADE_OUT = 0.3;
 
 const FORWARD_SPEED = 1.4;
+const FORWARD_DIAGONAL_SPEED = 1.4;
 const BACK_SPEED = -1.4;
-const RIGHT_SPEED = 1.25;
-const LEFT_SPEED = 1.25;
+const BACK_DIAGONAL_SPEED = -1.4;
+const RIGHT_SPEED = 1.4;
+const LEFT_SPEED = 1.4;
 
 // States
 const IncludeStates = new Set<EMovementState>([
@@ -34,15 +37,19 @@ const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.Char
 const Animations = Character.Animations;
 const Attributes = Character.Attributes;
 const Humanoid = Character.Humanoid;
-const HumanoidRootPart = Character.HumanoidRootPart;
 const Butler = Character.Butler;
 
-const [WalkForward, WalkBack, WalkRight, WalkLeft] = Animations.GetAnimations(
-	EAnimations.WalkForward,
-	EAnimations.WalkBack,
-	EAnimations.WalkRight,
-	EAnimations.WalkLeft,
-);
+const [WalkForward, WalkForwardLeft, WalkForwardRight, WalkBack, WalkBackLeft, WalkBackRight, WalkRight, WalkLeft] =
+	Animations.GetAnimations(
+		EAnimations.WalkForward,
+		EAnimations.WalkForwardLeft,
+		EAnimations.WalkForwardRight,
+		EAnimations.WalkBack,
+		EAnimations.WalkBackLeft,
+		EAnimations.WalkBackRight,
+		EAnimations.WalkRight,
+		EAnimations.WalkLeft,
+	);
 
 let IsWalking = false;
 let IsWalkingLocked = false;
@@ -56,10 +63,7 @@ export class WalkManager {
 		const Speed = speed ? speed : FADE_OUT;
 
 		StateManager.SetState(EMovementState.Walking, false);
-		WalkForward.Stop(Speed);
-		WalkBack.Stop(Speed);
-		WalkLeft.Stop(Speed);
-		WalkRight.Stop(Speed);
+		this.StopAllAnimations(Speed);
 	}
 
 	public static WalkActivate() {
@@ -70,44 +74,55 @@ export class WalkManager {
 		else WalkForward.Play(FADE_IN, 1, this.AnimForwardSpeed());
 	}
 
+	private static StopAllAnimations(speed?: number) {
+		WalkForward.Stop(speed);
+		WalkForwardLeft.Stop(speed);
+		WalkForwardRight.Stop(speed);
+		WalkBack.Stop(speed);
+		WalkBackLeft.Stop(speed);
+		WalkBackRight.Stop(speed);
+		WalkRight.Stop(speed);
+		WalkLeft.Stop(speed);
+	}
+
 	public static Direction() {
 		if (!IsWalking || !IsWalkingLocked) return;
 
 		if (this.WalkDirection === Vector3.zero) {
-			WalkForward.Stop(FADE_OUT);
-			WalkBack.Stop(FADE_OUT);
-			WalkLeft.Stop(FADE_OUT);
-			WalkRight.Stop(FADE_OUT);
+			this.StopAllAnimations(FADE_OUT);
 			return;
 		}
 
-		switch (this.WalkDirection.Z) {
-			case -1:
-				if (!WalkForward.IsPlaying) WalkForward.Play(FADE_IN, 1, this.AnimForwardSpeed());
-				if (WalkBack.IsPlaying) WalkBack.Stop(FADE_OUT);
-				break;
-			case 1:
-				if (!WalkBack.IsPlaying) WalkBack.Play(FADE_IN, 1, this.AnimBackSpeed());
-				if (WalkForward.IsPlaying) WalkForward.Stop(FADE_OUT);
-				break;
-			default:
-				if (WalkForward.IsPlaying) WalkForward.Stop(FADE_OUT);
-				if (WalkBack.IsPlaying) WalkBack.Stop(FADE_OUT);
-				break;
-		}
+		this.StopAllAnimations(FADE_OUT);
 
-		switch (this.WalkDirection.X) {
-			case 1:
-				if (!WalkRight.IsPlaying) WalkRight.Play(FADE_IN, 1, this.AnimRightSpeed());
-				if (WalkLeft.IsPlaying) WalkLeft.Stop(FADE_OUT);
+		switch (this.WalkDirection) {
+			case new Vector3(0, 0, -1): // Forward
+				WalkForward.Play(FADE_IN, 1, this.AnimForwardSpeed());
 				break;
-			case -1:
-				if (!WalkLeft.IsPlaying) WalkLeft.Play(FADE_IN, 1, this.AnimLeftSpeed());
-				if (WalkRight.IsPlaying) WalkRight.Stop(FADE_OUT);
+			case new Vector3(-1, 0, -1): // Forward-Left
+				print("FORWARDLEFT");
+				WalkForwardLeft.Play(FADE_IN, 1, this.AnimForwardDiagonalSpeed());
+				break;
+			case new Vector3(1, 0, -1): // Forward-Right
+				WalkForwardRight.Play(FADE_IN, 1, this.AnimForwardDiagonalSpeed());
+				break;
+			case new Vector3(0, 0, 1): // Back
+				WalkBack.Play(FADE_IN, 1, this.AnimBackSpeed());
+				break;
+			case new Vector3(-1, 0, 1): // Back-Left
+				WalkBackLeft.Play(FADE_IN, 1, this.AnimBackDiagonalSpeed());
+				break;
+			case new Vector3(1, 0, 1): // Back-Right
+				WalkBackRight.Play(FADE_IN, 1, this.AnimBackDiagonalSpeed());
+				break;
+			case new Vector3(1, 0, 0): // Right
+				WalkRight.Play(FADE_IN, 1, this.AnimRightSpeed());
+				break;
+			case new Vector3(-1, 0, 0): // Left
+				WalkLeft.Play(FADE_IN, 1, this.AnimLeftSpeed());
 				break;
 			default:
-				if (WalkLeft.IsPlaying) WalkLeft.Stop(FADE_OUT);
-				if (WalkRight.IsPlaying) WalkRight.Stop(FADE_OUT);
+				this.StopAllAnimations(FADE_OUT);
 				break;
 		}
 	}
@@ -118,7 +133,12 @@ export class WalkManager {
 
 	public static AnimForwardSpeed = () => (Humanoid.WalkSpeed * FORWARD_SPEED) / EMovementSpeeds.Default;
 
+	public static AnimForwardDiagonalSpeed = () =>
+		(Humanoid.WalkSpeed * FORWARD_DIAGONAL_SPEED) / EMovementSpeeds.Default;
+
 	public static AnimBackSpeed = () => (Humanoid.WalkSpeed * BACK_SPEED) / EMovementSpeeds.Default;
+
+	public static AnimBackDiagonalSpeed = () => (Humanoid.WalkSpeed * BACK_DIAGONAL_SPEED) / EMovementSpeeds.Default;
 
 	public static AnimLeftSpeed = () => (Humanoid.WalkSpeed * LEFT_SPEED) / EMovementSpeeds.Default;
 
@@ -149,8 +169,7 @@ function CheckWalk() {
 	}
 }
 
-function MoveDirection() {
-	const direction = Tools.WorldMovingDirection(HumanoidRootPart.CFrame.VectorToObjectSpace(Humanoid.MoveDirection));
+function MoveDirection(direction: Vector3) {
 	if (WalkManager.WalkDirection === direction) {
 		CheckWalk();
 		return;
@@ -169,6 +188,5 @@ function WalkSpeed() {
 }
 
 Butler.Connect(Attributes.AttributeChanged, (attribute) => AttributeChanged(attribute));
-Butler.Connect(Humanoid.GetPropertyChangedSignal("MoveDirection"), () => MoveDirection());
-Butler.Connect(HumanoidRootPart.GetPropertyChangedSignal("CFrame"), () => MoveDirection());
+Butler.Connect(ShiftLockHandler.ChangedDirection, (direction) => MoveDirection(direction));
 Butler.Connect(Humanoid.GetPropertyChangedSignal("WalkSpeed"), () => WalkSpeed());

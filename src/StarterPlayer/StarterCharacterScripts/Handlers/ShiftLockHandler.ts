@@ -1,8 +1,13 @@
 // Imports
+import Signal from "@rbxts/lemon-signal";
 import { Workspace, Players, RunService, UserInputService } from "@rbxts/services";
 import Spring from "@rbxts/spring";
 import { EAttribute } from "ReplicatedStorage/Enums/EAttribute";
+import { Tools } from "ReplicatedStorage/Libraries/Tools";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
+
+// Events
+const ChangedDirectionSignal = new Signal<Vector3>();
 
 interface ConfigType {
 	CHARACTER_ROTATION_SPEED: number;
@@ -14,7 +19,7 @@ interface ConfigType {
 }
 
 const Config: ConfigType = {
-	CHARACTER_ROTATION_SPEED: 3,
+	CHARACTER_ROTATION_SPEED: 50,
 	TRANSITION_SPRING_DAMPER: 0.7,
 	CAMERA_TRANSITION_IN_SPEED: 10,
 	CAMERA_TRANSITION_OUT_SPEED: 10,
@@ -24,6 +29,7 @@ const Config: ConfigType = {
 
 let Enabled = false;
 let AutoRotate = true;
+let Direction = new Vector3(0, 0, 0);
 const Player = Players.LocalPlayer;
 const Camera = Workspace.CurrentCamera as Camera;
 const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
@@ -36,6 +42,8 @@ const CameraSpring = new Spring(new Vector3(0, 0, 0));
 CameraSpring.Damper = Config.TRANSITION_SPRING_DAMPER;
 
 export class ShiftLockHandler {
+	public static ChangedDirection = ChangedDirectionSignal;
+
 	public static Toggle() {
 		if (Enabled) {
 			CameraSpring.Speed = Config.CAMERA_TRANSITION_OUT_SPEED;
@@ -81,6 +89,13 @@ function RenderStepped(deltaTime: number) {
 		new CFrame(HumanoidRootPart.Position).mul(CFrame.Angles(0, y, 0)),
 		math.clamp(deltaTime * 2 * Config.CHARACTER_ROTATION_SPEED, 0, 1),
 	);
+
+	const actualDirection = Tools.WorldMovingDirection(
+		HumanoidRootPart.CFrame.VectorToObjectSpace(Humanoid.MoveDirection),
+	);
+	if (actualDirection === Direction) return;
+	Direction = actualDirection;
+	ChangedDirectionSignal.Fire(Direction);
 }
 
 Butler.Connect(Attributes.AttributeChanged, (attribute) => AttributeChanged(attribute));

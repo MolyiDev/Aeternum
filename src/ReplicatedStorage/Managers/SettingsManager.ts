@@ -6,6 +6,8 @@ import { ECustomInputs } from "ReplicatedStorage/Enums/Settings/ECustomInputs";
 import { ESettingsControls } from "ReplicatedStorage/Enums/Settings/ESettingsControls";
 import { ESettingsAudio } from "ReplicatedStorage/Enums/Settings/ESettingsAudio";
 import { ESettingsVisual } from "ReplicatedStorage/Enums/Settings/ESettingsVisual";
+import Object from "@rbxts/object-utils";
+import { ESettingsGeneral } from "ReplicatedStorage/Enums/Settings/ESettingsGeneral";
 
 // Events
 const SettingsSet = ReplicatedStorage.WaitForChild("Events").WaitForChild("SettingsSet") as RemoteEvent;
@@ -104,30 +106,23 @@ export class SettingsManager {
 		return newControls;
 	}
 
-	public static ChangeName(key: Enum.UserInputType | Enum.KeyCode | ECustomInputs) {
-		const mappedName = this.KeyMappings.get(key);
-		if (mappedName) return mappedName;
-		else if (typeIs(key, "EnumItem")) return key.Name;
-		else return tostring(key);
-	}
-
 	public static GetAllControls(
 		player: Player,
 	): Map<Enum.UserInputType | Enum.KeyCode | ECustomInputs, [string, number]> {
-		const controls = SettingsManager.GetSetting(player, ECustomInputs.All) as string;
-		return SettingsManager.DecodeControls(controls);
+		const controls = this.GetSetting(player, ECustomInputs.All) as string;
+		return this.DecodeControls(controls);
 	}
 
 	public static SaveControls(
 		player: Player,
 		controls: Map<Enum.KeyCode | Enum.UserInputType | ECustomInputs, [string, number]>,
 	) {
-		const encoded = SettingsManager.EncodeControls(controls);
-		SettingsManager.SetSetting(player, ECustomInputs.All, encoded);
+		const encoded = this.EncodeControls(controls);
+		this.SetSetting(player, ECustomInputs.All, encoded);
 	}
 
 	public static RemovePreviousControl(player: Player, controlToRemove: string, controlType: number) {
-		const controls = SettingsManager.GetAllControls(player);
+		const controls = this.GetAllControls(player);
 		for (const [input, controlData] of pairs(controls)) {
 			if (controlData[0] === controlToRemove && controlData[1] === controlType) {
 				controls.delete(input);
@@ -138,7 +133,7 @@ export class SettingsManager {
 	}
 
 	public static GetControl(player: Player, input: InputObject) {
-		const controls = SettingsManager.GetAllControls(player);
+		const controls = this.GetAllControls(player);
 
 		let controlReturn = controls.get(input.KeyCode);
 
@@ -157,12 +152,12 @@ export class SettingsManager {
 			SettingsSet.FireServer("Controls", input, control, controlType);
 		} else {
 			if (!input) {
-				const controls = SettingsManager.RemovePreviousControl(player, control, controlType);
-				SettingsManager.SaveControls(player, controls);
+				const controls = this.RemovePreviousControl(player, control, controlType);
+				this.SaveControls(player, controls);
 			} else {
-				const controls = SettingsManager.RemovePreviousControl(player, control, controlType);
+				const controls = this.RemovePreviousControl(player, control, controlType);
 				controls.set(input, [control, controlType]);
-				SettingsManager.SaveControls(player, controls);
+				this.SaveControls(player, controls);
 			}
 		}
 	}
@@ -177,20 +172,28 @@ export class SettingsManager {
 	}
 
 	public static WaitForSettings(player: Player) {
-		while (!player.GetAttribute("SettingsLoaded")) task.wait();
+		while (!player.GetAttribute("SettingsLoaded")) task.wait(0.05);
 	}
 
-	private static CheckBooleanSetting(
+	private static CheckSetting = (
 		player: Player,
-		savedData: IPlayerSavedData,
-		enumeration: ESettingsVisual,
-		defaultValue: boolean,
-	) {
-		if (savedData.Visual && savedData.Visual[enumeration] !== undefined) {
-			SettingsManager.SetSetting(player, enumeration, savedData.Visual[enumeration]);
-		} else {
-			SettingsManager.SetSetting(player, enumeration, defaultValue);
+		setting: string,
+		savedData: { [key: string]: boolean | number } | { [key: string]: undefined } | undefined,
+		defaultValue: boolean | number | string,
+	) =>
+		this.SetSetting(
+			player,
+			setting,
+			savedData && savedData[setting] !== undefined ? savedData[setting] : defaultValue,
+		);
+
+	private static GetSettingsForEnum(player: Player, enumType: object) {
+		const settings: { [key: string]: AttributeValue | undefined } = {};
+		for (const enumV of Object.values(enumType)) {
+			const enumValue = enumV as string;
+			settings[enumValue] = this.GetSetting(player, enumValue);
 		}
+		return settings;
 	}
 
 	public static Initialize() {
@@ -199,85 +202,51 @@ export class SettingsManager {
 		const PlayerSettingsStore = DataStoreService.GetDataStore("PlayerSettings");
 
 		Players.PlayerAdded.Connect((player: Player) => {
-			task.wait();
-
-			const [success, savedData] = pcall(() => PlayerSettingsStore.GetAsync(tostring(player.UserId)));
+			const [_, savedData] = pcall(() => PlayerSettingsStore.GetAsync(tostring(player.UserId)));
 			const data = savedData as IPlayerSavedData;
+			const dataAudio = data?.Audio;
+			const dataControls = data?.Controls;
+			const dataVisual = data?.Visual;
+			const dataGeneral = data?.DataGeneral;
 
-			if (success && savedData) {
-				SettingsManager.SetSetting(
-					player,
-					ESettingsAudio.Overall,
-					data.Audio && data.Audio[ESettingsAudio.Overall] !== undefined
-						? data.Audio[ESettingsAudio.Overall]
-						: 1,
-				);
-				SettingsManager.SetSetting(
-					player,
-					ESettingsAudio.Music,
-					data.Audio && data.Audio[ESettingsAudio.Music] !== undefined
-						? data.Audio[ESettingsAudio.Music]
-						: 0.25,
-				);
-				SettingsManager.SetSetting(
-					player,
-					ESettingsAudio.Effects,
-					data.Audio && data.Audio[ESettingsAudio.Effects] !== undefined
-						? data.Audio[ESettingsAudio.Effects]
-						: 0.5,
-				);
+			// Audio
+			this.CheckSetting(player, ESettingsAudio.Overall, dataAudio, 1);
+			this.CheckSetting(player, ESettingsAudio.Music, dataAudio, 1);
+			this.CheckSetting(player, ESettingsAudio.Effects, dataAudio, 1);
 
-				this.CheckBooleanSetting(player, data, ESettingsVisual.Shadows, true);
-				this.CheckBooleanSetting(player, data, ESettingsVisual.Bloom, true);
-				this.CheckBooleanSetting(player, data, ESettingsVisual.DepthOfField, true);
+			// Controls
 
-				SettingsManager.SaveControls(player, SettingsManager.DefaultControls);
+			this.SaveControls(player, this.DefaultControls);
+			//this.CheckSetting(player, ECustomInputs.All, dataControls, this.EncodeControls(this.DefaultControls));
 
-				/*if (data.Controls && data.Controls[ECustomInputs.All]) {
-					const ctrls = data.Controls[ECustomInputs.All];
-					SettingsManager.SetSetting(player, ECustomInputs.All, ctrls);
-				} else {
-					SettingsManager.SaveControls(player, SettingsManager.DefaultControls);
-				}*/
-			} else {
-				SettingsManager.SetSetting(player, ESettingsAudio.Overall, 1);
-				SettingsManager.SetSetting(player, ESettingsAudio.Music, 0.25);
-				SettingsManager.SetSetting(player, ESettingsAudio.Effects, 0.5);
+			// Visual
+			this.CheckSetting(player, ESettingsVisual.Wind, dataVisual, true);
+			this.CheckSetting(player, ESettingsVisual.Bloom, dataVisual, true);
+			this.CheckSetting(player, ESettingsVisual.Blur, dataVisual, true);
+			this.CheckSetting(player, ESettingsVisual.DepthOfField, dataVisual, true);
+			this.CheckSetting(player, ESettingsVisual.SunRays, dataVisual, true);
+			this.CheckSetting(player, ESettingsVisual.Shadows, dataVisual, true);
+			this.CheckSetting(player, ESettingsVisual.VolumetricShadows, dataVisual, false);
+			this.CheckSetting(player, ESettingsVisual.Debris, dataVisual, 1);
+			this.CheckSetting(player, ESettingsVisual.SubDebris, dataVisual, 1);
 
-				SettingsManager.SetSetting(player, ESettingsVisual.Shadows, true);
-				SettingsManager.SetSetting(player, ESettingsVisual.Bloom, true);
-				SettingsManager.SetSetting(player, ESettingsVisual.DepthOfField, true);
-
-				SettingsManager.SaveControls(player, SettingsManager.DefaultControls);
-			}
+			// General
+			this.CheckSetting(player, ESettingsGeneral.FPSMS, dataGeneral, false);
 
 			player.SetAttribute("SettingsLoaded", true);
 		});
 
 		Players.PlayerRemoving.Connect((player) => {
 			const settingsData = {
-				Audio: {
-					[ESettingsAudio.Overall]: SettingsManager.GetSetting(player, ESettingsAudio.Overall),
-					[ESettingsAudio.Music]: SettingsManager.GetSetting(player, ESettingsAudio.Music),
-					[ESettingsAudio.Effects]: SettingsManager.GetSetting(player, ESettingsAudio.Effects),
-				},
-
-				Visual: {
-					[ESettingsVisual.Shadows]: SettingsManager.GetSetting(player, ESettingsVisual.Shadows),
-					[ESettingsVisual.Bloom]: SettingsManager.GetSetting(player, ESettingsVisual.Bloom),
-					[ESettingsVisual.DepthOfField]: SettingsManager.GetSetting(player, ESettingsVisual.DepthOfField),
-				},
-
+				Audio: this.GetSettingsForEnum(player, ESettingsAudio),
 				Controls: {
-					[ECustomInputs.All]:
-						SettingsManager.EncodeControls(SettingsManager.GetAllControls(player)) ??
-						SettingsManager.DefaultControls,
+					[ECustomInputs.All]: this.EncodeControls(this.GetAllControls(player)) ?? this.DefaultControls,
 				},
+				Visual: this.GetSettingsForEnum(player, ESettingsVisual),
+				General: this.GetSettingsForEnum(player, ESettingsGeneral),
 			};
 
-			const [success, err] = pcall(() => {
-				PlayerSettingsStore.SetAsync(tostring(player.UserId), settingsData);
-			});
+			const [success, err] = pcall(() => PlayerSettingsStore.SetAsync(tostring(player.UserId), settingsData));
 
 			if (!success) warn("Error saving configuration:", err);
 		});
@@ -296,9 +265,9 @@ export class SettingsManager {
 				if (any2 !== any2) return;
 				if (typeIs(any, "string")) return;
 				if (!typeIs(any1, "string")) return;
-				SettingsManager.SetControl(player, any, any1, any2);
+				this.SetControl(player, any, any1, any2);
 			} else if (funct === "Setting") {
-				if (typeIs(any, "string")) SettingsManager.SetSetting(player, any, any1);
+				if (typeIs(any, "string")) this.SetSetting(player, any, any1);
 			}
 		});
 	}
