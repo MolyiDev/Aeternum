@@ -9,7 +9,7 @@ import { UpBar } from "./UpBar";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
 import { AudioSettings } from "./AudioSettings";
 import { VisualSettings } from "./VisualSettings";
-import { SpecialButton } from "StarterGui/Components/SpecialButton";
+import { SpecialButton } from "StarterPlayer/StarterPlayerScripts/UI/Components/SpecialButton";
 import { ESettingsPanels } from "./Components/Enums/ESettingsPanels";
 import { GeneralSettings } from "./GeneralSettings";
 import { StarterGui } from "@rbxts/services";
@@ -19,6 +19,7 @@ const TWEENINFO_PANEL = new TweenInfo(0.55, Enum.EasingStyle.Quad, Enum.EasingDi
 
 interface ISettingsGUI {
 	opacity?: number;
+	position: UDim2;
 	interactable?: boolean;
 }
 
@@ -36,7 +37,7 @@ export const SettingsGUI = forwardRef<CanvasGroup, ISettingsGUI>((props, ref) =>
 			ref={settingsRef}
 			noBackground
 			anchorPoint={AnchorPoints.Middle}
-			position={UDim2.fromScale(0.5, 0.5)}
+			position={props.position}
 			size={UDim2.fromScale(1, 1)}
 			opacity={props.opacity}
 			interactable={props.interactable}
@@ -86,10 +87,11 @@ export const SettingsGUI = forwardRef<CanvasGroup, ISettingsGUI>((props, ref) =>
 					buttonStrokeColor={Color3.fromRGB(167, 59, 73)}
 					imageEvent={{
 						MouseButton1Up: () => {
-							Tools.TweenPlay(settingsRef.current, TWEENINFO_PANEL, {
+							const tween = Tools.TweenPlay(settingsRef.current, TWEENINFO_PANEL, {
 								Position: UDim2.fromScale(0.5, 0.7),
 								GroupTransparency: 1,
 							});
+							tween.Completed.Once(() => (settingsRef.current.Position = UDim2.fromScale(0.5, 10)));
 							StarterGui.SetCoreGuiEnabled(Enum.CoreGuiType.All, true);
 							Icon.setTopbarEnabled(true);
 							settingsRef.current.Interactable = false;

@@ -41,9 +41,8 @@ export class GroundSmash implements IReplicateClass {
 		if (animName !== EAnimations.GroundSmashIdle) return;
 
 		const rayOrigin = this.Character.HumanoidRootPart.Position;
-		const rayDirection = new Vector3(0, -5000, 0);
 
-		const rayResult = Workspace.Raycast(rayOrigin, rayDirection, this.RayParams);
+		const rayResult = Workspace.Raycast(rayOrigin, new Vector3(0, -5000, 0), this.RayParams);
 		if (!rayResult) {
 			this.Height = 0;
 			return;

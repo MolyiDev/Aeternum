@@ -11,9 +11,13 @@ import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
 import { EWeapons } from "ReplicatedStorage/Enums/EWeapons";
 import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
 
+// Constants
+const FEINT_OUT = 0.1;
+
 // Variables
 const Player = Players.LocalPlayer;
 const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Animations = Character.Animations;
 const Abilities = Character.Abilities;
 const Attributes = Character.Attributes;
 const Butler = Character.Butler;
@@ -53,6 +57,15 @@ function AbilityRemove(abilityPlace: EAbilityPlace, weapon: EWeapons) {
 function InputBegan(control: [string, number] | undefined, input: InputObject, doublePressed: boolean) {
 	if (!control) return;
 	switch (control[0]) {
+		case ESettingsControls.Feint:
+			{
+				const UsingAbility = Attributes.UsingAbilityAnim();
+				if (!UsingAbility || !Abilities.CanFeint(UsingAbility)) return;
+				const AnimAbility = Animations.GetAnimation(UsingAbility);
+				if (!AnimAbility) return;
+				AnimAbility.Stop(FEINT_OUT);
+			}
+			break;
 		case ESettingsControls.Ability1:
 			AbilityStart(EAbilityPlace.Ability1);
 			break;

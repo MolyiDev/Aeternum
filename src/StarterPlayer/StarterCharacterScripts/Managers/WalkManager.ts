@@ -55,6 +55,7 @@ let IsWalking = false;
 let IsWalkingLocked = false;
 
 export class WalkManager {
+	private static PrevAnimation: AnimationTrack | undefined;
 	public static WalkDirection: Vector3 = Vector3.zero;
 
 	public static WalkDeactivate(speed: number | undefined) {
@@ -75,6 +76,7 @@ export class WalkManager {
 	}
 
 	private static StopAllAnimations(speed?: number) {
+		this.PrevAnimation = undefined;
 		WalkForward.Stop(speed);
 		WalkForwardLeft.Stop(speed);
 		WalkForwardRight.Stop(speed);
@@ -93,33 +95,49 @@ export class WalkManager {
 			return;
 		}
 
+		const Time = this.PrevAnimation !== undefined ? this.PrevAnimation.TimePosition : 0;
 		this.StopAllAnimations(FADE_OUT);
 
 		switch (this.WalkDirection) {
 			case new Vector3(0, 0, -1): // Forward
 				WalkForward.Play(FADE_IN, 1, this.AnimForwardSpeed());
+				WalkForward.TimePosition = Time;
+				this.PrevAnimation = WalkForward;
 				break;
 			case new Vector3(-1, 0, -1): // Forward-Left
-				print("FORWARDLEFT");
 				WalkForwardLeft.Play(FADE_IN, 1, this.AnimForwardDiagonalSpeed());
+				WalkForwardLeft.TimePosition = Time;
+				this.PrevAnimation = WalkForwardLeft;
 				break;
 			case new Vector3(1, 0, -1): // Forward-Right
 				WalkForwardRight.Play(FADE_IN, 1, this.AnimForwardDiagonalSpeed());
+				WalkForwardRight.TimePosition = Time;
+				this.PrevAnimation = WalkForwardRight;
 				break;
 			case new Vector3(0, 0, 1): // Back
 				WalkBack.Play(FADE_IN, 1, this.AnimBackSpeed());
+				WalkBack.TimePosition = Time;
+				this.PrevAnimation = WalkBack;
 				break;
 			case new Vector3(-1, 0, 1): // Back-Left
 				WalkBackLeft.Play(FADE_IN, 1, this.AnimBackDiagonalSpeed());
+				WalkBackLeft.TimePosition = Time;
+				this.PrevAnimation = WalkBackLeft;
 				break;
 			case new Vector3(1, 0, 1): // Back-Right
 				WalkBackRight.Play(FADE_IN, 1, this.AnimBackDiagonalSpeed());
+				WalkBackRight.TimePosition = Time;
+				this.PrevAnimation = WalkBackRight;
 				break;
 			case new Vector3(1, 0, 0): // Right
 				WalkRight.Play(FADE_IN, 1, this.AnimRightSpeed());
+				WalkRight.TimePosition = Time;
+				this.PrevAnimation = WalkRight;
 				break;
 			case new Vector3(-1, 0, 0): // Left
 				WalkLeft.Play(FADE_IN, 1, this.AnimLeftSpeed());
+				WalkLeft.TimePosition = Time;
+				this.PrevAnimation = WalkLeft;
 				break;
 			default:
 				this.StopAllAnimations(FADE_OUT);

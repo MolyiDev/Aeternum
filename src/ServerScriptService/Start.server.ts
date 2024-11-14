@@ -31,7 +31,7 @@ task.delay(5, () => {
 CharacterManager.AddedCharacter.Connect((character) => {
 	if (!character.IsPlayer) return;
 	character.Model.Parent = CharactersFolder;
-	task.wait(5);
+	task.wait(10);
 	AbilityManager.AddAbility(character, EAbilityPlace.Ability1, EAbility.SeriousPunch);
 	AbilityManager.AddAbility(character, EAbilityPlace.Ability2, EAbility.ElectricKick);
 	AbilityManager.AddAbility(character, EAbilityPlace.Ability3, EAbility.GroundSmash);

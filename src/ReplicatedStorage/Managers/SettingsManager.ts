@@ -215,12 +215,12 @@ export class SettingsManager {
 			this.CheckSetting(player, ESettingsAudio.Effects, dataAudio, 1);
 
 			// Controls
-
 			this.SaveControls(player, this.DefaultControls);
 			//this.CheckSetting(player, ECustomInputs.All, dataControls, this.EncodeControls(this.DefaultControls));
 
 			// Visual
 			this.CheckSetting(player, ESettingsVisual.Wind, dataVisual, true);
+			this.CheckSetting(player, ESettingsVisual.Clouds, dataVisual, true);
 			this.CheckSetting(player, ESettingsVisual.Bloom, dataVisual, true);
 			this.CheckSetting(player, ESettingsVisual.Blur, dataVisual, true);
 			this.CheckSetting(player, ESettingsVisual.DepthOfField, dataVisual, true);
@@ -232,6 +232,7 @@ export class SettingsManager {
 
 			// General
 			this.CheckSetting(player, ESettingsGeneral.FPSMS, dataGeneral, false);
+			this.CheckSetting(player, ESettingsGeneral.ServerInfo, dataGeneral, false);
 
 			player.SetAttribute("SettingsLoaded", true);
 		});

@@ -3,6 +3,7 @@ import { Debris, Players, Workspace } from "@rbxts/services";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
 import { SettingsManager } from "./SettingsManager";
 import { ESettingsVisual } from "ReplicatedStorage/Enums/Settings/ESettingsVisual";
+import Collector from "ReplicatedStorage/Libraries/Collector";
 
 // Variables
 const Player = Players.LocalPlayer;
@@ -40,6 +41,7 @@ export class RockManager {
 		Rocks = Rocks * ((SettingsManager.GetSetting(Player, ESettingsVisual.Debris) as number) ?? 1);
 		SubRocks = SubRocks * ((SettingsManager.GetSetting(Player, ESettingsVisual.SubDebris) as number) ?? 1);
 		const newCframe = new CFrame(ray.Position);
+		const upTimeTween = new TweenInfo(UpTime, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut);
 		let angle = 0;
 
 		const noSpawnPosition = Center.Position.add(Center.LookVector.mul(NoSpawnRadius));
@@ -62,7 +64,10 @@ export class RockManager {
 					RayParams,
 				);
 			else newRay = Workspace.Raycast(cf.Position.add(ray.Normal.mul(6)), ray.Normal.mul(-20), RayParams);
-			if (!newRay) continue;
+			if (!newRay) {
+				angle += 360 / Rocks;
+				continue;
+			}
 			cf = new CFrame(newRay.Position, ray.Position.add(new Vector3(0, 1, 0).mul(Radius / 3)));
 
 			const Rock = new Instance("Part", DebrisFolder);
@@ -100,9 +105,9 @@ export class RockManager {
 				weld.Part1 = rockClone;
 			}
 
-			Debris.AddItem(Rock, 10);
+			Collector.AddItem(Rock, 10);
 
-			Tools.TweenPlay(Rock, new TweenInfo(UpTime, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			Tools.TweenPlay(Rock, upTimeTween, {
 				CFrame: cf.sub(new Vector3(0, 0.3, 0)),
 			});
 
@@ -178,7 +183,7 @@ export class RockManager {
 			Rock.AddTag("NoCameraCollide");
 			Rock.CollisionGroup = "RockDebris";
 
-			Debris.AddItem(Rock, 5);
+			Collector.AddItem(Rock, 5);
 
 			const velocitySpread = 28;
 
@@ -258,7 +263,7 @@ export class RockManager {
 				});
 
 				const randomTime = math.random(50, 150) / 100;
-				Debris.AddItem(Rock, lifeTime + speedOut + randomTime);
+				Collector.AddItem(Rock, lifeTime + speedOut + randomTime);
 				task.delay(lifeTime + randomTime, () => {
 					Tools.TweenPlay(Rock, new TweenInfo(speedOut, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
 						CFrame: c1Pos,
@@ -291,7 +296,7 @@ export class RockManager {
 				});
 
 				const randomTime = math.random(50, 150) / 100;
-				Debris.AddItem(Rock, lifeTime + speedOut + randomTime);
+				Collector.AddItem(Rock, lifeTime + speedOut + randomTime);
 				task.delay(lifeTime + randomTime, () => {
 					Tools.TweenPlay(Rock, new TweenInfo(speedOut, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
 						CFrame: c2Pos,
@@ -343,7 +348,7 @@ export class RockManager {
 			});
 
 			const randomTime = math.random(50, 150) / 100;
-			Debris.AddItem(Rock, lifeTime + speedOut + randomTime);
+			Collector.AddItem(Rock, lifeTime + speedOut + randomTime);
 			task.delay(lifeTime + randomTime, () => {
 				Tools.TweenPlay(Rock, new TweenInfo(speedOut, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
 					CFrame: r1Pos,
@@ -441,7 +446,7 @@ export class RockManager {
 				});
 
 				const randomTime = math.random(50, 150) / 100;
-				Debris.AddItem(Rock, lifeTime + speedOut + randomTime);
+				Collector.AddItem(Rock, lifeTime + speedOut + randomTime);
 				task.delay(lifeTime + randomTime, () => {
 					Tools.TweenPlay(Rock, new TweenInfo(speedOut, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
 						CFrame: c1Pos,
@@ -474,7 +479,7 @@ export class RockManager {
 				});
 
 				const randomTime = math.random(50, 150) / 100;
-				Debris.AddItem(Rock, lifeTime + speedOut + randomTime);
+				Collector.AddItem(Rock, lifeTime + speedOut + randomTime);
 				task.delay(lifeTime + randomTime, () => {
 					Tools.TweenPlay(Rock, new TweenInfo(speedOut, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
 						CFrame: c2Pos,
@@ -527,7 +532,7 @@ export class RockManager {
 			});
 
 			const randomTime = math.random(50, 150) / 100;
-			Debris.AddItem(Rock, lifeTime + speedOut + randomTime);
+			Collector.AddItem(Rock, lifeTime + speedOut + randomTime);
 			task.delay(lifeTime + randomTime, () => {
 				Tools.TweenPlay(Rock, new TweenInfo(speedOut, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
 					CFrame: r1Pos,

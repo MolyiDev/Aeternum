@@ -2,7 +2,7 @@ import { CanvasGroup, Frame, ImageButton } from "@rbxts/better-react-components"
 import { ISettingsToggle } from "./Interfaces/ISettingsToggle";
 import React, { useRef } from "@rbxts/react";
 import { createColorSequence, GradientElement } from "@rbxts/better-react-components/out/helpers/Gradient";
-import { TextLabelShadow } from "StarterGui/Components/Shadows";
+import { TextLabelShadow } from "StarterPlayer/StarterPlayerScripts/UI/Components/Shadows";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
 
 const TWINFO_KNOB = new TweenInfo(0.325, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut);
@@ -25,7 +25,13 @@ export function SettingsToggle(props: ISettingsToggle) {
 	const InitialPosition = Activated ? KNOB_ON_POSITION : KNOB_OFF_POSITION;
 
 	return (
-		<Frame anchorPoint={"m"} backgroundTransparency={0.25} size={UDim2.fromScale(0.96, 0.175)} cornerRadius={0.1}>
+		<Frame
+			anchorPoint={"m"}
+			backgroundTransparency={0.25}
+			size={UDim2.fromScale(0.96, 0.175)}
+			cornerRadius={0.1}
+			layoutOrder={props.layoutOrder}
+		>
 			<GradientElement
 				color={createColorSequence([
 					new ColorSequenceKeypoint(0, Color3.fromRGB(34, 34, 34)),

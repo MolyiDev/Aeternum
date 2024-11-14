@@ -2,9 +2,7 @@ import { CanvasGroup, Frame, ListLayout, ScrollingFrame } from "@rbxts/better-re
 import React from "@rbxts/react";
 import ReactRoblox from "@rbxts/react-roblox";
 import { CreateReactStory } from "@rbxts/ui-labs";
-import { SettingsDragger } from "StarterGui/SettingsUI/Components/SettingsDragger";
-import { SettingsPanel } from "StarterGui/SettingsUI/Components/SettingsPanel";
-import { SettingsGUI } from "StarterGui/SettingsUI/SettingsGUI";
+import { SettingsDragger } from "StarterPlayer/StarterPlayerScripts/UI/SettingsUI/Components/SettingsDragger";
 
 const story = CreateReactStory(
 	{
@@ -40,9 +38,9 @@ const story = CreateReactStory(
 						explanation="Volume of all sounds"
 						initialValue={0}
 						minDrag={0}
-						maxDrag={100}
+						maxDrag={500}
 						layoutOrder={0}
-						dragAmount={1}
+						dragAmount={20}
 						textModifier="%"
 						ValueChanged={(value) => print(value)}
 					/>

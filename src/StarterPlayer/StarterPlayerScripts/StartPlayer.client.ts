@@ -1,5 +1,5 @@
 /* eslint-disable roblox-ts/lua-truthiness */
-import { Lighting, Players } from "@rbxts/services";
+import { Lighting, Players, Workspace } from "@rbxts/services";
 import { ESettingsVisual } from "ReplicatedStorage/Enums/Settings/ESettingsVisual";
 import { SettingsManager } from "ReplicatedStorage/Managers/SettingsManager";
 import { WindManager } from "ReplicatedStorage/Managers/WindManager";
@@ -7,6 +7,10 @@ import { WindManager } from "ReplicatedStorage/Managers/WindManager";
 const Player = Players.LocalPlayer;
 SettingsManager.WaitForSettings(Player);
 
+(Workspace.Terrain.FindFirstChild("Clouds") as Clouds).Enabled = SettingsManager.GetSetting(
+	Player,
+	ESettingsVisual.Clouds,
+) as boolean;
 Lighting.Bloom.Enabled = SettingsManager.GetSetting(Player, ESettingsVisual.Bloom) as boolean;
 Lighting.Blur.Enabled = SettingsManager.GetSetting(Player, ESettingsVisual.Blur) as boolean;
 Lighting.DepthOfField.Enabled = SettingsManager.GetSetting(Player, ESettingsVisual.DepthOfField) as boolean;

@@ -20,6 +20,7 @@ import { GuardManager } from "./Combat/Managers/GuardManager";
 import { SlideManager } from "./Managers/SlideManager";
 import { ShiftLockHandler } from "./Handlers/ShiftLockHandler";
 import { CharacterManager } from "../../ReplicatedStorage/Managers/CharacterManager";
+import Collector from "ReplicatedStorage/Libraries/Collector";
 
 // Variables
 const TemporalFolder = Workspace.WaitForChild("Temporal");
@@ -253,7 +254,7 @@ function Movement() {
 				new CFrame(math.random(-20, 20) / 10, math.random(-1, 1), math.random(-1, 1)),
 			);
 
-			Debris.AddItem(speedParticle, 0.285);
+			Collector.AddItem(speedParticle, 0.285);
 			Tools.TweenPlay(speedParticle, new TweenInfo(0.285), {
 				Transparency: 1,
 				Size: new Vector3(0, 0, 0),
@@ -285,7 +286,7 @@ function Movement() {
 				}
 			}
 
-			Debris.AddItem(dustClone, 1);
+			Collector.AddItem(dustClone, 1);
 			direction = -direction;
 		}
 	} else direction = 1;

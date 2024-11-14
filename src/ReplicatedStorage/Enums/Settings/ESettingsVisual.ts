@@ -1,5 +1,6 @@
 export enum ESettingsVisual {
 	Wind = "Settings_Visual_Wind",
+	Clouds = "Settings_Visual_Clouds",
 	Bloom = "Settings_Visual_Bloom",
 	Blur = "Settings_Visual_Blur",
 	DepthOfField = "Settings_Visual_DepthOfField",

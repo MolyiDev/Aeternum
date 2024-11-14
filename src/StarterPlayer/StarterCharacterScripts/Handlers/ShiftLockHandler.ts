@@ -83,12 +83,13 @@ function AttributeChanged(attribute: string) {
 function RenderStepped(deltaTime: number) {
 	Camera.CFrame = Camera.CFrame.mul(new CFrame(CameraSpring.Position));
 
-	if (!AutoRotate || !Enabled) return;
-	const [x, y, z] = Camera.CFrame.ToOrientation();
-	HumanoidRootPart.CFrame = HumanoidRootPart.CFrame.Lerp(
-		new CFrame(HumanoidRootPart.Position).mul(CFrame.Angles(0, y, 0)),
-		math.clamp(deltaTime * 2 * Config.CHARACTER_ROTATION_SPEED, 0, 1),
-	);
+	if (AutoRotate && Enabled) {
+		const [x, y, z] = Camera.CFrame.ToOrientation();
+		HumanoidRootPart.CFrame = HumanoidRootPart.CFrame.Lerp(
+			new CFrame(HumanoidRootPart.Position).mul(CFrame.Angles(0, y, 0)),
+			math.clamp(deltaTime * 2 * Config.CHARACTER_ROTATION_SPEED, 0, 1),
+		);
+	}
 
 	const actualDirection = Tools.WorldMovingDirection(
 		HumanoidRootPart.CFrame.VectorToObjectSpace(Humanoid.MoveDirection),

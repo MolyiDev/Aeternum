@@ -9,6 +9,8 @@ export enum EAttribute {
 	IsRagdoll = "IsRagdoll",
 	IsStunnedFull = "IsStunnedFull",
 	IsStunnedPartial = "IsStunnedPartial",
+	CanLandStun = "CanLandStun",
 	UsingAbility = "UsingAbility",
+	UsingAbilityAnim = "UsingAbilityAnim",
 	UsingMove = "UsingMove",
 }

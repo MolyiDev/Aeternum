@@ -35,6 +35,7 @@ export const SettingsPanel = forwardRef<CanvasGroup, ISettingsPanel>((props, ref
 				<ListLayout
 					padding={0.0125}
 					horizontalAlign={"Center"}
+					order={"LayoutOrder"}
 					flexAlignY={props.flexAlign ? "SpaceBetween" : "None"}
 				/>
 				{props.children}

@@ -1,7 +1,7 @@
 import { AnchorPoints, CanvasGroup, Frame, GridLayout, Image } from "@rbxts/better-react-components";
 import { createColorSequence, GradientElement } from "@rbxts/better-react-components/out/helpers/Gradient";
 import React, { useEffect, useRef, useState } from "@rbxts/react";
-import { ImageButtonShadow, TextLabelShadow } from "StarterGui/Components/Shadows";
+import { ImageButtonShadow, TextLabelShadow } from "StarterPlayer/StarterPlayerScripts/UI/Components/Shadows";
 import { ESettingsPanels } from "./Components/Enums/ESettingsPanels";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
 

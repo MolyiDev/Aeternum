@@ -4,6 +4,7 @@ import { Character } from ".";
 import { EWeapons } from "ReplicatedStorage/Enums/EWeapons";
 import { EAbilityInfo } from "ReplicatedStorage/Enums/Abilities/EAbilityInfo";
 import Signal from "@rbxts/lemon-signal";
+import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
 
 interface PlaceWeapon {
 	Place: EAbilityPlace;
@@ -15,6 +16,7 @@ export class Abilities {
 
 	private AbilitiesPerPlace: Map<EAbilityPlace | string, Map<EWeapons | string, EAbility | string>>;
 	private PlacesPerAbility: Map<EAbility | string, PlaceWeapon>; // Reverse to clean AbilitiesPerPlace on undefined
+	public AbilitiesFeint: Map<EAbility | string, boolean>;
 	private Abilities: Set<EAbility | string>;
 
 	public AbilityAdded: Signal<[EAbilityPlace, EWeapons, EAbility]>;
@@ -30,6 +32,7 @@ export class Abilities {
 
 		this.AbilitiesPerPlace = new Map();
 		this.PlacesPerAbility = new Map();
+		this.AbilitiesFeint = new Map();
 		this.Abilities = new Set();
 
 		this.AbilityAdded = new Signal();
@@ -40,7 +43,11 @@ export class Abilities {
 
 	public Has = (ability: string) => this.Abilities.has(ability);
 
-	public CanFeint(ability: EAbility) {}
+	public CanFeint(ability: string): boolean {
+		const ReplicateInfo = ModuleManager.GetReplicateInfo(ability);
+		if (!ReplicateInfo || !ReplicateInfo.CanFeint || !this.AbilitiesFeint.get(ability)) return false;
+		return true;
+	}
 
 	public AbilitiesChanged(attribute: string) {
 		// Attribute is the name of the ability (EAbility) and getAtt is the place of the ability (EAbilityPlace)
@@ -48,16 +55,16 @@ export class Abilities {
 		if (!getAtt) {
 			this.Abilities.delete(attribute);
 			const PlacesPerAbility = this.PlacesPerAbility.get(attribute);
-			if (PlacesPerAbility) {
-				const AbilityPlace = this.AbilitiesPerPlace.get(PlacesPerAbility.Place);
-				if (AbilityPlace) {
-					AbilityPlace.delete(PlacesPerAbility.Weapon);
-					this.AbilityRemoved.Fire(PlacesPerAbility.Place, PlacesPerAbility.Weapon, attribute as EAbility);
-					this.AbilitiesPerPlace.delete(PlacesPerAbility.Place);
-				}
+			if (!PlacesPerAbility) return;
 
-				this.PlacesPerAbility.delete(attribute);
+			const AbilityPlace = this.AbilitiesPerPlace.get(PlacesPerAbility.Place);
+			if (AbilityPlace) {
+				AbilityPlace.delete(PlacesPerAbility.Weapon);
+				this.AbilityRemoved.Fire(PlacesPerAbility.Place, PlacesPerAbility.Weapon, attribute as EAbility);
+				this.AbilitiesPerPlace.delete(PlacesPerAbility.Place);
 			}
+
+			this.PlacesPerAbility.delete(attribute);
 
 			return;
 		}

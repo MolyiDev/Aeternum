@@ -31,6 +31,8 @@ export class LandManager {
 	}
 
 	public static LandingLargeStart() {
+		if (!Attributes.CanLandStun()) return;
+
 		Attributes.SelfStun(1.5, EStunType.Default);
 		LandLarge.Play(0.1, 5);
 	}

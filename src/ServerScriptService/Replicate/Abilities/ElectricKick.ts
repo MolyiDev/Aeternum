@@ -90,7 +90,6 @@ export class ElectricKick implements IReplicateClass {
 		this.MarkStop = Butler.Once(ElectricKick.Stopped, () => {
 			Butler.RemoveList(this.MarkRockHand, this.MarkDamage, this.MarkDamageFinal, this.MarkStop);
 			Attributes.SetTickAnim(Ability, tick());
-			Attributes.SetUsingAbility(undefined);
 		});
 	}
 

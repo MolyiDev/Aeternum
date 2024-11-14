@@ -22,8 +22,6 @@ function InputBegan(control: [string, number] | undefined, input: InputObject, d
 			if (StateManager.IsInState(EMovementState.Crouching)) StealthManager.Attack();
 			else PunchManager.Attack();
 			break;
-		case ESettingsControls.Attack2:
-			break;
 		case ESettingsControls.HeavyAttack:
 			HeavyManager.Attack();
 			break;

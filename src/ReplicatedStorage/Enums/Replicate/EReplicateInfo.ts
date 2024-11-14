@@ -3,142 +3,111 @@ import { EAbilityInfo } from "../Abilities/EAbilityInfo";
 import { EAnimations } from "../EAnimations";
 import { IReplicateInfo } from "ReplicatedStorage/Interfaces/IReplicateInfo";
 
+const defaultReplicateInfo: IReplicateInfo = {
+	Ability: false,
+	Move: false,
+	Signal: false,
+	CanFeint: false,
+	HasFeintStop: true,
+	CanUseStunned: false,
+	Sound: false,
+	Cooldown: 0,
+	Class: undefined,
+};
+
+function ReplicateInfo(overrides: Partial<IReplicateInfo> = {}): IReplicateInfo {
+	return { ...defaultReplicateInfo, ...overrides };
+}
+
 export const EReplicateInfo = new Map<EAnimations | string, IReplicateInfo>([
 	// Abilities
 
 	[
 		EAnimations.ElectricKick,
-		{
+		ReplicateInfo({
 			Ability: true,
 			Signal: true,
-			CanUseStunned: false,
+			Sound: true,
 			Cooldown: EAbilityInfo[EAbility.ElectricKick].Cooldown,
-		},
+		}),
 	],
 	[
 		EAnimations.SeriousPunch,
-		{
+		ReplicateInfo({
 			Ability: true,
-			Signal: false,
-			CanUseStunned: false,
+			Sound: true,
 			Cooldown: EAbilityInfo[EAbility.SeriousPunch].Cooldown,
-		},
+		}),
 	],
 	[
 		EAnimations.GroundSmash,
-		{
+		ReplicateInfo({
 			Ability: true,
-			Signal: false,
-			CanUseStunned: false,
+			Sound: true,
 			Cooldown: EAbilityInfo[EAbility.GroundSmash].Cooldown,
 			Class: "GroundSmash",
-		},
+		}),
 	],
 	[
 		EAnimations.GroundSmashIdle,
-		{
+		ReplicateInfo({
 			Ability: true,
-			Signal: false,
-			CanUseStunned: false,
+			Sound: true,
+			HasFeintStop: false,
 			Cooldown: EAbilityInfo[EAbility.GroundSmash].Cooldown,
 			Class: "GroundSmash",
-		},
+		}),
 	],
 	[
 		EAnimations.GroundSmashLand,
-		{
+		ReplicateInfo({
 			Ability: true,
-			Signal: false,
-			CanUseStunned: false,
+			Sound: true,
 			Cooldown: EAbilityInfo[EAbility.GroundSmash].Cooldown,
 			Class: "GroundSmash",
-		},
+		}),
 	],
 
 	// Dash
 
 	[
 		EAnimations.DashForward,
-		{
-			Ability: false,
-			Signal: false,
-			CanUseStunned: false,
+		ReplicateInfo({
+			Sound: true,
 			Cooldown: 2.5,
-		},
+		}),
 	],
 	[
 		EAnimations.DashBack,
-		{
-			Ability: false,
-			Signal: false,
-			CanUseStunned: false,
+		ReplicateInfo({
+			Sound: true,
 			Cooldown: 2.5,
-		},
+		}),
 	],
 	[
 		EAnimations.DashLeft,
-		{
-			Ability: false,
-			Signal: false,
-			CanUseStunned: false,
+		ReplicateInfo({
+			Sound: true,
 			Cooldown: 2.5,
-		},
+		}),
 	],
 	[
 		EAnimations.DashRight,
-		{
-			Ability: false,
-			Signal: false,
-			CanUseStunned: false,
+		ReplicateInfo({
+			Sound: true,
 			Cooldown: 2.5,
-		},
+		}),
 	],
 
-	// Footsteps
+	// Walk-Run
 
-	[
-		EAnimations.WalkForward,
-		{
-			Ability: false,
-			Signal: false,
-			CanUseStunned: false,
-			Cooldown: 0,
-		},
-	],
-	[
-		EAnimations.WalkBack,
-		{
-			Ability: false,
-			Signal: false,
-			CanUseStunned: false,
-			Cooldown: 0,
-		},
-	],
-	[
-		EAnimations.WalkLeft,
-		{
-			Ability: false,
-			Signal: false,
-			CanUseStunned: false,
-			Cooldown: 0,
-		},
-	],
-	[
-		EAnimations.WalkRight,
-		{
-			Ability: false,
-			Signal: false,
-			CanUseStunned: false,
-			Cooldown: 0,
-		},
-	],
-	[
-		EAnimations.Run,
-		{
-			Ability: false,
-			Signal: false,
-			CanUseStunned: false,
-			Cooldown: 0,
-		},
-	],
+	[EAnimations.WalkForward, ReplicateInfo()],
+	[EAnimations.WalkForwardLeft, ReplicateInfo()],
+	[EAnimations.WalkForwardRight, ReplicateInfo()],
+	[EAnimations.WalkBackLeft, ReplicateInfo()],
+	[EAnimations.WalkBackRight, ReplicateInfo()],
+	[EAnimations.WalkBack, ReplicateInfo()],
+	[EAnimations.WalkLeft, ReplicateInfo()],
+	[EAnimations.WalkRight, ReplicateInfo()],
+	[EAnimations.Run, ReplicateInfo()],
 ]);

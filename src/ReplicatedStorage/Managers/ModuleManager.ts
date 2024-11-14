@@ -1,15 +1,17 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { ReplicatedStorage, RunService, ServerScriptService } from "@rbxts/services";
 import { Character } from "ReplicatedStorage/Classes/Character";
+import { EReplicateInfo } from "ReplicatedStorage/Enums/Replicate/EReplicateInfo";
 import { IAbility } from "ReplicatedStorage/Interfaces/IAbility";
 import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
+import { IReplicateInfo } from "ReplicatedStorage/Interfaces/IReplicateInfo";
 
 const Abilities = ReplicatedStorage.WaitForChild("Abilities")
 	.GetDescendants()
 	.filter((descendant) => descendant.IsA("ModuleScript"));
 
 const ReplicatesDictionary: { [key: string]: ModuleScript } = {};
-
+const ReplicatesInfo: { [key: string]: IReplicateInfo } = {};
 const AbilitiesDictionary: { [key: string]: ModuleScript } = {};
 
 if (RunService.IsClient()) {
@@ -43,6 +45,8 @@ export class ModuleManager {
 		const ReplicateModule = ReplicatesDictionary[name];
 		return (require(ReplicateModule) as { [key: string]: new (character: Character) => IReplicateClass })[name];
 	}
+
+	public static GetReplicateInfo = (name: string) => EReplicateInfo.get(name);
 
 	public static GetAbility(name: string) {
 		const AbilityModule = AbilitiesDictionary[name];

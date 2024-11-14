@@ -4,10 +4,8 @@ import { Character } from ".";
 import { EAbilityPlace } from "ReplicatedStorage/Enums/Abilities/EAbilityPlace";
 import { EWeapons } from "ReplicatedStorage/Enums/EWeapons";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
-import { EReplicateInfo } from "ReplicatedStorage/Enums/Replicate/EReplicateInfo";
 import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
-import { EReplicateSound } from "ReplicatedStorage/Enums/Replicate/EReplicateSound";
 import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
 
 export class ReplicateClient {
@@ -43,21 +41,25 @@ export class ReplicateClient {
 
 	public InitializeDefaultModules() {
 		const ClassDash = new (ModuleManager.GetReplicate("Dash"))(this.Character);
-		const ClassFottsteps = new (ModuleManager.GetReplicate("Footsteps"))(this.Character);
+		const ClassFootsteps = new (ModuleManager.GetReplicate("Footsteps"))(this.Character);
 
 		this.StopModules.add(ClassDash);
-		this.StopModules.add(ClassFottsteps);
+		this.StopModules.add(ClassFootsteps);
 
 		this.ReplicateModules.set(EAnimations.DashForward, ClassDash);
 		this.ReplicateModules.set(EAnimations.DashBack, ClassDash);
 		this.ReplicateModules.set(EAnimations.DashLeft, ClassDash);
 		this.ReplicateModules.set(EAnimations.DashRight, ClassDash);
 
-		this.ReplicateModules.set(EAnimations.WalkForward, ClassFottsteps);
-		this.ReplicateModules.set(EAnimations.WalkBack, ClassFottsteps);
-		this.ReplicateModules.set(EAnimations.WalkLeft, ClassFottsteps);
-		this.ReplicateModules.set(EAnimations.WalkRight, ClassFottsteps);
-		this.ReplicateModules.set(EAnimations.Run, ClassFottsteps);
+		this.ReplicateModules.set(EAnimations.WalkForward, ClassFootsteps);
+		this.ReplicateModules.set(EAnimations.WalkForwardLeft, ClassFootsteps);
+		this.ReplicateModules.set(EAnimations.WalkForwardRight, ClassFootsteps);
+		this.ReplicateModules.set(EAnimations.WalkBack, ClassFootsteps);
+		this.ReplicateModules.set(EAnimations.WalkBackLeft, ClassFootsteps);
+		this.ReplicateModules.set(EAnimations.WalkBackRight, ClassFootsteps);
+		this.ReplicateModules.set(EAnimations.WalkLeft, ClassFootsteps);
+		this.ReplicateModules.set(EAnimations.WalkRight, ClassFootsteps);
+		this.ReplicateModules.set(EAnimations.Run, ClassFootsteps);
 
 		this.Character.Model.Abilities.GetAttributes().forEach((attributeValue, ability) => {
 			this.AbilityAdded(
@@ -94,9 +96,9 @@ export class ReplicateClient {
 
 	public AnimationPlayed(animTrack: AnimationTrack) {
 		const AnimName = Tools.IdToName(animTrack.Animation!.AnimationId);
-		const ReplicateInfo = EReplicateInfo.get(AnimName);
+		const ReplicateInfo = ModuleManager.GetReplicateInfo(AnimName);
 		if (!ReplicateInfo) return;
-		const ReplicateName = ReplicateInfo.Class ? ReplicateInfo.Class : AnimName;
+		const ReplicateName = ReplicateInfo.Class ?? AnimName;
 		const ReplicateClass = this.ReplicateModules.get(ReplicateName);
 		if (!ReplicateClass) return;
 
@@ -105,23 +107,35 @@ export class ReplicateClient {
 		const Abilities = Character.Abilities;
 		const Attributes = Character.Attributes;
 
-		if (
-			ReplicateInfo.Ability &&
-			(!Abilities.Has(ReplicateName) ||
-				(Attributes.UsingAbility() && Attributes.UsingAbility() !== ReplicateName) ||
-				Attributes.UsingMove())
-		) {
+		if (!ReplicateInfo.CanUseStunned && Attributes.IsStunnedFull()) {
 			animTrack.Stop();
 			return;
 		}
-
-		if (!ReplicateInfo.CanUseStunned && Attributes.IsStunnedFull()) return;
 
 		if (ReplicateInfo.Cooldown > 0) {
 			const time = tick() - Attributes.TickAnim(ReplicateName);
 			if (time < ReplicateInfo.Cooldown) {
 				animTrack.Stop();
 				return;
+			}
+		}
+
+		if (ReplicateInfo.Ability) {
+			if (
+				!Abilities.Has(ReplicateName) ||
+				(Attributes.UsingAbility() && Attributes.UsingAbility() !== ReplicateName) ||
+				Attributes.UsingMove()
+			) {
+				animTrack.Stop();
+				return;
+			}
+
+			if (ReplicateInfo.CanFeint) {
+				this.Character.Abilities.AbilitiesFeint.set(AnimName, true);
+				if (ReplicateInfo.HasFeintStop && !this.ReplicatesPlayed.has(AnimName))
+					Butler.Connect(animTrack.GetMarkerReachedSignal("StopFeint"), () =>
+						this.Character.Abilities.AbilitiesFeint.set(AnimName, false),
+					);
 			}
 		}
 
@@ -135,7 +149,7 @@ export class ReplicateClient {
 				});
 			else Butler.Connect(animTrack.Stopped, () => this.ReplicatesPlaying.delete(AnimName));
 
-			if (EReplicateSound.has(AnimName)) {
+			if (ReplicateInfo.Sound) {
 				Butler.Connect(animTrack.GetMarkerReachedSignal("Sound"), (soundString?: string) => {
 					const [SoundName, Start, Volume, Speed] = this.ReadSoundString(soundString!);
 					const Sound = Tools.SoundNameToSound(SoundName as string);

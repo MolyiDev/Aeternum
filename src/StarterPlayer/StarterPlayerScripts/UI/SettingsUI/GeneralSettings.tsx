@@ -14,6 +14,7 @@ export const GeneralSettings = forwardRef<CanvasGroup>((props, ref) => {
 				title="FPS/MS"
 				explanation="Toggle visualizer for fps and ms"
 				initialValue={SettingsManager.GetSetting(Player, ESettingsGeneral.FPSMS) as boolean}
+				layoutOrder={0}
 				ToggleChanged={(activated: boolean) =>
 					SettingsManager.SetSetting(Player, ESettingsGeneral.FPSMS, activated)
 				}

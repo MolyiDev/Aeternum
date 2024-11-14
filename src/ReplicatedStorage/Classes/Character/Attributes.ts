@@ -52,6 +52,10 @@ export class Attributes {
 	public UsingAbility = () => this.Model.GetAttribute(EAttribute.UsingAbility) as string | undefined;
 	public SetUsingAbility = (ability: string | undefined) => this.Model.SetAttribute(EAttribute.UsingAbility, ability);
 
+	public UsingAbilityAnim = () => this.Model.GetAttribute(EAttribute.UsingAbilityAnim) as string | undefined;
+	public SetUsingAbilityAnim = (ability: string | undefined) =>
+		this.Model.SetAttribute(EAttribute.UsingAbilityAnim, ability);
+
 	public UsingMove = () => this.Model.GetAttribute(EAttribute.UsingMove) as string | undefined;
 	public SetUsingMove = (move: string | undefined) => this.Model.SetAttribute(EAttribute.UsingMove, move);
 
@@ -77,6 +81,11 @@ export class Attributes {
 	public TickAttackStealth = () => this.Model.GetAttribute(EAttribute.Tick_AttackStealth) as number;
 
 	public SetTickAttackStealth = (tick: number) => this.Model.SetAttribute(EAttribute.Tick_AttackStealth, tick);
+
+	// Can
+
+	public CanLandStun = () => this.Model.GetAttribute(EAttribute.CanLandStun);
+	public SetCanLandStun = (bool: boolean) => this.Model.SetAttribute(EAttribute.CanLandStun, bool);
 
 	// Other
 

@@ -28,7 +28,7 @@ export const AudioSettings = forwardRef<CanvasGroup>((props, ref) => {
 				minDrag={0}
 				maxDrag={100}
 				layoutOrder={1}
-				dragAmount={5}
+				dragAmount={1}
 				textModifier="%"
 				ValueChanged={(value) => SettingsManager.SetSetting(Player, ESettingsAudio.Music, value / 100)}
 			/>
@@ -39,7 +39,7 @@ export const AudioSettings = forwardRef<CanvasGroup>((props, ref) => {
 				minDrag={0}
 				maxDrag={100}
 				layoutOrder={2}
-				dragAmount={10}
+				dragAmount={1}
 				textModifier="%"
 				ValueChanged={(value) => SettingsManager.SetSetting(Player, ESettingsAudio.Effects, value / 100)}
 			/>

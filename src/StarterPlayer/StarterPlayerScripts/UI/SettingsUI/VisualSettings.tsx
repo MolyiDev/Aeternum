@@ -1,11 +1,12 @@
 import React, { forwardRef } from "@rbxts/react";
-import { SettingsDragger } from "StarterGui/SettingsUI/Components/SettingsDragger";
+import { SettingsDragger } from "StarterPlayer/StarterPlayerScripts/UI/SettingsUI/Components/SettingsDragger";
 import { SettingsToggle } from "./Components/SettingsToggle";
 import { SettingsPanel } from "./Components/SettingsPanel";
-import { Lighting, Players } from "@rbxts/services";
+import { Lighting, Players, Workspace } from "@rbxts/services";
 import { SettingsManager } from "ReplicatedStorage/Managers/SettingsManager";
 import { ESettingsVisual } from "ReplicatedStorage/Enums/Settings/ESettingsVisual";
 import { WindManager } from "ReplicatedStorage/Managers/WindManager";
+import Collector from "ReplicatedStorage/Libraries/Collector";
 
 const Player = Players.LocalPlayer;
 
@@ -16,6 +17,7 @@ export const VisualSettings = forwardRef<CanvasGroup>((props, ref) => {
 				title="Wind"
 				explanation="Toggle wind"
 				initialValue={SettingsManager.GetSetting(Player, ESettingsVisual.Wind) as boolean}
+				layoutOrder={0}
 				ToggleChanged={(activated: boolean) => {
 					SettingsManager.SetSetting(Player, ESettingsVisual.Wind, activated);
 					if (activated) WindManager.Init();
@@ -23,9 +25,20 @@ export const VisualSettings = forwardRef<CanvasGroup>((props, ref) => {
 				}}
 			/>
 			<SettingsToggle
+				title="Clouds"
+				explanation="Toggle clouds"
+				initialValue={SettingsManager.GetSetting(Player, ESettingsVisual.Clouds) as boolean}
+				layoutOrder={0}
+				ToggleChanged={(activated: boolean) => {
+					SettingsManager.SetSetting(Player, ESettingsVisual.Clouds, activated);
+					(Workspace.Terrain.FindFirstChild("Clouds") as Clouds).Enabled = activated;
+				}}
+			/>
+			<SettingsToggle
 				title="Bloom"
 				explanation="Toggle bloom"
 				initialValue={SettingsManager.GetSetting(Player, ESettingsVisual.Bloom) as boolean}
+				layoutOrder={1}
 				ToggleChanged={(activated: boolean) => {
 					SettingsManager.SetSetting(Player, ESettingsVisual.Bloom, activated);
 					Lighting.Bloom.Enabled = activated;
@@ -35,6 +48,7 @@ export const VisualSettings = forwardRef<CanvasGroup>((props, ref) => {
 				title="Blur"
 				explanation="Toggle blur"
 				initialValue={SettingsManager.GetSetting(Player, ESettingsVisual.Blur) as boolean}
+				layoutOrder={2}
 				ToggleChanged={(activated: boolean) => {
 					SettingsManager.SetSetting(Player, ESettingsVisual.Blur, activated);
 					Lighting.Blur.Enabled = activated;
@@ -44,6 +58,7 @@ export const VisualSettings = forwardRef<CanvasGroup>((props, ref) => {
 				title="Depth of Field"
 				explanation="Toggle depth of field"
 				initialValue={SettingsManager.GetSetting(Player, ESettingsVisual.DepthOfField) as boolean}
+				layoutOrder={3}
 				ToggleChanged={(activated: boolean) => {
 					SettingsManager.SetSetting(Player, ESettingsVisual.DepthOfField, activated);
 					Lighting.DepthOfField.Enabled = activated;
@@ -53,6 +68,7 @@ export const VisualSettings = forwardRef<CanvasGroup>((props, ref) => {
 				title="Sun Rays"
 				explanation="Toggle sun rays"
 				initialValue={SettingsManager.GetSetting(Player, ESettingsVisual.SunRays) as boolean}
+				layoutOrder={4}
 				ToggleChanged={(activated: boolean) => {
 					SettingsManager.SetSetting(Player, ESettingsVisual.SunRays, activated);
 					Lighting.SunRays.Enabled = activated;
@@ -62,6 +78,7 @@ export const VisualSettings = forwardRef<CanvasGroup>((props, ref) => {
 				title="Shadows"
 				explanation="Toggle shadows"
 				initialValue={SettingsManager.GetSetting(Player, ESettingsVisual.Shadows) as boolean}
+				layoutOrder={5}
 				ToggleChanged={(activated: boolean) => {
 					SettingsManager.SetSetting(Player, ESettingsVisual.Shadows, activated);
 					Lighting.GlobalShadows = activated;
@@ -71,6 +88,7 @@ export const VisualSettings = forwardRef<CanvasGroup>((props, ref) => {
 				title="Volumetric Shadows"
 				explanation="Toggle volumetric shadows"
 				initialValue={SettingsManager.GetSetting(Player, ESettingsVisual.VolumetricShadows) as boolean}
+				layoutOrder={6}
 				ToggleChanged={(activated: boolean) => {
 					SettingsManager.SetSetting(Player, ESettingsVisual.VolumetricShadows, activated);
 				}}
@@ -81,8 +99,9 @@ export const VisualSettings = forwardRef<CanvasGroup>((props, ref) => {
 				initialValue={(SettingsManager.GetSetting(Player, ESettingsVisual.Debris) as number) * 100}
 				minDrag={25}
 				maxDrag={250}
-				dragAmount={1}
+				dragAmount={25}
 				textModifier="%"
+				layoutOrder={8}
 				ValueChanged={(value: number) =>
 					SettingsManager.SetSetting(Player, ESettingsVisual.Debris, value / 100)
 				}
@@ -93,8 +112,9 @@ export const VisualSettings = forwardRef<CanvasGroup>((props, ref) => {
 				initialValue={(SettingsManager.GetSetting(Player, ESettingsVisual.SubDebris) as number) * 100}
 				minDrag={0}
 				maxDrag={250}
-				dragAmount={1}
+				dragAmount={25}
 				textModifier="%"
+				layoutOrder={9}
 				ValueChanged={(value: number) =>
 					SettingsManager.SetSetting(Player, ESettingsVisual.SubDebris, value / 100)
 				}

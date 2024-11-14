@@ -3,6 +3,7 @@ import { StunManager } from "./StunManager";
 import { Debris } from "@rbxts/services";
 import { RagdollManager } from "./RagdollManager";
 import { Character } from "ReplicatedStorage/Classes/Character";
+import Collector from "ReplicatedStorage/Libraries/Collector";
 
 export class DamageManager {
 	public static Damage(character: Character, damage: number) {
@@ -26,7 +27,7 @@ export class DamageManager {
 			Velocity: Vector3.zero,
 		});
 
-		Debris.AddItem(knockbackVelocity, time);
+		Collector.AddItem(knockbackVelocity, time);
 	}
 
 	public static KnockbackStun(character: Character, velocity: Vector3, time: number, stunTime: number = time) {

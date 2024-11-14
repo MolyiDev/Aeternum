@@ -26,7 +26,7 @@ function InitSettingsGUI() {
 
 	return (
 		<screengui IgnoreGuiInset={true} ResetOnSpawn={false} ZIndexBehavior={"Sibling"}>
-			<SettingsGUI ref={settingsRef} opacity={1} interactable={false} />
+			<SettingsGUI ref={settingsRef} opacity={1} position={UDim2.fromScale(0.5, 10)} interactable={false} />
 		</screengui>
 	);
 }
@@ -37,17 +37,17 @@ const icon = new Icon()
 	.setImage("rbxassetid://14897656651")
 	.setLabel("Settings", "Viewing")
 	.setLabel("Settings", "Selected")
-	.autoDeselect(true);
+	.autoDeselect(true)
+	.disableOverlay(true);
 
 icon.selected.Connect(() => {
-	Icon.setTopbarEnabled(false);
 	if (!SettingsRef) return;
 	SettingsRef.Position = UDim2.fromScale(0.5, 0.7);
 	SettingsRef.Interactable = true;
-	StarterGui.SetCoreGuiEnabled(Enum.CoreGuiType.All, false);
 	Tools.TweenPlay(SettingsRef, TWEENINFO_PANEL, {
 		Position: UDim2.fromScale(0.5, 0.5),
 		GroupTransparency: 0,
 	});
 	icon.deselect();
+	Icon.setTopbarEnabled(false);
 });

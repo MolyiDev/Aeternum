@@ -19,7 +19,6 @@ export function SettingsDragger(props: ISettingsDragger) {
 	const outsideBarRef = useRef<Frame>(undefined!);
 	const frameBarRef = useRef<Frame>(undefined!);
 	const handleRef = useRef<Frame>(undefined!);
-	const [insideBoundUI, setInsideBoundUI] = useState<Frame | undefined>(undefined);
 	const [frameBoundUI, setFrameBoundUI] = useState<Frame | undefined>(undefined);
 
 	function ChangeText(number: number) {
@@ -50,7 +49,6 @@ export function SettingsDragger(props: ISettingsDragger) {
 			return;
 		scaleX = (numberMultipler - props.minDrag) / (props.maxDrag - props.minDrag);
 		handleRef.current.Position = UDim2.fromScale(scaleX, 0.5);
-		print(handleRef.current.Position, scaleX, number);
 		currentValue = numberMultipler;
 
 		textBoxRef.current.Text = `${numberMultipler}${props.textModifier}`;
@@ -58,7 +56,6 @@ export function SettingsDragger(props: ISettingsDragger) {
 	}
 
 	useEffect(() => {
-		if (insideBarRef.current) setInsideBoundUI(insideBarRef.current);
 		if (frameBarRef.current) setFrameBoundUI(frameBarRef.current);
 		if (handleRef.current) {
 			const initialScaleX = math.clamp((currentValue - props.minDrag) / (props.maxDrag - props.minDrag), 0, 1);
@@ -122,19 +119,10 @@ export function SettingsDragger(props: ISettingsDragger) {
 						name={"FrameBar"}
 						noBackground
 						position={UDim2.fromScale(0.5, 0.5)}
-						size={UDim2.fromScale(0.98, 0.9)}
-					/>
-					<Frame
-						ref={insideBarRef}
-						name={"InsideBar"}
-						anchorPoint={"m"}
-						background={Color3.fromRGB(255, 255, 255)}
-						position={UDim2.fromScale(0.5, 0.5)}
-						size={UDim2.fromScale(0.91, 0.35)}
-						cornerRadius={0.5}
+						size={UDim2.fromScale(1, 0.9)}
 					>
 						<uidragdetector
-							BoundingUI={insideBoundUI}
+							BoundingUI={frameBoundUI}
 							DragStyle={"Scriptable"}
 							ResponseStyle={"Scale"}
 							Event={{
@@ -154,6 +142,16 @@ export function SettingsDragger(props: ISettingsDragger) {
 								DragContinue: (dragger, inputPosition) => ChangePosition(inputPosition),
 							}}
 						/>
+					</Frame>
+					<Frame
+						ref={insideBarRef}
+						name={"InsideBar"}
+						anchorPoint={"m"}
+						background={Color3.fromRGB(255, 255, 255)}
+						position={UDim2.fromScale(0.5, 0.5)}
+						size={UDim2.fromScale(0.91, 0.35)}
+						cornerRadius={0.5}
+					>
 						<Frame
 							ref={handleRef}
 							name={"Handle"}
@@ -167,28 +165,7 @@ export function SettingsDragger(props: ISettingsDragger) {
 								Color: Color3.fromRGB(152, 152, 152),
 								Thickness: 0,
 							}}
-						>
-							<uidragdetector
-								DragRelativity={"Relative"}
-								DragStyle={"Scriptable"}
-								ResponseStyle={"Scale"}
-								Event={{
-									DragStart: () => {
-										Tools.TweenPlay(handleStrokeRef.current, TWINFO, {
-											Thickness: 1.5,
-										});
-									},
-
-									DragEnd: () => {
-										Tools.TweenPlay(handleStrokeRef.current, TWINFO, {
-											Thickness: 0,
-										});
-									},
-
-									DragContinue: (dragger, inputPosition) => ChangePosition(inputPosition),
-								}}
-							/>
-						</Frame>
+						/>
 					</Frame>
 				</Frame>
 				<Frame

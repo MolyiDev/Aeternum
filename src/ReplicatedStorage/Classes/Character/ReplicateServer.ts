@@ -4,7 +4,6 @@ import { Character } from ".";
 import { EAbilityPlace } from "ReplicatedStorage/Enums/Abilities/EAbilityPlace";
 import { EWeapons } from "ReplicatedStorage/Enums/EWeapons";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
-import { EReplicateInfo } from "ReplicatedStorage/Enums/Replicate/EReplicateInfo";
 import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
 import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
@@ -54,7 +53,7 @@ export class ReplicateServer {
 	}
 
 	public AbilityAdded(abilityPlace: EAbilityPlace, weapon: EWeapons, ability: EAbility) {
-		const ReplicateInfo = EReplicateInfo.get(ability);
+		const ReplicateInfo = ModuleManager.GetReplicateInfo(ability);
 		if (!ReplicateInfo) return;
 		const classByName = new (ModuleManager.GetReplicate(ability))(this.Character);
 		if (ReplicateInfo.Signal) this.ReplicateSignals.set(ability, classByName);
@@ -73,9 +72,9 @@ export class ReplicateServer {
 
 	public AnimationPlayed(animTrack: AnimationTrack) {
 		const AnimName = Tools.IdToName(animTrack.Animation!.AnimationId);
-		const ReplicateInfo = EReplicateInfo.get(AnimName);
+		const ReplicateInfo = ModuleManager.GetReplicateInfo(AnimName);
 		if (!ReplicateInfo) return;
-		const ReplicateName = ReplicateInfo.Class ? ReplicateInfo.Class : AnimName;
+		const ReplicateName = ReplicateInfo.Class ?? AnimName;
 		const ReplicateClass = this.ReplicateAnimations.get(ReplicateName);
 		if (!ReplicateClass) return;
 
@@ -83,16 +82,6 @@ export class ReplicateServer {
 		const Butler = Character.Butler;
 		const Abilities = Character.Abilities;
 		const Attributes = Character.Attributes;
-
-		if (
-			ReplicateInfo.Ability &&
-			(!Abilities.Has(ReplicateName) ||
-				(Attributes.UsingAbility() && Attributes.UsingAbility() !== ReplicateName) ||
-				Attributes.UsingMove())
-		) {
-			animTrack.Stop();
-			return;
-		}
 
 		if (!ReplicateInfo.CanUseStunned && Attributes.IsStunnedFull()) return;
 
@@ -104,6 +93,20 @@ export class ReplicateServer {
 			}
 		}
 
+		if (ReplicateInfo.Ability) {
+			if (
+				!Abilities.Has(ReplicateName) ||
+				(Attributes.UsingAbility() && Attributes.UsingAbility() !== ReplicateName) ||
+				Attributes.UsingMove()
+			) {
+				animTrack.Stop();
+				return;
+			}
+
+			Attributes.SetUsingAbility(ReplicateName);
+			Attributes.SetUsingAbilityAnim(AnimName);
+		}
+
 		if (!this.ReplicatesPlayed.has(AnimName)) {
 			this.ReplicatesPlayed.add(AnimName);
 			ReplicateClass.AnimPlayOnce?.(animTrack, AnimName);
@@ -111,12 +114,18 @@ export class ReplicateServer {
 				Butler.Connect(animTrack.Stopped, () => {
 					ReplicateClass.AnimStop!(animTrack, AnimName);
 					this.ReplicatesPlaying.delete(AnimName);
-					if (ReplicateInfo.Ability) Attributes.SetUsingAbility(undefined);
+					if (ReplicateInfo.Ability) {
+						Attributes.SetUsingAbility(undefined);
+						Attributes.SetUsingAbilityAnim(undefined);
+					}
 				});
 			else
 				Butler.Connect(animTrack.Stopped, () => {
 					this.ReplicatesPlaying.delete(AnimName);
-					if (ReplicateInfo.Ability) Attributes.SetUsingAbility(undefined);
+					if (ReplicateInfo.Ability) {
+						Attributes.SetUsingAbility(undefined);
+						Attributes.SetUsingAbilityAnim(undefined);
+					}
 				});
 		}
 
@@ -127,26 +136,17 @@ export class ReplicateServer {
 
 		this.ReplicatesPlaying.add(AnimName);
 		ReplicateClass.AnimPlay?.(animTrack, AnimName);
-		if (ReplicateInfo.Ability) Attributes.SetUsingAbility(AnimName);
 	}
 
 	public SignalFired(ability: EAbility) {
 		const ReplicateClass = this.ReplicateSignals.get(ability);
 		if (!ReplicateClass) return;
 
-		const ReplicateInfo = EReplicateInfo.get(ability)!;
+		const ReplicateInfo = ModuleManager.GetReplicateInfo(ability)!;
 
 		const Character = this.Character;
 		const Abilities = Character.Abilities;
 		const Attributes = Character.Attributes;
-
-		if (
-			ReplicateInfo.Ability &&
-			(!Abilities.Has(ability) ||
-				(Attributes.UsingAbility() && Attributes.UsingAbility() !== ability) ||
-				Attributes.UsingMove())
-		)
-			return;
 
 		if (!ReplicateInfo.CanUseStunned && Attributes.IsStunnedFull()) return;
 
@@ -155,8 +155,19 @@ export class ReplicateServer {
 			if (time < ReplicateInfo.Cooldown) return;
 		}
 
+		if (ReplicateInfo.Ability) {
+			if (
+				!Abilities.Has(ability) ||
+				(Attributes.UsingAbility() && Attributes.UsingAbility() !== ability) ||
+				Attributes.UsingMove()
+			)
+				return;
+
+			Attributes.SetUsingAbility(ability);
+			Attributes.SetUsingAbilityAnim(ability);
+		}
+
 		ReplicateClass.Signal!();
-		if (ReplicateInfo.Ability) Attributes.SetUsingAbility(ability);
 	}
 
 	public Destroy() {
