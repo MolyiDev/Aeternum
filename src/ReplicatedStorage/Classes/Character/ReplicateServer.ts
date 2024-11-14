@@ -10,8 +10,7 @@ import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
 
 export class ReplicateServer {
 	public Character: Character;
-	public ReplicateAnimations: Map<EAnimations | string, IReplicateClass>;
-	public ReplicateSignals: Map<EAnimations | string, IReplicateClass>;
+	public ReplicateModules: Map<EAnimations | string, IReplicateClass>;
 	public StopModules: Set<IReplicateClass>;
 	public ReplicatesPlayed: Set<EAnimations | string>;
 	public ReplicatesPlaying: Set<EAnimations | string>;
@@ -22,8 +21,7 @@ export class ReplicateServer {
 		const Abilities = character.Abilities;
 		const Animator = character.Humanoid.Animator;
 
-		this.ReplicateAnimations = new Map();
-		this.ReplicateSignals = new Map();
+		this.ReplicateModules = new Map();
 		this.StopModules = new Set();
 		this.ReplicatesPlayed = new Set();
 		this.ReplicatesPlaying = new Set();
@@ -46,28 +44,24 @@ export class ReplicateServer {
 
 		this.StopModules.add(ClassDash);
 
-		this.ReplicateAnimations.set(EAnimations.DashForward, ClassDash);
-		this.ReplicateAnimations.set(EAnimations.DashBack, ClassDash);
-		this.ReplicateAnimations.set(EAnimations.DashLeft, ClassDash);
-		this.ReplicateAnimations.set(EAnimations.DashRight, ClassDash);
+		this.ReplicateModules.set(EAnimations.DashForward, ClassDash);
+		this.ReplicateModules.set(EAnimations.DashBack, ClassDash);
+		this.ReplicateModules.set(EAnimations.DashLeft, ClassDash);
+		this.ReplicateModules.set(EAnimations.DashRight, ClassDash);
 	}
 
 	public AbilityAdded(abilityPlace: EAbilityPlace, weapon: EWeapons, ability: EAbility) {
-		const ReplicateInfo = ModuleManager.GetReplicateInfo(ability);
-		if (!ReplicateInfo) return;
 		const classByName = new (ModuleManager.GetReplicate(ability))(this.Character);
-		if (ReplicateInfo.Signal) this.ReplicateSignals.set(ability, classByName);
-		else this.ReplicateAnimations.set(ability, classByName);
-
+		this.ReplicateModules.set(ability, classByName);
 		if ("Destroy" in classByName) this.StopModules.add(classByName);
 	}
 
 	public AbilityRemoved(abilityPlace: EAbilityPlace, weapon: EWeapons, ability: EAbility) {
-		const ReplicateClass = this.ReplicateAnimations.get(ability);
+		const ReplicateClass = this.ReplicateModules.get(ability);
 		if (!ReplicateClass) return;
 		if (this.StopModules.delete(ReplicateClass)) ReplicateClass.Destroy!();
 
-		this.ReplicateAnimations.delete(ability);
+		this.ReplicateModules.delete(ability);
 	}
 
 	public AnimationPlayed(animTrack: AnimationTrack) {
@@ -75,7 +69,7 @@ export class ReplicateServer {
 		const ReplicateInfo = ModuleManager.GetReplicateInfo(AnimName);
 		if (!ReplicateInfo) return;
 		const ReplicateName = ReplicateInfo.Class ?? AnimName;
-		const ReplicateClass = this.ReplicateAnimations.get(ReplicateName);
+		const ReplicateClass = this.ReplicateModules.get(ReplicateName);
 		if (!ReplicateClass) return;
 
 		const Character = this.Character;
@@ -83,7 +77,10 @@ export class ReplicateServer {
 		const Abilities = Character.Abilities;
 		const Attributes = Character.Attributes;
 
-		if (!ReplicateInfo.CanUseStunned && Attributes.IsStunnedFull()) return;
+		if (!ReplicateInfo.CanUseStunned && Attributes.IsStunnedFull()) {
+			animTrack.Stop();
+			return;
+		}
 
 		if (ReplicateInfo.Cooldown > 0) {
 			const time = tick() - Attributes.TickAnim(ReplicateName);
@@ -114,6 +111,7 @@ export class ReplicateServer {
 				Butler.Connect(animTrack.Stopped, () => {
 					ReplicateClass.AnimStop!(animTrack, AnimName);
 					this.ReplicatesPlaying.delete(AnimName);
+
 					if (ReplicateInfo.Ability) {
 						Attributes.SetUsingAbility(undefined);
 						Attributes.SetUsingAbilityAnim(undefined);
@@ -122,6 +120,7 @@ export class ReplicateServer {
 			else
 				Butler.Connect(animTrack.Stopped, () => {
 					this.ReplicatesPlaying.delete(AnimName);
+
 					if (ReplicateInfo.Ability) {
 						Attributes.SetUsingAbility(undefined);
 						Attributes.SetUsingAbilityAnim(undefined);
@@ -139,7 +138,7 @@ export class ReplicateServer {
 	}
 
 	public SignalFired(ability: EAbility) {
-		const ReplicateClass = this.ReplicateSignals.get(ability);
+		const ReplicateClass = this.ReplicateModules.get(ability);
 		if (!ReplicateClass) return;
 
 		const ReplicateInfo = ModuleManager.GetReplicateInfo(ability)!;
@@ -171,7 +170,7 @@ export class ReplicateServer {
 	}
 
 	public Destroy() {
-		this.ReplicateAnimations.clear();
+		this.ReplicateModules.clear();
 
 		this.StopModules.forEach((replicateClass) => {
 			replicateClass.Destroy!();

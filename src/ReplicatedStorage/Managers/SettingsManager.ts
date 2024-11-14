@@ -36,6 +36,8 @@ export class SettingsManager {
 		[ECustomInputs.None, [ESettingsControls.Dash, EControlType.Alternative]],
 		[Enum.UserInputType.MouseButton1, [ESettingsControls.Attack1, EControlType.Principal]],
 		[ECustomInputs.None, [ESettingsControls.Attack1, EControlType.Alternative]],
+		[Enum.UserInputType.MouseButton2, [ESettingsControls.Feint, EControlType.Principal]],
+		[ECustomInputs.None, [ESettingsControls.Feint, EControlType.Alternative]],
 		[Enum.KeyCode.F, [ESettingsControls.Block, EControlType.Principal]],
 		[ECustomInputs.None, [ESettingsControls.Block, EControlType.Alternative]],
 		[Enum.KeyCode.R, [ESettingsControls.HeavyAttack, EControlType.Principal]],

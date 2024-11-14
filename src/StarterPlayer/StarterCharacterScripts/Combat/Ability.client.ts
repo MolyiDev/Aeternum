@@ -60,9 +60,12 @@ function InputBegan(control: [string, number] | undefined, input: InputObject, d
 		case ESettingsControls.Feint:
 			{
 				const UsingAbility = Attributes.UsingAbilityAnim();
+				print(1, UsingAbility);
 				if (!UsingAbility || !Abilities.CanFeint(UsingAbility)) return;
+				print(2);
 				const AnimAbility = Animations.GetAnimation(UsingAbility);
 				if (!AnimAbility) return;
+				print(3);
 				AnimAbility.Stop(FEINT_OUT);
 			}
 			break;

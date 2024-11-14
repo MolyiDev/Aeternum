@@ -45,6 +45,7 @@ export class Abilities {
 
 	public CanFeint(ability: string): boolean {
 		const ReplicateInfo = ModuleManager.GetReplicateInfo(ability);
+		print(ability, ReplicateInfo);
 		if (!ReplicateInfo || !ReplicateInfo.CanFeint || !this.AbilitiesFeint.get(ability)) return false;
 		return true;
 	}
