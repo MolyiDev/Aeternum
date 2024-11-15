@@ -9,11 +9,22 @@ import { EAbilityInfo } from "ReplicatedStorage/Enums/Abilities/EAbilityInfo";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
 import { Character } from "ReplicatedStorage/Classes/Character";
 import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
+import { ReplicateInfo } from "ReplicatedStorage/Attributes/ReplicateInfo";
+import { EStopGlobal } from "ReplicatedStorage/Enums/Replicate/EStopGlobal";
 
 // Variables
 const Ability = EAbility.ElectricKick;
 const AbilityInfo = EAbilityInfo.ElectricKick;
 
+@ReplicateInfo({
+	[EAnimations.ElectricKick]: {
+		Ability: true,
+		CanFeint: true,
+		Signal: true,
+		Sound: true,
+		Cooldown: AbilityInfo.Cooldown,
+	},
+})
 export class ElectricKick implements IReplicateClass {
 	public Character: Character;
 	public AlreadyLooked: Character[];
@@ -52,6 +63,12 @@ export class ElectricKick implements IReplicateClass {
 		this.AlreadyLooked = [];
 
 		this.MarkRockHand = Butler.Connect(ElectricKick.GetMarkerReachedSignal("RockHand"), () => {
+			if (!Attributes.UsingAbility()) {
+				if (!Attributes.IsStunnedFull()) StunManager.UnStun(Character);
+				task.delay(0.1, () => ElectricKick.Stop(EStopGlobal));
+				return;
+			}
+
 			HitboxManager.Create(
 				new Vector3(8, 6, 16),
 				HumanoidRootPart.CFrame.mul(new CFrame(0, 0, -12)),
@@ -86,11 +103,16 @@ export class ElectricKick implements IReplicateClass {
 				);
 			});
 		});
+	}
 
-		this.MarkStop = Butler.Once(ElectricKick.Stopped, () => {
-			Butler.RemoveList(this.MarkRockHand, this.MarkDamage, this.MarkDamageFinal, this.MarkStop);
-			Attributes.SetTickAnim(Ability, tick());
-		});
+	public AnimStop(animTrack: AnimationTrack, animName: string): void {
+		const Character = this.Character;
+		const Attributes = Character.Attributes;
+		const Butler = Character.Butler;
+
+		Butler.RemoveList(this.MarkRockHand, this.MarkDamage, this.MarkDamageFinal, this.MarkStop);
+		const Cooldown = Attributes.UsingAbility() === Ability ? tick() : tick() - AbilityInfo.Cooldown / 2;
+		Attributes.SetTickAnim(Ability, Cooldown);
 	}
 
 	public Punch(part: BasePart) {

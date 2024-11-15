@@ -32,16 +32,6 @@ export const EReplicateInfo = new Map<EAnimations | string, IReplicateInfo>([
 		}),
 	],
 	[
-		EAnimations.ElectricKick,
-		ReplicateInfo({
-			Ability: true,
-			CanFeint: true,
-			Signal: true,
-			Sound: true,
-			Cooldown: EAbilityInfo[EAbility.ElectricKick].Cooldown,
-		}),
-	],
-	[
 		EAnimations.GroundSmash,
 		ReplicateInfo({
 			Ability: true,

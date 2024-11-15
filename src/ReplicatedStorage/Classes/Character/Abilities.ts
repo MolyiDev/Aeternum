@@ -43,13 +43,6 @@ export class Abilities {
 
 	public Has = (ability: string) => this.Abilities.has(ability);
 
-	public CanFeint(ability: string): boolean {
-		const ReplicateInfo = ModuleManager.GetReplicateInfo(ability);
-		print(ability, ReplicateInfo);
-		if (!ReplicateInfo || !ReplicateInfo.CanFeint || !this.AbilitiesFeint.get(ability)) return false;
-		return true;
-	}
-
 	public AbilitiesChanged(attribute: string) {
 		// Attribute is the name of the ability (EAbility) and getAtt is the place of the ability (EAbilityPlace)
 		const getAtt = this.AbilitiesFolder.GetAttribute(attribute) as string;

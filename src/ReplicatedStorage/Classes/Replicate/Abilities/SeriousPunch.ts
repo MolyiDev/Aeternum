@@ -2,6 +2,7 @@
 import { RockManager } from "ReplicatedStorage/Managers/RockManager";
 import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
 import { Character } from "ReplicatedStorage/Classes/Character";
+import { EStopGlobal } from "ReplicatedStorage/Enums/Replicate/EStopGlobal";
 
 export class SeriousPunch implements IReplicateClass {
 	public Character: Character;
@@ -22,6 +23,7 @@ export class SeriousPunch implements IReplicateClass {
 
 	public AnimPlayOnce(animTrack: AnimationTrack) {
 		const Character = this.Character;
+		const Attributes = Character.Attributes;
 		const Model = Character.Model;
 		const Butler = Character.Butler;
 
@@ -33,6 +35,13 @@ export class SeriousPunch implements IReplicateClass {
 
 		this.MarkerRockLast = Butler.Connect(animTrack.GetMarkerReachedSignal("RockLast"), () => {
 			const CF = Character.HumanoidRootPart.CFrame;
+
+			if (!Attributes.UsingAbility()) {
+				animTrack.Stop(EStopGlobal);
+				RockManager.Crater(CF, 0, 0.6, 3, 8, 1, 0.25);
+				return;
+			}
+
 			RockManager.Crater(CF, 6, 0.75, 4, 8, 2, 0.25);
 			RockManager.Explosion(CF.Position, 0.45, 1, 3, 30);
 			delay(0.05, () => RockManager.Crater(CF, 6, 0.45, 8, 20, 2, 0.25));

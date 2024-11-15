@@ -6,15 +6,16 @@ const AnimFolder = ReplicatedStorage.WaitForChild("Animations");
 
 export class Animations {
 	private AnimationsLoaded: Map<string, AnimationTrack>;
+	public Animator: Animator;
 
 	constructor(character: Character) {
-		const Animator = character.Humanoid.WaitForChild("Animator") as Animator;
+		this.Animator = character.Humanoid.WaitForChild("Animator") as Animator;
 
 		this.AnimationsLoaded = new Map<string, AnimationTrack>();
 
 		for (const animation of AnimFolder.GetDescendants()) {
 			if (!animation.IsA("Animation")) continue;
-			this.AnimationsLoaded.set(animation.Name, Animator.LoadAnimation(animation));
+			this.AnimationsLoaded.set(animation.Name, this.Animator.LoadAnimation(animation));
 		}
 	}
 

@@ -82,7 +82,7 @@ export class Footsteps implements IReplicateClass {
 
 		this.FootstepConnection = Butler.Connect(animTrack.GetMarkerReachedSignal("Footstep"), (FootEnum?: string) => {
 			const MaterialName = Humanoid.FloorMaterial.Name;
-			if (!LoadedSFX[MaterialName]) return;
+			if (MaterialName === "Air") return;
 
 			const Sounds = LoadedSFX[MaterialName].GetChildren() as Sound[];
 			const SelectedSound = Sounds[math.random(0, Sounds.size() - 1)] as Sound;

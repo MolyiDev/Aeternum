@@ -1,18 +1,22 @@
+// Imports
 import { Character } from "ReplicatedStorage/Classes/Character";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
 import { EAbilityInfo } from "ReplicatedStorage/Enums/Abilities/EAbilityInfo";
-import { IAbilityInfo } from "ReplicatedStorage/Interfaces/IAbilityInfo";
+import { EStopGlobal } from "ReplicatedStorage/Enums/Replicate/EStopGlobal";
 import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { DamageManager } from "ServerScriptService/Managers/DamageManager";
 import { HitboxManager } from "ServerScriptService/Managers/HitboxManager";
 import { StunManager } from "ServerScriptService/Managers/StunManager";
 
+// Variables
+const Ability = EAbility.SeriousPunch;
+const AbilityInfo = EAbilityInfo.SeriousPunch;
+
 export class SeriousPunch implements IReplicateClass {
 	public Character: Character;
 	public OverlapParams: OverlapParams;
 	public PlayersDamaged: Character[];
-	public AbilityInfo: IAbilityInfo;
 	public MarkerDamage: RBXScriptConnection = undefined!;
 
 	constructor(character: Character) {
@@ -24,14 +28,21 @@ export class SeriousPunch implements IReplicateClass {
 
 		this.OverlapParams = overlapParams;
 		this.PlayersDamaged = [];
-		this.AbilityInfo = EAbilityInfo[EAbility.SeriousPunch];
 	}
 
 	public AnimPlayOnce(animTrack: AnimationTrack) {
-		const Butler = this.Character.Butler;
-		const HumanoidRootPart = this.Character.HumanoidRootPart;
+		const Character = this.Character;
+		const Attributes = Character.Attributes;
+		const Butler = Character.Butler;
+		const HumanoidRootPart = Character.HumanoidRootPart;
 
 		this.MarkerDamage = Butler.Connect(animTrack.GetMarkerReachedSignal("Damage"), () => {
+			if (!Attributes.UsingAbility()) {
+				if (!Attributes.IsStunnedFull()) StunManager.UnStun(Character);
+				animTrack.Stop(EStopGlobal);
+				return;
+			}
+
 			this.PlayersDamaged = [];
 
 			HitboxManager.CreateMultiple(
@@ -49,7 +60,10 @@ export class SeriousPunch implements IReplicateClass {
 	}
 
 	public AnimStop(animTrack: AnimationTrack) {
-		this.Character.Attributes.SetTickAnim(EAbility.SeriousPunch, tick());
+		const Attributes = this.Character.Attributes;
+
+		const Cooldown = Attributes.UsingAbility() === Ability ? tick() : tick() - AbilityInfo.Cooldown / 2;
+		Attributes.SetTickAnim(Ability, Cooldown);
 	}
 
 	public Punch(part: BasePart, box: number) {
@@ -57,7 +71,6 @@ export class SeriousPunch implements IReplicateClass {
 		if (!HitCharacter || this.PlayersDamaged.includes(HitCharacter)) return;
 		this.PlayersDamaged.push(HitCharacter);
 		const Attributes = HitCharacter.Attributes;
-		const AbilityInfo = this.AbilityInfo;
 
 		if (Attributes.IsDashing() && AbilityInfo.Dasheable) return;
 
@@ -97,6 +110,5 @@ export class SeriousPunch implements IReplicateClass {
 		this.OverlapParams = undefined!;
 		this.PlayersDamaged.clear();
 		this.PlayersDamaged = undefined!;
-		this.AbilityInfo = undefined!;
 	}
 }

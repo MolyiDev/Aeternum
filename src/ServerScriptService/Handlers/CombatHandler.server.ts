@@ -6,6 +6,11 @@ import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { HitboxManager } from "../Managers/HitboxManager";
 import { Character } from "ReplicatedStorage/Classes/Character";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
+import { ReplicatedStorage } from "@rbxts/services";
+import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
+
+// Events
+const FeintEvent = ReplicatedStorage.WaitForChild("Events").WaitForChild("Combat").WaitForChild("Feint") as RemoteEvent;
 
 // Constants
 const PARRY_TIME = 0.2;
@@ -21,6 +26,31 @@ const AnimationList = new Set<string>([
 
 const UnParryiableAttacks = new Set<string>([]);
 const UnBlockableAttacks = new Set<string>([]);
+
+FeintEvent.OnServerEvent.Connect((player, ...args) => {
+	if (args.size() === 0) return;
+	const Character = CharacterManager.GetCharacter(player.Character);
+	if (!Character) return;
+	const Ability = args[0] as string;
+	if (!Ability || !typeIs(Ability, "string") || Ability !== Ability) return;
+	const Attributes = Character.Attributes;
+	if (Attributes.IsStunnedFull()) return;
+	const Abilities = Character.Abilities;
+	const UsingAbility = Attributes.UsingAbilityAnim();
+	if (!UsingAbility) return;
+	const ReplicateInfo = ModuleManager.GetReplicateInfo(UsingAbility);
+	if (!ReplicateInfo || !ReplicateInfo.CanFeint || !Abilities.AbilitiesFeint.get(UsingAbility)) return;
+	const AnimAbility = Character.Animations.Animator.GetPlayingAnimationTracks().find(
+		(animTrack) => Tools.IdToName(animTrack.Animation!.AnimationId) === UsingAbility,
+	);
+	if (!AnimAbility) return;
+	if (Attributes.UsingAbility() === UsingAbility) Attributes.SetUsingAbility(undefined);
+	else {
+		AnimAbility.Stop(0.15);
+		Attributes.SetUsingAbilityAnim(undefined);
+		StunManager.UnStun(Character);
+	}
+});
 
 CharacterManager.AddedCharacter.Connect((character) => {
 	const Butler = character.Butler;

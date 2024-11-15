@@ -142,7 +142,8 @@ export class StunManager {
 		}
 	}
 
-	public static UnStun(character: Character, data: StunData) {
+	public static UnStun(character: Character, data: StunData | undefined = Stunned.get(character)) {
+		if (!data) return;
 		const Humanoid = character.Humanoid;
 		const Attributes = character.Attributes;
 		const Butler = character.Butler;

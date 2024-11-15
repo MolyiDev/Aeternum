@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 // Imports
-import { Players } from "@rbxts/services";
+import { Players, ReplicatedStorage } from "@rbxts/services";
 import { ESettingsControls } from "ReplicatedStorage/Enums/Settings/ESettingsControls";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { ControlManager } from "../Managers/ControlsManager";
@@ -10,6 +10,11 @@ import { EAbilityInfo } from "ReplicatedStorage/Enums/Abilities/EAbilityInfo";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
 import { EWeapons } from "ReplicatedStorage/Enums/EWeapons";
 import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
+import { Tools } from "ReplicatedStorage/Libraries/Tools";
+import { EStopGlobal } from "ReplicatedStorage/Enums/Replicate/EStopGlobal";
+
+// Events
+const FeintEvent = ReplicatedStorage.WaitForChild("Events").WaitForChild("Combat").WaitForChild("Feint") as RemoteEvent;
 
 // Constants
 const FEINT_OUT = 0.1;
@@ -59,14 +64,18 @@ function InputBegan(control: [string, number] | undefined, input: InputObject, d
 	switch (control[0]) {
 		case ESettingsControls.Feint:
 			{
+				if (Attributes.IsStunnedFull()) return;
 				const UsingAbility = Attributes.UsingAbilityAnim();
-				print(1, UsingAbility);
-				if (!UsingAbility || !Abilities.CanFeint(UsingAbility)) return;
-				print(2);
-				const AnimAbility = Animations.GetAnimation(UsingAbility);
+				if (!UsingAbility) return;
+				const ReplicateInfo = ModuleManager.GetReplicateInfo(UsingAbility);
+				if (!ReplicateInfo || !ReplicateInfo.CanFeint || !Abilities.AbilitiesFeint.get(UsingAbility)) return;
+				const AnimAbility = Character.Animations.Animator.GetPlayingAnimationTracks().find(
+					(animTrack) => Tools.IdToName(animTrack.Animation!.AnimationId) === UsingAbility,
+				);
 				if (!AnimAbility) return;
-				print(3);
-				AnimAbility.Stop(FEINT_OUT);
+				FeintEvent.FireServer(UsingAbility);
+				if (Attributes.UsingAbility() === UsingAbility) return;
+				AnimAbility.Stop(EStopGlobal);
 			}
 			break;
 		case ESettingsControls.Ability1:

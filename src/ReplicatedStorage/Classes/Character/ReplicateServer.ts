@@ -102,6 +102,14 @@ export class ReplicateServer {
 
 			Attributes.SetUsingAbility(ReplicateName);
 			Attributes.SetUsingAbilityAnim(AnimName);
+
+			if (ReplicateInfo.CanFeint) {
+				this.Character.Abilities.AbilitiesFeint.set(AnimName, true);
+				if (ReplicateInfo.HasFeintStop && !this.ReplicatesPlayed.has(AnimName))
+					Butler.Connect(animTrack.GetMarkerReachedSignal("StopFeint"), () =>
+						this.Character.Abilities.AbilitiesFeint.set(AnimName, false),
+					);
+			}
 		}
 
 		if (!this.ReplicatesPlayed.has(AnimName)) {
