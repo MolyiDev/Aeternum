@@ -1,6 +1,5 @@
 import Signal from "@rbxts/lemon-signal";
 import { ReplicatedStorage } from "@rbxts/services";
-import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
 import { EAttribute } from "ReplicatedStorage/Enums/EAttribute";
 import { EStunType } from "ReplicatedStorage/Enums/EStunType";
 import { IModel } from "ReplicatedStorage/Interfaces/IModel";

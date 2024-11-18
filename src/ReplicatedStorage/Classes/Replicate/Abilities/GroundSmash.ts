@@ -4,10 +4,14 @@ import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
 import { Character } from "ReplicatedStorage/Classes/Character";
 import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 import { Workspace } from "@rbxts/services";
+import { EStopGlobal } from "ReplicatedStorage/Enums/Replicate/EStopGlobal";
+import { ReplicateInfo } from "ReplicatedStorage/Attributes/ReplicateInfo";
+import { GroundSmashInfo } from "ReplicatedStorage/Abilities/GroundSmash";
 
 const MaxRocks = 16;
 const MaxSize = 1.3;
 
+@ReplicateInfo(GroundSmashInfo)
 export class GroundSmash implements IReplicateClass {
 	public Character: Character;
 	public Height: number;
@@ -55,6 +59,7 @@ export class GroundSmash implements IReplicateClass {
 
 	public AnimPlayOnce(animTrack: AnimationTrack, animName: string) {
 		const Character = this.Character;
+		const Attributes = Character.Attributes;
 		const Butler = Character.Butler;
 		const HumanoidRootPart = Character.HumanoidRootPart;
 
@@ -62,6 +67,13 @@ export class GroundSmash implements IReplicateClass {
 			case EAnimations.GroundSmash:
 				this.MarkSmash1 = Butler.Connect(animTrack.GetMarkerReachedSignal("Smash1"), () => {
 					const CF = HumanoidRootPart.CFrame;
+
+					if (!Attributes.UsingAbility()) {
+						animTrack.Stop(EStopGlobal);
+						RockManager.Crater(CF, 0, 0.55, 4, 8, 1, 0.15, true);
+						return;
+					}
+
 					const Directions = [
 						CF,
 						CF.mul(CFrame.Angles(0, math.rad(90), 0)),
@@ -163,6 +175,11 @@ export class GroundSmash implements IReplicateClass {
 				break;
 			case EAnimations.GroundSmashLand:
 				this.MarkSmash = Butler.Connect(animTrack.GetMarkerReachedSignal("Smash"), () => {
+					if (!Attributes.UsingAbility()) {
+						animTrack.Stop(EStopGlobal);
+						return;
+					}
+
 					const CF = HumanoidRootPart.CFrame;
 
 					const Directions = [

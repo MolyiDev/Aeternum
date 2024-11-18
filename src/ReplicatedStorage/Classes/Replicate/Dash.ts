@@ -3,7 +3,15 @@ import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
 import { Butler } from "ReplicatedStorage/Modules/Butler";
 import { Character } from "../Character";
+import { ReplicateInfo } from "ReplicatedStorage/Attributes/ReplicateInfo";
+import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 
+@ReplicateInfo({
+	[EAnimations.DashForward]: { Sound: true, Cooldown: 2.5 },
+	[EAnimations.DashBack]: { Sound: true, Cooldown: 2.5 },
+	[EAnimations.DashLeft]: { Sound: true, Cooldown: 2.5 },
+	[EAnimations.DashRight]: { Sound: true, Cooldown: 2.5 },
+})
 export class Dash implements IReplicateClass {
 	public Butler: Butler;
 	public Highlight: Highlight;

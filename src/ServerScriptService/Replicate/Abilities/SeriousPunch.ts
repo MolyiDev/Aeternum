@@ -1,18 +1,21 @@
 // Imports
+import { SeriousPunchInfo } from "ReplicatedStorage/Abilities/SeriousPunch";
+import { ReplicateInfo } from "ReplicatedStorage/Attributes/ReplicateInfo";
 import { Character } from "ReplicatedStorage/Classes/Character";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
-import { EAbilityInfo } from "ReplicatedStorage/Enums/Abilities/EAbilityInfo";
 import { EStopGlobal } from "ReplicatedStorage/Enums/Replicate/EStopGlobal";
 import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
+import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
 import { DamageManager } from "ServerScriptService/Managers/DamageManager";
 import { HitboxManager } from "ServerScriptService/Managers/HitboxManager";
 import { StunManager } from "ServerScriptService/Managers/StunManager";
 
 // Variables
 const Ability = EAbility.SeriousPunch;
-const AbilityInfo = EAbilityInfo.SeriousPunch;
+const AbilityInfo = ModuleManager.GetAbilityInfo(Ability)!;
 
+@ReplicateInfo(SeriousPunchInfo)
 export class SeriousPunch implements IReplicateClass {
 	public Character: Character;
 	public OverlapParams: OverlapParams;

@@ -14,6 +14,7 @@ export class DamageManager {
 			FillTransparency: 1,
 		});
 
+		print("Character Damaged -", character);
 		character.Humanoid.TakeDamage(damage);
 		print(`Damaged: ${character.Model.Name}`, damage);
 	}
@@ -31,12 +32,12 @@ export class DamageManager {
 	}
 
 	public static KnockbackStun(character: Character, velocity: Vector3, time: number, stunTime: number = time) {
-		this.Knockback(character, velocity, time);
 		StunManager.Stun(character, stunTime);
+		this.Knockback(character, velocity, time);
 	}
 
 	public static KnockbackRagdoll(character: Character, velocity: Vector3, time: number, ragdollTime: number = time) {
-		this.Knockback(character, velocity, time);
 		RagdollManager.RagdollCharacter(character, ragdollTime);
+		this.Knockback(character, velocity, time);
 	}
 }

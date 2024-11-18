@@ -57,12 +57,13 @@ export class StunManager {
 		StunnedHumanoids = 0;
 
 		Stunned.forEach((data, character) => {
-			if (!character) {
+			const humanoid = character?.Humanoid;
+
+			if (!humanoid) {
 				Stunned.delete(character);
 				return;
 			}
 
-			const humanoid = character.Humanoid;
 			humanoid.WalkSpeed = 0;
 			humanoid.JumpPower = 0;
 			character.Attributes.SetAutoRotate(false);

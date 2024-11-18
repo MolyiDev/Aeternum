@@ -8,6 +8,7 @@ import { Character } from "ReplicatedStorage/Classes/Character";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
 import { ReplicatedStorage } from "@rbxts/services";
 import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
+import { EStopGlobal } from "ReplicatedStorage/Enums/Replicate/EStopGlobal";
 
 // Events
 const FeintEvent = ReplicatedStorage.WaitForChild("Events").WaitForChild("Combat").WaitForChild("Feint") as RemoteEvent;
@@ -46,7 +47,7 @@ FeintEvent.OnServerEvent.Connect((player, ...args) => {
 	if (!AnimAbility) return;
 	if (Attributes.UsingAbility() === UsingAbility) Attributes.SetUsingAbility(undefined);
 	else {
-		AnimAbility.Stop(0.15);
+		AnimAbility.Stop(EStopGlobal);
 		Attributes.SetUsingAbilityAnim(undefined);
 		StunManager.UnStun(Character);
 	}
@@ -72,6 +73,7 @@ CharacterManager.AddedCharacter.Connect((character) => {
 
 		const Marker = Butler.Connect(animationTrack.GetMarkerReachedSignal("Damage"), () => {
 			HitboxManager.Create(
+				Enum.PartType.Block,
 				new Vector3(4.5, 5.5, 3.5),
 				HumanoidRootPart.CFrame.mul(new CFrame(0, 0, -5)),
 				0.15,

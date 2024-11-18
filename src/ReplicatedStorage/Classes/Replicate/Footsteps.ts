@@ -1,6 +1,8 @@
 // Imports
 import { ReplicatedStorage, SoundService, Workspace } from "@rbxts/services";
+import { ReplicateInfo } from "ReplicatedStorage/Attributes/ReplicateInfo";
 import { Character } from "ReplicatedStorage/Classes/Character";
+import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
 import { Butler } from "ReplicatedStorage/Modules/Butler";
@@ -23,6 +25,17 @@ const MAX_TREMOLO = 0.95;
 const MIN_SPEED = 0.94;
 const MAX_SPEED = 1.06;
 
+@ReplicateInfo({
+	[EAnimations.WalkForward]: {},
+	[EAnimations.WalkForwardLeft]: {},
+	[EAnimations.WalkForwardRight]: {},
+	[EAnimations.WalkBack]: {},
+	[EAnimations.WalkBackLeft]: {},
+	[EAnimations.WalkBackRight]: {},
+	[EAnimations.WalkLeft]: {},
+	[EAnimations.WalkRight]: {},
+	[EAnimations.Run]: {},
+})
 export class Footsteps implements IReplicateClass {
 	public Butler: Butler;
 	public Humanoid: Humanoid;

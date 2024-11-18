@@ -5,26 +5,19 @@ import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { DamageManager } from "ServerScriptService/Managers/DamageManager";
 import { StunManager } from "ServerScriptService/Managers/StunManager";
 import { EStunType } from "ReplicatedStorage/Enums/EStunType";
-import { EAbilityInfo } from "ReplicatedStorage/Enums/Abilities/EAbilityInfo";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
 import { Character } from "ReplicatedStorage/Classes/Character";
 import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
 import { ReplicateInfo } from "ReplicatedStorage/Attributes/ReplicateInfo";
 import { EStopGlobal } from "ReplicatedStorage/Enums/Replicate/EStopGlobal";
+import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
+import { ElectricKickInfo } from "ReplicatedStorage/Abilities/ElectricKick";
 
 // Variables
 const Ability = EAbility.ElectricKick;
-const AbilityInfo = EAbilityInfo.ElectricKick;
+const AbilityInfo = ModuleManager.GetAbilityInfo(Ability)!;
 
-@ReplicateInfo({
-	[EAnimations.ElectricKick]: {
-		Ability: true,
-		CanFeint: true,
-		Signal: true,
-		Sound: true,
-		Cooldown: AbilityInfo.Cooldown,
-	},
-})
+@ReplicateInfo(ElectricKickInfo)
 export class ElectricKick implements IReplicateClass {
 	public Character: Character;
 	public AlreadyLooked: Character[];
@@ -70,6 +63,7 @@ export class ElectricKick implements IReplicateClass {
 			}
 
 			HitboxManager.Create(
+				Enum.PartType.Block,
 				new Vector3(8, 6, 16),
 				HumanoidRootPart.CFrame.mul(new CFrame(0, 0, -12)),
 				0.2,

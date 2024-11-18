@@ -3,7 +3,10 @@ import { RockManager } from "ReplicatedStorage/Managers/RockManager";
 import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
 import { Character } from "ReplicatedStorage/Classes/Character";
 import { EStopGlobal } from "ReplicatedStorage/Enums/Replicate/EStopGlobal";
+import { ReplicateInfo } from "ReplicatedStorage/Attributes/ReplicateInfo";
+import { SeriousPunchInfo } from "ReplicatedStorage/Abilities/SeriousPunch";
 
+@ReplicateInfo(SeriousPunchInfo)
 export class SeriousPunch implements IReplicateClass {
 	public Character: Character;
 	public MarkerRock: RBXScriptConnection = undefined!;

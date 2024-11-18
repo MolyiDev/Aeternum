@@ -1,26 +1,24 @@
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
-import { EAbilityPlace } from "ReplicatedStorage/Enums/Abilities/EAbilityPlace";
 import { Character } from ".";
 import { EWeapons } from "ReplicatedStorage/Enums/EWeapons";
-import { EAbilityInfo } from "ReplicatedStorage/Enums/Abilities/EAbilityInfo";
 import Signal from "@rbxts/lemon-signal";
 import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
 
 interface PlaceWeapon {
-	Place: EAbilityPlace;
+	Place: number;
 	Weapon: EWeapons;
 }
 
 export class Abilities {
 	private AbilitiesFolder: Folder;
 
-	private AbilitiesPerPlace: Map<EAbilityPlace | string, Map<EWeapons | string, EAbility | string>>;
+	private AbilitiesPerPlace: Map<number | string, Map<EWeapons | string, EAbility | string>>;
 	private PlacesPerAbility: Map<EAbility | string, PlaceWeapon>; // Reverse to clean AbilitiesPerPlace on undefined
 	public AbilitiesFeint: Map<EAbility | string, boolean>;
 	private Abilities: Set<EAbility | string>;
 
-	public AbilityAdded: Signal<[EAbilityPlace, EWeapons, EAbility]>;
-	public AbilityRemoved: Signal<[EAbilityPlace, EWeapons, EAbility]>;
+	public AbilityAdded: Signal<[number, EWeapons, EAbility]>;
+	public AbilityRemoved: Signal<[number, EWeapons, EAbility]>;
 
 	constructor(character: Character) {
 		const Model = character.Model;
@@ -63,7 +61,8 @@ export class Abilities {
 			return;
 		}
 
-		const AbilityInfo = EAbilityInfo[attribute];
+		ModuleManager.LoadModule(attribute);
+		const AbilityInfo = ModuleManager.GetAbilityInfo(attribute)!;
 
 		let AbilityPlace = this.AbilitiesPerPlace.get(getAtt);
 
@@ -77,10 +76,12 @@ export class Abilities {
 		AbilityPlace.delete(AbilityInfo.Weapon);
 		AbilityPlace.set(AbilityInfo.Weapon, attribute);
 
-		this.PlacesPerAbility.delete(attribute);
-		this.PlacesPerAbility.set(attribute, { Weapon: AbilityInfo.Weapon, Place: getAtt as EAbilityPlace });
+		const numberAtt = tonumber(getAtt) ?? (getAtt as unknown as number);
 
-		this.AbilityAdded.Fire(getAtt as EAbilityPlace, AbilityInfo.Weapon, attribute as EAbility);
+		this.PlacesPerAbility.delete(attribute);
+		this.PlacesPerAbility.set(attribute, { Weapon: AbilityInfo.Weapon, Place: numberAtt });
+
+		this.AbilityAdded.Fire(numberAtt, AbilityInfo.Weapon, attribute as EAbility);
 	}
 
 	public Destroy() {

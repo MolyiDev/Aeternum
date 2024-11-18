@@ -3,7 +3,6 @@ import { PhysicsService, Players, Workspace } from "@rbxts/services";
 import { NPCManager } from "ReplicatedStorage/Managers/NPCManager";
 import { SettingsManager } from "ReplicatedStorage/Managers/SettingsManager";
 import { AbilityManager } from "./Managers/AbilitiesManager";
-import { EAbilityPlace } from "ReplicatedStorage/Enums/Abilities/EAbilityPlace";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
 import { ECollisionGroup } from "ReplicatedStorage/Enums/ECollisionGroup";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
@@ -32,7 +31,7 @@ CharacterManager.AddedCharacter.Connect((character) => {
 	if (!character.IsPlayer) return;
 	character.Model.Parent = CharactersFolder;
 	task.wait(10);
-	AbilityManager.AddAbility(character, EAbilityPlace.Ability1, EAbility.SeriousPunch);
-	AbilityManager.AddAbility(character, EAbilityPlace.Ability2, EAbility.ElectricKick);
-	AbilityManager.AddAbility(character, EAbilityPlace.Ability3, EAbility.GroundSmash);
+	AbilityManager.AddAbility(character, 1, EAbility.SeriousPunch);
+	AbilityManager.AddAbility(character, 2, EAbility.ElectricKick);
+	AbilityManager.AddAbility(character, 3, EAbility.GroundSmash);
 });

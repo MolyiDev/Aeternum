@@ -1,15 +1,54 @@
 // Imports
+import { AbilityInfo } from "ReplicatedStorage/Attributes/AbilityInfo";
 import { Character } from "ReplicatedStorage/Classes/Character";
 import { Attributes } from "ReplicatedStorage/Classes/Character/Attributes";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
 import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 import { EStunType } from "ReplicatedStorage/Enums/EStunType";
+import { EWeapons } from "ReplicatedStorage/Enums/EWeapons";
 import { IAbility } from "ReplicatedStorage/Interfaces/IAbility";
 import { IHumanoid } from "ReplicatedStorage/Interfaces/IHumanoid";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
 import { Butler } from "ReplicatedStorage/Modules/Butler";
 
-export class GroundSmash implements IAbility {
+const Cooldown = 5;
+
+const GroundSmashInfo = {
+	[EAnimations.GroundSmash]: {
+		Ability: true,
+		CanFeint: true,
+		Sound: true,
+		Cooldown: Cooldown,
+		Class: "GroundSmash",
+	},
+	[EAnimations.GroundSmashIdle]: {
+		Ability: true,
+		Sound: true,
+		HasFeintStop: false,
+		Cooldown: Cooldown,
+		Class: "GroundSmash",
+	},
+	[EAnimations.GroundSmashLand]: {
+		Ability: true,
+		Sound: true,
+		Cooldown: Cooldown,
+		Class: "GroundSmash",
+	},
+};
+
+@AbilityInfo(EAbility.GroundSmash, {
+	Weapon: EWeapons.Hands,
+	Cooldown: Cooldown,
+	Damage: [50, 30, 10],
+	ParryStunTime: 0.85,
+	ParryTime: 0.2,
+	Parryable: true,
+	BlockDamageReduce: 4,
+	Blockeable: true,
+	Dasheable: true,
+})
+class GroundSmash implements IAbility {
+	public Name = script.Name;
 	private Attributes: Attributes;
 	private Humanoid: IHumanoid;
 	private Butler: Butler;
@@ -52,10 +91,6 @@ export class GroundSmash implements IAbility {
 		}
 	}
 
-	public GetAbility() {
-		return EAbility.GroundSmash;
-	}
-
 	public Destroy() {
 		this.Attributes = undefined!;
 		this.Humanoid = undefined!;
@@ -74,3 +109,5 @@ export class GroundSmash implements IAbility {
 		});
 	}
 }
+
+export { GroundSmash, GroundSmashInfo };

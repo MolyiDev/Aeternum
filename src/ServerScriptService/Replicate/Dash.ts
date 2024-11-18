@@ -1,7 +1,15 @@
 // Imports
+import { ReplicateInfo } from "ReplicatedStorage/Attributes/ReplicateInfo";
 import { Character } from "ReplicatedStorage/Classes/Character";
+import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
 
+@ReplicateInfo({
+	[EAnimations.DashForward]: { Sound: true, Cooldown: 2.5 },
+	[EAnimations.DashBack]: { Sound: true, Cooldown: 2.5 },
+	[EAnimations.DashLeft]: { Sound: true, Cooldown: 2.5 },
+	[EAnimations.DashRight]: { Sound: true, Cooldown: 2.5 },
+})
 export class Dash implements IReplicateClass {
 	public Character: Character;
 	public MarkerStart: RBXScriptConnection = undefined!;

@@ -6,6 +6,7 @@ const HitboxFolder = Workspace.WaitForChild("Hitbox");
 
 export class HitboxManager {
 	public static Create(
+		shape: Enum.PartType,
 		size: Vector3,
 		cframe: CFrame,
 		lifeTime: number,
@@ -14,12 +15,14 @@ export class HitboxManager {
 		funct: Callback,
 	) {
 		const HitBox = new Instance("Part", HitboxFolder);
+		HitBox.Shape = shape;
 		HitBox.Size = size;
 		HitBox.Anchored = true;
 		HitBox.CanCollide = false;
 		HitBox.Transparency = 0.7;
 		HitBox.Color = Color3.fromRGB(255, 0, 0);
 		HitBox.CFrame = cframe;
+		if (shape === Enum.PartType.Cylinder) HitBox.Orientation = new Vector3(0, 0, -90);
 
 		/*if (destroy) {
 			const partCFrame = HitBox.CFrame;
@@ -90,7 +93,9 @@ export class HitboxManager {
 			);
 
 			const boxCFrame = cframe.mul(new CFrame(0, 0, -accumulatedOffsetZ - currentSize.Z / 2));
-			this.Create(currentSize, boxCFrame, lifeTime, destroy, params, (part) => funct(part, i));
+			this.Create(Enum.PartType.Block, currentSize, boxCFrame, lifeTime, destroy, params, (part) =>
+				funct(part, i),
+			);
 			accumulatedOffsetZ += currentSize.Z;
 			task.wait(waitTime);
 		}

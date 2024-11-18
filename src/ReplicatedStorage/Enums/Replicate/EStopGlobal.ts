@@ -1,1 +1,1 @@
-export const EStopGlobal = 0.625;
+export const EStopGlobal = 0.65;

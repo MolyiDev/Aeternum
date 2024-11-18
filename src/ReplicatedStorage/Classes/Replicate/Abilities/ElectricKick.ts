@@ -2,21 +2,11 @@
 import { RockManager } from "ReplicatedStorage/Managers/RockManager";
 import { Character } from "ReplicatedStorage/Classes/Character";
 import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
-import { EAbilityInfo } from "ReplicatedStorage/Enums/Abilities/EAbilityInfo";
-import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
 import { ReplicateInfo } from "ReplicatedStorage/Attributes/ReplicateInfo";
-import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 import { EStopGlobal } from "ReplicatedStorage/Enums/Replicate/EStopGlobal";
+import { ElectricKickInfo } from "ReplicatedStorage/Abilities/ElectricKick";
 
-@ReplicateInfo({
-	[EAnimations.ElectricKick]: {
-		Ability: true,
-		CanFeint: true,
-		Signal: true,
-		Sound: true,
-		Cooldown: EAbilityInfo[EAbility.ElectricKick].Cooldown,
-	},
-})
+@ReplicateInfo(ElectricKickInfo)
 export class ElectricKick implements IReplicateClass {
 	public Character: Character;
 	public MarkerRockHand: RBXScriptConnection = undefined!;

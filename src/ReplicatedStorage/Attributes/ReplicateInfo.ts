@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Object from "@rbxts/object-utils";
-import { EReplicateInfo } from "ReplicatedStorage/Enums/Replicate/EReplicateInfo";
 import { IReplicateInfo } from "ReplicatedStorage/Interfaces/IReplicateInfo";
+import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
 
 const defaultReplicateInfo: IReplicateInfo = {
 	Ability: false,
@@ -18,6 +18,6 @@ const defaultReplicateInfo: IReplicateInfo = {
 export function ReplicateInfo(infoMap: { [anim: string]: Partial<IReplicateInfo> }) {
 	return function (target: unknown) {
 		for (const [animation, info] of Object.entries(infoMap))
-			EReplicateInfo.set(animation as string, { ...defaultReplicateInfo, ...info });
+			ModuleManager.SetReplicateInfo(animation as string, { ...defaultReplicateInfo, ...info });
 	};
 }

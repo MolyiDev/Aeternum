@@ -2,7 +2,6 @@
 import { ReplicatedStorage } from "@rbxts/services";
 import { Character } from "ReplicatedStorage/Classes/Character";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
-import { EAbilityPlace } from "ReplicatedStorage/Enums/Abilities/EAbilityPlace";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 
 // Events
@@ -26,7 +25,7 @@ export class AbilityManager {
 		Model.Abilities.SetAttribute(ability, undefined);
 	}
 
-	public static AddAbility(character: Character, abilityPlace: EAbilityPlace, ability: EAbility) {
+	public static AddAbility(character: Character, abilityPlace: number, ability: EAbility) {
 		const Model = character.Model;
 		Model.Abilities.SetAttribute(ability, abilityPlace);
 	}

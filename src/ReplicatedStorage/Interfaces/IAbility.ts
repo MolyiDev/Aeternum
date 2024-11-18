@@ -1,7 +1,5 @@
-import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
-
 export interface IAbility {
+	Name: string;
 	Start(): void;
-	GetAbility(): EAbility;
 	Destroy(): void;
 }

@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { ReplicatedStorage, RunService, ServerScriptService } from "@rbxts/services";
 import { Character } from "ReplicatedStorage/Classes/Character";
-import { EReplicateInfo } from "ReplicatedStorage/Enums/Replicate/EReplicateInfo";
 import { IAbility } from "ReplicatedStorage/Interfaces/IAbility";
+import { IAbilityInfo } from "ReplicatedStorage/Interfaces/IAbilityInfo";
 import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
 import { IReplicateInfo } from "ReplicatedStorage/Interfaces/IReplicateInfo";
 
@@ -11,8 +11,9 @@ const Abilities = ReplicatedStorage.WaitForChild("Abilities")
 	.filter((descendant) => descendant.IsA("ModuleScript"));
 
 const ReplicatesDictionary: { [key: string]: ModuleScript } = {};
-const ReplicatesInfo: { [key: string]: IReplicateInfo } = {};
 const AbilitiesDictionary: { [key: string]: ModuleScript } = {};
+const ReplicatesInfo = new Map<string, IReplicateInfo>();
+const AbilitiesInfo = new Map<string, IAbilityInfo>();
 
 if (RunService.IsClient()) {
 	const Replicates = ReplicatedStorage.WaitForChild("Classes")
@@ -46,10 +47,17 @@ export class ModuleManager {
 		return (require(ReplicateModule) as { [key: string]: new (character: Character) => IReplicateClass })[name];
 	}
 
-	public static GetReplicateInfo = (name: string) => EReplicateInfo.get(name);
+	public static SetReplicateInfo = (name: string, info: IReplicateInfo) => ReplicatesInfo.set(name, info);
+
+	public static GetReplicateInfo = (name: string) => ReplicatesInfo.get(name);
+
+	public static LoadModule = (name: string) => require(AbilitiesDictionary[name]);
 
 	public static GetAbility(name: string) {
 		const AbilityModule = AbilitiesDictionary[name];
 		return (require(AbilityModule) as { [key: string]: new (character: Character) => IAbility })[name];
 	}
+
+	public static SetAbilityInfo = (name: string, info: IAbilityInfo) => AbilitiesInfo.set(name, info);
+	public static GetAbilityInfo = (name: string) => AbilitiesInfo.get(name);
 }

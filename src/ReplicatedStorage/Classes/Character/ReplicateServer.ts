@@ -1,7 +1,6 @@
 /* eslint-disable roblox-ts/lua-truthiness */
 import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 import { Character } from ".";
-import { EAbilityPlace } from "ReplicatedStorage/Enums/Abilities/EAbilityPlace";
 import { EWeapons } from "ReplicatedStorage/Enums/EWeapons";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
 import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
@@ -50,13 +49,13 @@ export class ReplicateServer {
 		this.ReplicateModules.set(EAnimations.DashRight, ClassDash);
 	}
 
-	public AbilityAdded(abilityPlace: EAbilityPlace, weapon: EWeapons, ability: EAbility) {
+	public AbilityAdded(abilityPlace: number, weapon: EWeapons, ability: EAbility) {
 		const classByName = new (ModuleManager.GetReplicate(ability))(this.Character);
 		this.ReplicateModules.set(ability, classByName);
 		if ("Destroy" in classByName) this.StopModules.add(classByName);
 	}
 
-	public AbilityRemoved(abilityPlace: EAbilityPlace, weapon: EWeapons, ability: EAbility) {
+	public AbilityRemoved(abilityPlace: number, weapon: EWeapons, ability: EAbility) {
 		const ReplicateClass = this.ReplicateModules.get(ability);
 		if (!ReplicateClass) return;
 		if (this.StopModules.delete(ReplicateClass)) ReplicateClass.Destroy!();
