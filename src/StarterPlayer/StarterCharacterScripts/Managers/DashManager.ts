@@ -1,12 +1,12 @@
 // Imports
-import { Players, Workspace } from "@rbxts/services";
-import { Tools } from "ReplicatedStorage/Libraries/Tools";
+import { Players } from "@rbxts/services";
 import { ControlManager } from "./ControlsManager";
 import { ESettingsControls } from "ReplicatedStorage/Enums/Settings/ESettingsControls";
-import { StateManager } from "./StateManager";
 import { EMovementState } from "ReplicatedStorage/Enums/Movement/EMovementState";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
+import { EDashDirection } from "ReplicatedStorage/Enums/Dash/EDashDirection";
+import { EDashMode } from "ReplicatedStorage/Enums/Dash/EDashMode";
 
 // States
 const IncludeStates = new Set<EMovementState>([]);
@@ -14,12 +14,11 @@ const ExcludeStates = new Set<EMovementState>([EMovementState.Sliding]);
 
 // Variables
 const Player = Players.LocalPlayer;
-const Camera = Workspace.CurrentCamera as Camera;
 const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Tweens = Character.Tweens;
+const States = Character.States;
 const Animations = Character.Animations;
 const Attributes = Character.Attributes;
-const Humanoid = Character.Humanoid;
-const HumanoidRootPart = Character.HumanoidRootPart;
 const Butler = Character.Butler;
 
 const [DashForward, DashBack, DashLeft, DashRight] = Animations.GetAnimations(
@@ -29,61 +28,101 @@ const [DashForward, DashBack, DashLeft, DashRight] = Animations.GetAnimations(
 	EAnimations.DashRight,
 );
 
-const DASH_COOLDOWN = 2.5;
-const DASH_SPEED = 175;
+const DASH_COOLDOWN = 0;
+const DASH_DURATION = 0.45;
+const DASH_START_SPEED = 55;
+const DASH_END_SPEED = 16;
 
 let CanDash = true;
 
 export class DashManager {
 	public static DashStart() {
-		if (!CanDash || ExcludeStates.has(StateManager.State)) return;
+		if (!CanDash || ExcludeStates.has(States.State)) return;
+
+		const moveDirection = DashManager.GetDashDirection();
+		if (moveDirection === undefined) return;
+
 		CanDash = false;
+		const dashMode = Attributes.IsCameraLocked() ? EDashMode.Camera : EDashMode.Root;
 
-		const moveDirection = DashManager.GetMoveDirection();
-
-		const dashImpulse = Tools.IsTouchingGround(Humanoid, true)
-			? moveDirection.mul(DASH_SPEED * HumanoidRootPart.AssemblyMass)
-			: moveDirection.mul((DASH_SPEED / 2.25) * HumanoidRootPart.AssemblyMass);
-
-		HumanoidRootPart.ApplyImpulse(dashImpulse);
+		Tweens.SetDash({
+			Direction: moveDirection,
+			Mode: dashMode,
+			Time: DASH_DURATION,
+			InitialSpeed: DASH_START_SPEED,
+			FinalSpeed: DASH_END_SPEED,
+			Stun: true,
+		});
 
 		delay(DASH_COOLDOWN, () => {
 			CanDash = true;
 		});
 	}
 
-	private static GetMoveDirection(): Vector3 {
-		const cameraLookVector = Camera.CFrame.LookVector;
-		const cameraRightVector = Camera.CFrame.RightVector;
+	private static GetDashDirection(): EDashDirection | undefined {
 		const cameraLocked = Attributes.IsCameraLocked();
-		let moveVector = new Vector3(0, 0, 0);
+		let direction: EDashDirection | undefined;
 
 		if (ControlManager.IsKeyDown(ESettingsControls.Forward)) {
-			moveVector = moveVector.add(cameraLookVector);
+			direction = EDashDirection.Forward;
 			DashForward.Play(0.1);
 		}
+
 		if (ControlManager.IsKeyDown(ESettingsControls.Back)) {
-			moveVector = moveVector.sub(cameraLookVector);
+			if (direction === EDashDirection.Forward) direction = undefined;
+			else direction = EDashDirection.Back;
+
 			if (!cameraLocked) DashForward.Play(0.1);
 			else DashBack.Play(0.1);
 		}
+
 		if (ControlManager.IsKeyDown(ESettingsControls.Left)) {
-			moveVector = moveVector.sub(cameraRightVector);
+			switch (direction) {
+				case EDashDirection.Forward:
+					direction = EDashDirection.ForwardLeft;
+					break;
+				case EDashDirection.Back:
+					direction = EDashDirection.BackLeft;
+					break;
+				default:
+					direction = EDashDirection.Left;
+					break;
+			}
+
 			if (!cameraLocked) DashForward.Play(0.1);
 			else DashLeft.Play(0.1);
 		}
+
 		if (ControlManager.IsKeyDown(ESettingsControls.Right)) {
-			moveVector = moveVector.add(cameraRightVector);
+			switch (direction) {
+				case EDashDirection.Forward:
+					direction = EDashDirection.ForwardRight;
+					break;
+				case EDashDirection.ForwardLeft:
+					direction = EDashDirection.Forward;
+					break;
+				case EDashDirection.Back:
+					direction = EDashDirection.BackRight;
+					break;
+				case EDashDirection.BackLeft:
+					direction = EDashDirection.Back;
+					break;
+				case EDashDirection.Left:
+					direction = undefined;
+					break;
+				default:
+					direction = EDashDirection.Right;
+					break;
+			}
+
 			if (!cameraLocked) DashForward.Play(0.1);
 			else DashRight.Play(0.1);
 		}
 
-		if (moveVector === Vector3.zero) DashBack.Play(0.1);
-
-		moveVector = new Vector3(moveVector.X, 0, moveVector.Z);
-		return moveVector.Magnitude > 0
-			? moveVector.Unit
-			: new Vector3(-HumanoidRootPart.CFrame.LookVector.X, 0, -HumanoidRootPart.CFrame.LookVector.Z);
+		if (direction === undefined) {
+			DashBack.Play(0.1);
+			return EDashDirection.Back;
+		} else return direction;
 	}
 }
 

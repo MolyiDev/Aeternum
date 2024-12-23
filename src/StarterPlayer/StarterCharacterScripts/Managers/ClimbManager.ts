@@ -1,7 +1,6 @@
 /* eslint-disable roblox-ts/lua-truthiness */
 // Imports
 import { Players, RunService, Workspace } from "@rbxts/services";
-import { StateManager } from "./StateManager";
 import { EMovementState } from "ReplicatedStorage/Enums/Movement/EMovementState";
 import { ControlManager } from "./ControlsManager";
 import { ESettingsControls } from "ReplicatedStorage/Enums/Settings/ESettingsControls";
@@ -13,6 +12,7 @@ import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 const TemporalFolder = Workspace.WaitForChild("Temporal") as Folder;
 const Player = Players.LocalPlayer;
 const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const States = Character.States;
 const Animations = Character.Animations;
 const Attributes = Character.Attributes;
 const Humanoid = Character.Humanoid;
@@ -64,7 +64,7 @@ const [
 	EAnimations.ClimbIdle,
 );
 
-const CLIMB_SPEED = 0.35;
+const CLIMB_SPEED = 0.2;
 const DISTANCE_FROM_SURFACE = 1.2;
 const LEDGE_CHECK_DISTANCE = 5;
 const FADE_IN = 0.2;
@@ -130,7 +130,7 @@ export class ClimbManager {
 		Attributes.SetAutoRotate(false);
 
 		Humanoid.PlatformStand = true;
-		StateManager.SetState(EMovementState.Climbing, true, FADE_OUT);
+		States.SetState(EMovementState.Climbing, true, FADE_OUT);
 		this.StopMovements(FADE_OUT);
 		this.StopImpulses(FADE_OUT);
 
@@ -174,7 +174,7 @@ export class ClimbManager {
 
 		if (!full) return;
 		Attributes.SetAutoRotate(true);
-		StateManager.SetState(EMovementState.Climbing, false);
+		States.SetState(EMovementState.Climbing, false);
 		AlignPosition.Enabled = false;
 		AlignOrientation.Enabled = false;
 		Humanoid.PlatformStand = false;
@@ -252,7 +252,7 @@ function Impulse() {
 	Impulsed = true;
 
 	Humanoid.ChangeState(Enum.HumanoidStateType.GettingUp);
-	StateManager.SetState(EMovementState.Climbing, false);
+	States.SetState(EMovementState.Climbing, false);
 	AlignPart?.Destroy();
 	Attributes.SetAutoRotate(true);
 	AlignPosition.Enabled = false;

@@ -1,36 +1,36 @@
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
 import { Character } from ".";
-import { EWeapons } from "ReplicatedStorage/Enums/EWeapons";
+import { EWeapon } from "ReplicatedStorage/Enums/EWeapons";
 import Signal from "@rbxts/lemon-signal";
 import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
 
 interface PlaceWeapon {
 	Place: number;
-	Weapon: EWeapons;
+	Weapon: EWeapon;
 }
 
 export class Abilities {
-	private AbilitiesFolder: Folder;
+	public AbilitiesFolder: Folder;
 
-	private AbilitiesPerPlace: Map<number | string, Map<EWeapons | string, EAbility | string>>;
+	private AbilitiesPerPlace: Map<number | string, Map<EWeapon | string, EAbility | string>>;
 	private PlacesPerAbility: Map<EAbility | string, PlaceWeapon>; // Reverse to clean AbilitiesPerPlace on undefined
-	public AbilitiesFeint: Map<EAbility | string, boolean>;
+	public AbilitiesFeint: Set<EAbility | string>;
 	private Abilities: Set<EAbility | string>;
 
-	public AbilityAdded: Signal<[number, EWeapons, EAbility]>;
-	public AbilityRemoved: Signal<[number, EWeapons, EAbility]>;
+	public AbilityAdded: Signal<[number, EWeapon, EAbility]>;
+	public AbilityRemoved: Signal<[number, EWeapon, EAbility]>;
 
 	constructor(character: Character) {
 		const Model = character.Model;
 		const Butler = character.Butler;
 
-		this.AbilitiesFolder = Model.Abilities;
+		this.AbilitiesFolder = Model.WaitForChild("Abilities") as Folder;
 
 		Butler.Connect(this.AbilitiesFolder.AttributeChanged, (attribute) => this.AbilitiesChanged(attribute));
 
 		this.AbilitiesPerPlace = new Map();
 		this.PlacesPerAbility = new Map();
-		this.AbilitiesFeint = new Map();
+		this.AbilitiesFeint = new Set();
 		this.Abilities = new Set();
 
 		this.AbilityAdded = new Signal();
@@ -41,47 +41,45 @@ export class Abilities {
 
 	public Has = (ability: string) => this.Abilities.has(ability);
 
-	public AbilitiesChanged(attribute: string) {
-		// Attribute is the name of the ability (EAbility) and getAtt is the place of the ability (EAbilityPlace)
-		const getAtt = this.AbilitiesFolder.GetAttribute(attribute) as string;
-		if (!getAtt) {
-			this.Abilities.delete(attribute);
-			const PlacesPerAbility = this.PlacesPerAbility.get(attribute);
+	public AbilitiesChanged(abilityName: string) {
+		const abilityPlace = this.AbilitiesFolder.GetAttribute(abilityName) as string;
+		if (!abilityPlace) {
+			this.Abilities.delete(abilityName);
+			const PlacesPerAbility = this.PlacesPerAbility.get(abilityName);
 			if (!PlacesPerAbility) return;
 
 			const AbilityPlace = this.AbilitiesPerPlace.get(PlacesPerAbility.Place);
 			if (AbilityPlace) {
 				AbilityPlace.delete(PlacesPerAbility.Weapon);
-				this.AbilityRemoved.Fire(PlacesPerAbility.Place, PlacesPerAbility.Weapon, attribute as EAbility);
+				this.AbilityRemoved.Fire(PlacesPerAbility.Place, PlacesPerAbility.Weapon, abilityName as EAbility);
 				this.AbilitiesPerPlace.delete(PlacesPerAbility.Place);
 			}
 
-			this.PlacesPerAbility.delete(attribute);
-
+			this.PlacesPerAbility.delete(abilityName);
 			return;
 		}
 
-		ModuleManager.LoadModule(attribute);
-		const AbilityInfo = ModuleManager.GetAbilityInfo(attribute)!;
+		ModuleManager.LoadAbility(abilityName);
+		const AbilityInfo = ModuleManager.GetAbilityInfo(abilityName)!;
 
-		let AbilityPlace = this.AbilitiesPerPlace.get(getAtt);
+		let AbilityPlace = this.AbilitiesPerPlace.get(abilityPlace);
 
 		if (!AbilityPlace) {
-			this.AbilitiesPerPlace.set(getAtt, new Map());
-			AbilityPlace = this.AbilitiesPerPlace.get(getAtt)!;
+			this.AbilitiesPerPlace.set(abilityPlace, new Map());
+			AbilityPlace = this.AbilitiesPerPlace.get(abilityPlace)!;
 		}
 
-		if (!this.Abilities.has(attribute)) this.Abilities.add(attribute);
+		if (!this.Abilities.has(abilityName)) this.Abilities.add(abilityName);
 
 		AbilityPlace.delete(AbilityInfo.Weapon);
-		AbilityPlace.set(AbilityInfo.Weapon, attribute);
+		AbilityPlace.set(AbilityInfo.Weapon, abilityName);
 
-		const numberAtt = tonumber(getAtt) ?? (getAtt as unknown as number);
+		const numberAtt = tonumber(abilityPlace) ?? (abilityPlace as unknown as number);
 
-		this.PlacesPerAbility.delete(attribute);
-		this.PlacesPerAbility.set(attribute, { Weapon: AbilityInfo.Weapon, Place: numberAtt });
+		this.PlacesPerAbility.delete(abilityName);
+		this.PlacesPerAbility.set(abilityName, { Weapon: AbilityInfo.Weapon, Place: numberAtt });
 
-		this.AbilityAdded.Fire(numberAtt, AbilityInfo.Weapon, attribute as EAbility);
+		this.AbilityAdded.Fire(numberAtt, AbilityInfo.Weapon, abilityName as EAbility);
 	}
 
 	public Destroy() {
@@ -90,5 +88,13 @@ export class Abilities {
 		this.Abilities.clear();
 		this.AbilityAdded.Destroy();
 		this.AbilityRemoved.Destroy();
+
+		this.AbilitiesFolder = undefined!;
+		this.AbilitiesPerPlace = undefined!;
+		this.PlacesPerAbility = undefined!;
+		this.AbilitiesFeint = undefined!;
+		this.Abilities = undefined!;
+		this.AbilityAdded = undefined!;
+		this.AbilityRemoved = undefined!;
 	}
 }

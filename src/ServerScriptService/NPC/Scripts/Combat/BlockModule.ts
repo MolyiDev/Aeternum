@@ -14,7 +14,7 @@ const Attributes = Character.Attributes;
 const Humanoid = Character.Humanoid;
 const Model = Character.Model;
 
-const Block = Animations.GetAnimation(EAnimations.Block);
+const Block = Animations.GetAnimation(EAnimations.Default_Hands_Block);
 
 let IsBlocking = false;
 

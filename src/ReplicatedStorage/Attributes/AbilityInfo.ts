@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { EWeapons } from "ReplicatedStorage/Enums/EWeapons";
+import { EWeapon } from "ReplicatedStorage/Enums/EWeapons";
 import { IAbilityInfo } from "ReplicatedStorage/Interfaces/IAbilityInfo";
 import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
 
 const defaultAbilityInfo: IAbilityInfo = {
-	Weapon: EWeapons.Hands,
+	Weapon: EWeapon.Hands,
 	Cooldown: 0,
 	Damage: [],
 	ParryStunTime: 0,

@@ -35,9 +35,8 @@ export class CharacterManager {
 	}
 }
 
-function RegisterCharacter(model: Model, player: boolean = false) {
-	const character = new Character(model as IModel);
-	character.IsPlayer = player;
+function RegisterCharacter(model: Model, player: Player = undefined!) {
+	const character = new Character(model as IModel, player);
 	CharacterPerModel.set(model, character);
 
 	AddedCharacterSignal.Fire(character);
@@ -56,9 +55,9 @@ function RegisterPlayer(player: Player) {
 	const butler = new Butler();
 	ButlerPerPlayer.set(player, butler);
 
-	RegisterCharacter(player.Character ?? player.CharacterAdded.Wait()[0], true);
+	RegisterCharacter(player.Character ?? player.CharacterAdded.Wait()[0], player);
 
-	butler.Connect(player.CharacterAdded, (model) => RegisterCharacter(model, true));
+	butler.Connect(player.CharacterAdded, (model) => RegisterCharacter(model, player));
 	butler.Connect(player.CharacterRemoving, (model) => UnRegisterCharacter(model));
 }
 

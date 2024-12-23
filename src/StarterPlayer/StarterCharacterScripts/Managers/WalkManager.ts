@@ -1,7 +1,6 @@
 /* eslint-disable roblox-ts/lua-truthiness */
 // Imports
 import { Players } from "@rbxts/services";
-import { StateManager } from "./StateManager";
 import { EMovementState } from "ReplicatedStorage/Enums/Movement/EMovementState";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
 import { EMovementSpeeds } from "ReplicatedStorage/Enums/Movement/EMovementSpeeds";
@@ -34,6 +33,7 @@ const ExcludeStates = new Set<EMovementState>([]);
 // Variables
 const Player = Players.LocalPlayer;
 const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const States = Character.States;
 const Animations = Character.Animations;
 const Attributes = Character.Attributes;
 const Humanoid = Character.Humanoid;
@@ -63,7 +63,7 @@ export class WalkManager {
 		IsWalking = false;
 		const Speed = speed ? speed : FADE_OUT;
 
-		StateManager.SetState(EMovementState.Walking, false);
+		States.SetState(EMovementState.Walking, false);
 		this.StopAllAnimations(Speed);
 	}
 
@@ -145,9 +145,7 @@ export class WalkManager {
 		}
 	}
 
-	public static CanWalk() {
-		return StateManager.IsMoving() && !Attributes.IsStunned() && IncludeStates.has(StateManager.State);
-	}
+	public static CanWalk = () => States.IsMoving() && !Attributes.IsStunned() && IncludeStates.has(States.State);
 
 	public static AnimForwardSpeed = () => (Humanoid.WalkSpeed * FORWARD_SPEED) / EMovementSpeeds.Default;
 
@@ -168,7 +166,7 @@ function AttributeChanged(attribute: string) {
 
 	if (!Attributes.IsCameraLocked()) {
 		IsWalkingLocked = false;
-		if (StateManager.IsMoving() && !WalkForward.IsPlaying && WalkManager.CanWalk())
+		if (States.IsMoving() && !WalkForward.IsPlaying && WalkManager.CanWalk())
 			WalkForward.Play(FADE_IN, 1, WalkManager.AnimForwardSpeed());
 		if (WalkBack.IsPlaying) WalkBack.Stop(FADE_OUT);
 		if (WalkLeft.IsPlaying) WalkLeft.Stop(FADE_OUT);
@@ -181,9 +179,12 @@ function AttributeChanged(attribute: string) {
 }
 
 function CheckWalk() {
-	if (!StateManager.IsInState(EMovementState.Running) && Tools.IsTouchingGround(Humanoid)) {
-		if (WalkManager.CanWalk()) StateManager.SetState(EMovementState.Walking, true);
-		else StateManager.SetState(EMovementState.Walking, false);
+	if (!States.IsInState(EMovementState.Running) && Tools.IsTouchingGround(Humanoid)) {
+		if (WalkManager.CanWalk()) States.SetState(EMovementState.Walking, true);
+		else {
+			WalkManager.WalkDeactivate(FADE_OUT);
+			States.SetState(EMovementState.Walking, false);
+		}
 	}
 }
 

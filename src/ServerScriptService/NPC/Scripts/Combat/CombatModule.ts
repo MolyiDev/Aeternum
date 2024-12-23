@@ -8,10 +8,10 @@ const Attributes = Character.Attributes;
 const Animations = Character.Animations;
 
 const [Punch0, Punch1, Punch2, Punch3] = Animations.GetAnimations(
-	EAnimations.Punch0,
-	EAnimations.Punch1,
-	EAnimations.Punch2,
-	EAnimations.Punch3,
+	EAnimations.Default_Hands_BasicAttack0,
+	EAnimations.Default_Hands_BasicAttack1,
+	EAnimations.Default_Hands_BasicAttack2,
+	EAnimations.Default_Hands_BasicAttack3,
 );
 
 const PUNCH_TIMEOUT = 2;

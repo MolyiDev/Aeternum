@@ -1,6 +1,6 @@
 // Imports
 import { Workspace } from "@rbxts/services";
-import { GroundSmashInfo } from "ReplicatedStorage/Abilities/GroundSmash";
+import { GroundSmashInfo } from "ReplicatedStorage/Abilities/Hands/GroundSmash";
 import { ReplicateInfo } from "ReplicatedStorage/Attributes/ReplicateInfo";
 import { Character } from "ReplicatedStorage/Classes/Character";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
@@ -10,7 +10,7 @@ import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
 import { DamageManager } from "ServerScriptService/Managers/DamageManager";
-import { HitboxManager } from "ServerScriptService/Managers/HitboxManager";
+import { HitboxManager } from "ReplicatedStorage/Managers/HitboxManager";
 import { StunManager } from "ServerScriptService/Managers/StunManager";
 
 // Variables
@@ -85,7 +85,7 @@ export class GroundSmash implements IReplicateClass {
 
 					HitboxManager.Create(
 						Enum.PartType.Cylinder,
-						new Vector3(2, 10, 10),
+						new Vector3(2, 12, 12),
 						HumanoidRootPart.CFrame.mul(new CFrame(0, -1, 0)),
 						0.2,
 						false,
@@ -143,7 +143,7 @@ export class GroundSmash implements IReplicateClass {
 
 		if (Attributes.IsDashing() && AbilityInfo.Dasheable) return;
 
-		let Velocity = 40 + box * 20;
+		let Velocity = 75 + box * 20;
 
 		let Damage = AbilityInfo.Damage[box];
 
@@ -168,8 +168,8 @@ export class GroundSmash implements IReplicateClass {
 		const HumanoidRootPart = this.Character.HumanoidRootPart;
 
 		if (Attributes.IsBlocking())
-			DamageManager.Knockback(HitCharacter, HumanoidRootPart.CFrame.UpVector.mul(Velocity), 0.5);
-		else DamageManager.KnockbackRagdoll(HitCharacter, HumanoidRootPart.CFrame.UpVector.mul(Velocity), 1, 4);
+			DamageManager.Knockback(HitCharacter, HumanoidRootPart.CFrame.UpVector.mul(Velocity), 0.45);
+		else DamageManager.KnockbackRagdoll(HitCharacter, HumanoidRootPart.CFrame.UpVector.mul(Velocity), 0.45, 3);
 	}
 
 	public Destroy() {

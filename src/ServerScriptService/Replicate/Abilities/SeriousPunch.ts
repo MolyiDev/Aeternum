@@ -1,5 +1,5 @@
 // Imports
-import { SeriousPunchInfo } from "ReplicatedStorage/Abilities/SeriousPunch";
+import { SeriousPunchInfo } from "ReplicatedStorage/Abilities/Hands/SeriousPunch";
 import { ReplicateInfo } from "ReplicatedStorage/Attributes/ReplicateInfo";
 import { Character } from "ReplicatedStorage/Classes/Character";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
@@ -8,7 +8,7 @@ import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
 import { DamageManager } from "ServerScriptService/Managers/DamageManager";
-import { HitboxManager } from "ServerScriptService/Managers/HitboxManager";
+import { HitboxManager } from "ReplicatedStorage/Managers/HitboxManager";
 import { StunManager } from "ServerScriptService/Managers/StunManager";
 
 // Variables

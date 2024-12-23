@@ -1,29 +1,34 @@
 /* eslint-disable roblox-ts/lua-truthiness */
 import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 import { Character } from ".";
-import { EWeapons } from "ReplicatedStorage/Enums/EWeapons";
+import { EWeapon } from "ReplicatedStorage/Enums/EWeapons";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
 import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
 import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
+import { Players } from "@rbxts/services";
+import { EMoveSet } from "ReplicatedStorage/Enums/MoveSets/EMoveSet";
+import { EMove } from "ReplicatedStorage/Enums/MoveSets/EMove";
+import Object from "@rbxts/object-utils";
 
 export class ReplicateClient {
 	public Character: Character;
 	public ReplicateModules: Map<EAnimations | string, IReplicateClass>;
-	public StopModules: Set<IReplicateClass>;
+	public DestroyModules: Set<IReplicateClass>;
 	public ReplicatesPlayed: Set<EAnimations | string>;
-	public ReplicatesPlaying: Set<EAnimations | string>;
+	public SelfReplicatesPlayed: Set<EAnimations | string>;
 
 	constructor(character: Character) {
 		this.Character = character;
 		const Butler = character.Butler;
 		const Abilities = character.Abilities;
+		const Moves = character.Moves;
 		const Animator = character.Humanoid.Animator;
 
 		this.ReplicateModules = new Map();
-		this.StopModules = new Set();
+		this.DestroyModules = new Set();
 		this.ReplicatesPlayed = new Set();
-		this.ReplicatesPlaying = new Set();
+		this.SelfReplicatesPlayed = new Set();
 
 		Butler.Connect(Abilities.AbilityAdded, (abilityPlace, weapon, ability) =>
 			this.AbilityAdded(abilityPlace, weapon, ability),
@@ -33,17 +38,27 @@ export class ReplicateClient {
 			this.AbilityRemoved(abilityPlace, weapon, ability),
 		);
 
+		Butler.Connect(Moves.MoveSetChanged, (oldSet, newSet) => task.spawn(() => this.MoveSetChanged(oldSet, newSet)));
+
+		if (character.Player && character.Player === Players.LocalPlayer)
+			Butler.Connect(Animator.AnimationPlayed, (animTrack) => this.SelfAnimationPlayed(animTrack));
+
 		Butler.Connect(Animator.AnimationPlayed, (animTrack) => this.AnimationPlayed(animTrack));
 
 		task.spawn(() => this.InitializeDefaultModules());
+		task.spawn(() => {
+			const NewSet = this.Character.Moves.MoveSet;
+			if (!NewSet) return;
+			this.MoveSetChanged(undefined!, NewSet);
+		});
 	}
 
 	public InitializeDefaultModules() {
 		const ClassDash = new (ModuleManager.GetReplicate("Dash"))(this.Character);
 		const ClassFootsteps = new (ModuleManager.GetReplicate("Footsteps"))(this.Character);
 
-		this.StopModules.add(ClassDash);
-		this.StopModules.add(ClassFootsteps);
+		this.DestroyModules.add(ClassDash);
+		this.DestroyModules.add(ClassFootsteps);
 
 		this.ReplicateModules.set(EAnimations.DashForward, ClassDash);
 		this.ReplicateModules.set(EAnimations.DashBack, ClassDash);
@@ -60,23 +75,62 @@ export class ReplicateClient {
 		this.ReplicateModules.set(EAnimations.WalkRight, ClassFootsteps);
 		this.ReplicateModules.set(EAnimations.Run, ClassFootsteps);
 
-		this.Character.Model.Abilities.GetAttributes().forEach((attributeValue, ability) => {
-			this.AbilityAdded(undefined as unknown as number, undefined as unknown as EWeapons, ability as EAbility);
+		this.Character.Abilities.AbilitiesFolder.GetAttributes().forEach((attributeValue, ability) => {
+			this.AbilityAdded(undefined as unknown as number, undefined as unknown as EWeapon, ability as EAbility);
 		});
 	}
 
-	public AbilityAdded(abilityPlace: number, weapon: EWeapons, ability: EAbility) {
+	public AbilityAdded(abilityPlace: number, weapon: EWeapon, ability: EAbility) {
 		const classByName = new (ModuleManager.GetReplicate(ability))(this.Character);
 		this.ReplicateModules.set(ability, classByName);
-		if ("Destroy" in classByName) this.StopModules.add(classByName);
+		if ("Destroy" in classByName) this.DestroyModules.add(classByName);
 	}
 
-	public AbilityRemoved(abilityPlace: number, weapon: EWeapons, ability: EAbility) {
+	public AbilityRemoved(abilityPlace: number, weapon: EWeapon, ability: EAbility) {
 		const ReplicateClass = this.ReplicateModules.get(ability);
 		if (!ReplicateClass) return;
-		if (this.StopModules.delete(ReplicateClass)) ReplicateClass.Destroy!();
+		if (this.DestroyModules.delete(ReplicateClass)) ReplicateClass.Destroy!();
 
 		this.ReplicateModules.delete(ability);
+	}
+
+	public MoveSetChanged(oldSet: string, newSet: string) {
+		if (oldSet) {
+			for (const weapon of Object.values(EWeapon)) {
+				for (const move of Object.values(EMove)) {
+					let Name = `${oldSet}_${weapon}_${move}`;
+					let ReplicateClass = this.ReplicateModules.get(Name);
+
+					if (!ReplicateClass) {
+						if (newSet === EMoveSet.Default) continue;
+						Name = `${EMoveSet.Default}_${weapon}_${move}`;
+						ReplicateClass = this.ReplicateModules.get(Name);
+						if (!ReplicateClass) continue;
+					}
+
+					if (this.DestroyModules.delete(ReplicateClass)) ReplicateClass.Destroy!();
+					this.ReplicateModules.delete(Name);
+				}
+			}
+		}
+
+		for (const weapon of Object.values(EWeapon)) {
+			for (const move of Object.values(EMove)) {
+				let Name = `${newSet}_${weapon}_${move}`;
+				let classByName = ModuleManager.GetReplicate(Name);
+
+				if (!classByName) {
+					if (newSet === EMoveSet.Default) continue;
+					Name = `${EMoveSet.Default}_${weapon}_${move}`;
+					classByName = ModuleManager.GetReplicate(Name);
+					if (!classByName) continue;
+				}
+
+				const classNew = new classByName(this.Character);
+				this.ReplicateModules.set(Name, classNew);
+				if ("Destroy" in classByName) this.DestroyModules.add(classNew);
+			}
+		}
 	}
 
 	private ReadSoundString(soundString: string) {
@@ -89,7 +143,7 @@ export class ReplicateClient {
 		return [SoundName, Start, Volume, Speed];
 	}
 
-	public AnimationPlayed(animTrack: AnimationTrack) {
+	public SelfAnimationPlayed(animTrack: AnimationTrack) {
 		const AnimName = Tools.IdToName(animTrack.Animation!.AnimationId);
 		const ReplicateInfo = ModuleManager.GetReplicateInfo(AnimName);
 		if (!ReplicateInfo) return;
@@ -100,6 +154,41 @@ export class ReplicateClient {
 		const Character = this.Character;
 		const Butler = Character.Butler;
 		const Abilities = Character.Abilities;
+		const Attributes = Character.Attributes;
+
+		if (!ReplicateInfo.CanUseStunned && Attributes.IsStunnedFull()) return;
+
+		if (ReplicateInfo.Cooldown > 0) {
+			const time = tick() - Attributes.TickAnim(ReplicateName);
+			if (time < ReplicateInfo.Cooldown) return;
+		}
+
+		if (
+			(ReplicateInfo.Ability && !Abilities.Has(ReplicateName)) ||
+			(Attributes.UsingAbility() && Attributes.UsingAbility() !== ReplicateName) ||
+			Attributes.UsingMove()
+		)
+			return;
+
+		if (!this.SelfReplicatesPlayed.has(AnimName)) {
+			this.SelfReplicatesPlayed.add(AnimName);
+			ReplicateClass.SelfAnimPlayOnce?.(animTrack, AnimName);
+			if ("SelfAnimStop" in ReplicateClass)
+				Butler.Connect(animTrack.Stopped, () => ReplicateClass.SelfAnimStop!(animTrack, AnimName));
+		}
+
+		ReplicateClass.SelfAnimPlay?.(animTrack, AnimName);
+	}
+
+	public AnimationPlayed(animTrack: AnimationTrack) {
+		const AnimName = Tools.IdToName(animTrack.Animation!.AnimationId);
+		const ReplicateInfo = ModuleManager.GetReplicateInfo(AnimName);
+		if (!ReplicateInfo) return;
+		const ReplicateName = ReplicateInfo.Class ?? AnimName;
+		const ReplicateClass = this.ReplicateModules.get(ReplicateName);
+		if (!ReplicateClass) return;
+
+		const Character = this.Character;
 		const Attributes = Character.Attributes;
 
 		if (!ReplicateInfo.CanUseStunned && Attributes.IsStunnedFull()) {
@@ -115,6 +204,11 @@ export class ReplicateClient {
 			}
 		}
 
+		const Butler = Character.Butler;
+		const Abilities = Character.Abilities;
+		const Moves = Character.Moves;
+		const Weapons = Character.Weapons;
+
 		if (ReplicateInfo.Ability) {
 			if (
 				!Abilities.Has(ReplicateName) ||
@@ -125,11 +219,43 @@ export class ReplicateClient {
 				return;
 			}
 
+			const Weapon = ModuleManager.GetAbilityInfo(ReplicateName)!.Weapon;
+
+			if (!Weapons.Has(Weapon) || !Weapons.IsEquipped(Weapon)) {
+				animTrack.Stop();
+				return;
+			}
+
 			if (ReplicateInfo.CanFeint) {
-				this.Character.Abilities.AbilitiesFeint.set(AnimName, true);
+				Abilities.AbilitiesFeint.add(AnimName);
 				if (ReplicateInfo.HasFeintStop && !this.ReplicatesPlayed.has(AnimName))
 					Butler.Connect(animTrack.GetMarkerReachedSignal("StopFeint"), () =>
-						this.Character.Abilities.AbilitiesFeint.set(AnimName, false),
+						Abilities.AbilitiesFeint.delete(AnimName),
+					);
+			}
+		}
+
+		if (ReplicateInfo.Move) {
+			const Split = AnimName.split("_");
+			if (
+				Moves.MoveSet !== Split[0] ||
+				(Attributes.UsingMove() && Attributes.UsingMove() !== ReplicateName) ||
+				Attributes.UsingAbility()
+			) {
+				animTrack.Stop();
+				return;
+			}
+
+			if (!Weapons.Has(Split[1]) || !Weapons.IsEquipped(Split[1])) {
+				animTrack.Stop();
+				return;
+			}
+
+			if (ReplicateInfo.CanFeint) {
+				Moves.MovesFeint.add(AnimName);
+				if (ReplicateInfo.HasFeintStop && !this.ReplicatesPlayed.has(AnimName))
+					Butler.Connect(animTrack.GetMarkerReachedSignal("StopFeint"), () =>
+						Moves.MovesFeint.delete(AnimName),
 					);
 			}
 		}
@@ -138,11 +264,7 @@ export class ReplicateClient {
 			this.ReplicatesPlayed.add(AnimName);
 			ReplicateClass.AnimPlayOnce?.(animTrack, AnimName);
 			if ("AnimStop" in ReplicateClass)
-				Butler.Connect(animTrack.Stopped, () => {
-					ReplicateClass.AnimStop!(animTrack, AnimName);
-					this.ReplicatesPlaying.delete(AnimName);
-				});
-			else Butler.Connect(animTrack.Stopped, () => this.ReplicatesPlaying.delete(AnimName));
+				Butler.Connect(animTrack.Stopped, () => ReplicateClass.AnimStop!(animTrack, AnimName));
 
 			if (ReplicateInfo.Sound) {
 				Butler.Connect(animTrack.GetMarkerReachedSignal("Sound"), (soundString?: string) => {
@@ -158,24 +280,23 @@ export class ReplicateClient {
 			}
 		}
 
-		if (!this.ReplicatesPlayed.has(AnimName)) {
-			this.ReplicatesPlayed.add(AnimName);
-			ReplicateClass.AnimPlayOnce?.(animTrack, AnimName);
-		}
-
-		this.ReplicatesPlaying.add(AnimName);
 		ReplicateClass.AnimPlay?.(animTrack, AnimName);
 	}
 
 	public Destroy() {
 		this.ReplicateModules.clear();
 
-		this.StopModules.forEach((replicateClass) => {
+		this.DestroyModules.forEach((replicateClass) => {
 			replicateClass.Destroy!();
-			this.StopModules.delete(replicateClass);
+			this.DestroyModules.delete(replicateClass);
 		});
 
 		this.ReplicatesPlayed.clear();
-		this.ReplicatesPlaying.clear();
+		this.SelfReplicatesPlayed.clear();
+
+		this.ReplicateModules = undefined!;
+		this.DestroyModules = undefined!;
+		this.ReplicatesPlayed = undefined!;
+		this.SelfReplicatesPlayed = undefined!;
 	}
 }

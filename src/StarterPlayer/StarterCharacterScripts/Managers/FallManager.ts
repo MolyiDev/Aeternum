@@ -1,7 +1,6 @@
 /* eslint-disable roblox-ts/lua-truthiness */
 // Imports
 import { Players } from "@rbxts/services";
-import { StateManager } from "./StateManager";
 import { EMovementState } from "ReplicatedStorage/Enums/Movement/EMovementState";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
@@ -9,6 +8,7 @@ import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 // Variables
 const Player = Players.LocalPlayer;
 const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const States = Character.States;
 const Animations = Character.Animations;
 const Humanoid = Character.Humanoid;
 const Butler = Character.Butler;
@@ -30,7 +30,7 @@ export class FallManager {
 		IsFalling = false;
 		const Speed = speed ? speed : 0.25;
 
-		StateManager.SetState(EMovementState.Falling, false);
+		States.SetState(EMovementState.Falling, false);
 		Fall.Stop(Speed);
 	}
 }
@@ -40,10 +40,10 @@ function StateChanged(oldState: Enum.HumanoidStateType, newState: Enum.HumanoidS
 		case Enum.HumanoidStateType.FallingDown:
 		case Enum.HumanoidStateType.Flying:
 		case Enum.HumanoidStateType.Freefall:
-			StateManager.SetState(EMovementState.Falling, true, 0.65);
+			States.SetState(EMovementState.Falling, true, 0.65);
 			break;
 		default:
-			StateManager.SetState(EMovementState.Falling, false);
+			States.SetState(EMovementState.Falling, false);
 			break;
 	}
 }

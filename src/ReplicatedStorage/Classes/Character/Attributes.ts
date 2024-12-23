@@ -20,7 +20,8 @@ export class Attributes {
 	public IsStunned() {
 		return (
 			(this.Model.GetAttribute(EAttribute.IsStunnedFull) as boolean) ||
-			(this.Model.GetAttribute(EAttribute.IsStunnedPartial) as boolean)
+			(this.Model.GetAttribute(EAttribute.IsStunnedPartial) as boolean) ||
+			(this.Model.GetAttribute(EAttribute.IsStunnedSemiPartial) as boolean)
 		);
 	}
 
@@ -31,6 +32,10 @@ export class Attributes {
 	public IsStunnedPartial = () => this.Model.GetAttribute(EAttribute.IsStunnedPartial) as boolean;
 
 	public SetStunnedPartial = (bool: boolean) => this.Model.SetAttribute(EAttribute.IsStunnedPartial, bool);
+
+	public IsStunnedSemiPartial = () => this.Model.GetAttribute(EAttribute.IsStunnedSemiPartial) as boolean;
+
+	public SetStunnedSemiPartial = (bool: boolean) => this.Model.SetAttribute(EAttribute.IsStunnedSemiPartial, bool);
 
 	// Is
 
@@ -58,6 +63,9 @@ export class Attributes {
 	public UsingMove = () => this.Model.GetAttribute(EAttribute.UsingMove) as string | undefined;
 	public SetUsingMove = (move: string | undefined) => this.Model.SetAttribute(EAttribute.UsingMove, move);
 
+	public UsingMoveAnim = () => this.Model.GetAttribute(EAttribute.UsingMoveAnim) as string | undefined;
+	public SetUsingMoveAnim = (move: string | undefined) => this.Model.SetAttribute(EAttribute.UsingMoveAnim, move);
+
 	// IsCamera
 
 	public IsCameraLocked = () => this.Model.GetAttribute(EAttribute.IsCameraLocked) as boolean;
@@ -77,10 +85,6 @@ export class Attributes {
 
 	public SetTickParry = (tick: number) => this.Model.SetAttribute(EAttribute.Tick_Parry, tick);
 
-	public TickAttackStealth = () => this.Model.GetAttribute(EAttribute.Tick_AttackStealth) as number;
-
-	public SetTickAttackStealth = (tick: number) => this.Model.SetAttribute(EAttribute.Tick_AttackStealth, tick);
-
 	// Can
 
 	public CanLandStun = () => this.Model.GetAttribute(EAttribute.CanLandStun);
@@ -88,23 +92,27 @@ export class Attributes {
 
 	// Other
 
-	public SelfStun(time: number, stunType: EStunType = EStunType.Default) {
+	public SelfStun(time: number, stunType: EStunType = EStunType.Full, sendServer: boolean = true) {
 		switch (stunType) {
-			case EStunType.Default:
+			case EStunType.Full:
 				this.SetStunnedFull(true);
 				break;
 			case EStunType.Partial:
 				this.SetStunnedPartial(true);
 				break;
+			case EStunType.SemiPartial:
+				this.SetStunnedSemiPartial(true);
+				break;
 		}
 
-		SelfStun.FireServer(time, stunType);
+		if (sendServer) SelfStun.FireServer(time, stunType);
 	}
 
 	// Destroy
 
 	public Destroy() {
-		this.Model = undefined!;
 		this.AttributeChanged.Destroy();
+		this.Model = undefined!;
+		this.AttributeChanged = undefined!;
 	}
 }

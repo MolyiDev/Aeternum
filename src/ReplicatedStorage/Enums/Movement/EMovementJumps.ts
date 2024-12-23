@@ -1,6 +1,6 @@
 export enum EMovementJumps {
-	Default = 55,
-	Run = 58.5,
-	RunMomentum = 62.5,
-	Blocking = 50,
+	Default = 58,
+	Run = 62,
+	RunMomentum = 65.5,
+	Blocking = 53,
 }

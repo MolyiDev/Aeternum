@@ -99,18 +99,10 @@ Butler.Connect(UserInputService.InputBegan, (input: InputObject, processed: bool
 
 Butler.Connect(UserInputService.InputEnded, (input: InputObject, processed: boolean) => InputEnded(input, processed));
 
-Butler.Connect(GuiService.MenuClosed, () => {
-	FireWindowFocus(true);
-});
+Butler.Connect(GuiService.MenuClosed, () => FireWindowFocus(true));
 
-Butler.Connect(GuiService.MenuOpened, () => {
-	FireWindowFocus(false);
-});
+Butler.Connect(GuiService.MenuOpened, () => FireWindowFocus(false));
 
-Butler.Connect(UserInputService.WindowFocused, () => {
-	FireWindowFocus(true);
-});
+Butler.Connect(UserInputService.WindowFocused, () => FireWindowFocus(true));
 
-Butler.Connect(UserInputService.WindowFocusReleased, () => {
-	FireWindowFocus(false);
-});
+Butler.Connect(UserInputService.WindowFocusReleased, () => FireWindowFocus(false));

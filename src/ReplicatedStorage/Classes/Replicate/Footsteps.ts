@@ -9,7 +9,12 @@ import { Butler } from "ReplicatedStorage/Modules/Butler";
 
 // Variables
 const TemporalFolder = Workspace.WaitForChild("Temporal");
-const FootprintMaterials = new Set<Enum.Material>([Enum.Material.Sand, Enum.Material.Snow, Enum.Material.Mud]);
+const FootprintMaterials = new Set<Enum.Material>([
+	Enum.Material.Sand,
+	Enum.Material.Snow,
+	Enum.Material.Mud,
+	Enum.Material.Ground,
+]);
 
 const FootstepsGroup = SoundService.WaitForChild("Footsteps") as SoundGroup;
 const Footprint = ReplicatedStorage.WaitForChild("Effects").WaitForChild("Footprint") as BasePart;
@@ -18,8 +23,6 @@ const LoadedSFX = ReplicatedStorage.WaitForChild("Sounds").WaitForChild("Footste
 };
 
 const FADE_OUT = new TweenInfo(1.5, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, 0, false, 4);
-const MIN_PITCH = 0.92;
-const MAX_PITCH = 1.08;
 const MIN_TREMOLO = 0.65;
 const MAX_TREMOLO = 0.95;
 const MIN_SPEED = 0.94;
@@ -108,12 +111,6 @@ export class Footsteps implements IReplicateClass {
 			const roundedSpeed = math.round(randomSpeed * 1000) / 1000;
 
 			PlayingSound.PlaybackSpeed = roundedSpeed;
-
-			const pitchSound = new Instance("PitchShiftSoundEffect", PlayingSound);
-			const randomPitch = math.random() * (MAX_PITCH - MIN_PITCH) + MIN_PITCH;
-			const roundedPitch = math.round(randomPitch * 1000) / 1000;
-
-			pitchSound.Octave = roundedPitch;
 
 			const tremoloSound = new Instance("TremoloSoundEffect", PlayingSound);
 			const randomTremolo = math.random() * (MAX_TREMOLO - MIN_TREMOLO) + MIN_TREMOLO;

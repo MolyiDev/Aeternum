@@ -1,7 +1,6 @@
 /* eslint-disable roblox-ts/lua-truthiness */
 // Imports
 import { Players } from "@rbxts/services";
-import { StateManager } from "./StateManager";
 import { EMovementState } from "ReplicatedStorage/Enums/Movement/EMovementState";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { EStunType } from "ReplicatedStorage/Enums/EStunType";
@@ -14,6 +13,7 @@ const ExcludeStates = new Set<EMovementState>([EMovementState.Sliding]);
 // Variables
 const Player = Players.LocalPlayer;
 const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const States = Character.States;
 const Animations = Character.Animations;
 const Attributes = Character.Attributes;
 const Humanoid = Character.Humanoid;
@@ -26,14 +26,14 @@ const LANDING_LARGE_HEIGHT = -160;
 
 export class LandManager {
 	public static LandingShortStart() {
-		if (StateManager.IsInState(EMovementState.Sliding)) return;
+		if (States.IsInState(EMovementState.Sliding)) return;
 		LandShort.Play(0.1, 2, 1.35);
 	}
 
 	public static LandingLargeStart() {
 		if (!Attributes.CanLandStun()) return;
 
-		Attributes.SelfStun(1.5, EStunType.Default);
+		Attributes.SelfStun(1.5, EStunType.Full);
 		LandLarge.Play(0.1, 5);
 	}
 
@@ -52,8 +52,8 @@ export class LandManager {
 function StateChanged(oldState: Enum.HumanoidStateType, newState: Enum.HumanoidStateType) {
 	if (newState === Enum.HumanoidStateType.Landed) {
 		LandManager.LandActivate();
-		StateManager.SetState(EMovementState.Landing, true);
-	} else StateManager.SetState(EMovementState.Landing, false);
+		States.SetState(EMovementState.Landing, true);
+	} else States.SetState(EMovementState.Landing, false);
 }
 
 Butler.Connect(Humanoid.StateChanged, (oldState: Enum.HumanoidStateType, newState: Enum.HumanoidStateType) =>

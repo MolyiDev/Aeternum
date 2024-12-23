@@ -2,31 +2,32 @@
 import { Players } from "@rbxts/services";
 import { ESettingsControls } from "ReplicatedStorage/Enums/Settings/ESettingsControls";
 import { EMovementState } from "ReplicatedStorage/Enums/Movement/EMovementState";
-import { StateManager } from "../Managers/StateManager";
-import { BlockManager } from "./Managers/BlockManager";
 import { ControlManager } from "../Managers/ControlsManager";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
-import { StealthManager } from "./Managers/StealthManager";
-import { HeavyManager } from "./Managers/HeavyManager";
-import { PunchManager } from "./Managers/PunchManager";
+import { EMove } from "ReplicatedStorage/Enums/MoveSets/EMove";
 
 // Variables
 const Player = Players.LocalPlayer;
 const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const Moves = Character.Moves;
+const States = Character.States;
 const Butler = Character.Butler;
 
 function InputBegan(control: [string, number] | undefined, input: InputObject, doublePressed: boolean) {
 	if (!control) return;
 	switch (control[0]) {
 		case ESettingsControls.Attack1:
-			if (StateManager.IsInState(EMovementState.Crouching)) StealthManager.Attack();
-			else PunchManager.Attack();
+			if (States.IsInState(EMovementState.Crouching)) Moves.Get(EMove.CrouchAttack).Start();
+			else if (States.IsInState(EMovementState.Falling)) Moves.Get(EMove.AirAttack).Start();
+			else if (States.IsInState(EMovementState.Running)) Moves.Get(EMove.RunAttack).Start();
+			else Moves.Get(EMove.BasicAttack).Start();
 			break;
 		case ESettingsControls.HeavyAttack:
-			HeavyManager.Attack();
+			if (States.IsInState(EMovementState.Attacking)) return;
+			Moves.Get(EMove.HeavyAttack).Start();
 			break;
 		case ESettingsControls.Block:
-			BlockManager.Start();
+			Moves.Get(EMove.Block).Start();
 			break;
 	}
 }
@@ -35,7 +36,7 @@ function InputEnded(control: [string, number] | undefined, input: InputObject | 
 	if (!control) return;
 	switch (control[0]) {
 		case ESettingsControls.Block:
-			BlockManager.Stop();
+			Moves.Get(EMove.Block).Stop!();
 			break;
 	}
 }

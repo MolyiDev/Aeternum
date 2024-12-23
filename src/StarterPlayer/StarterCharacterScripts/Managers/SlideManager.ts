@@ -1,7 +1,6 @@
 // Imports
 import { Players, RunService, Workspace } from "@rbxts/services";
 import RaycastHitbox, { HitboxObject } from "@rbxts/raycast-hitbox";
-import { StateManager } from "./StateManager";
 import { EMovementState } from "ReplicatedStorage/Enums/Movement/EMovementState";
 import { EMovementSpeeds } from "ReplicatedStorage/Enums/Movement/EMovementSpeeds";
 import { RunManager } from "./RunManager";
@@ -25,6 +24,7 @@ const JUMP_SLIDE_UP = 40;
 const Player = Players.LocalPlayer;
 const Camera = Workspace.CurrentCamera as Camera;
 const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const States = Character.States;
 const Animations = Character.Animations;
 const Attributes = Character.Attributes;
 const Humanoid = Character.Humanoid;
@@ -123,7 +123,7 @@ export class SlideManager {
 		CanImpulse = false;
 		IsSliding = true;
 		Jumped = false;
-		StateManager.SetState(EMovementState.Sliding, true, 0.05);
+		States.SetState(EMovementState.Sliding, true, 0.05);
 		SlideIdle.Play(0.3);
 		delay(0.25, () => (CanImpulse = true));
 		RunManager.RunPause();
@@ -204,7 +204,7 @@ export class SlideManager {
 		UpperTorso.CanCollide = true;
 		Head.CanCollide = true;
 		Humanoid.ChangeState(Enum.HumanoidStateType.Running);
-		StateManager.SetState(EMovementState.Sliding, false);
+		States.SetState(EMovementState.Sliding, false);
 
 		if (!partial) {
 			Attributes.SetAutoRotate(true);
@@ -222,7 +222,7 @@ export class SlideManager {
 	public static SlideJump() {
 		if (!Tools.IsTouchingGround(Humanoid) || !CanImpulse) return;
 		Jumped = true;
-		StateManager.SetState(EMovementState.SlidingJump, true);
+		States.SetState(EMovementState.SlidingJump, true);
 		this.SlideStop(true);
 		SlideJump.Play(0.15, 1, 1.5);
 
@@ -237,18 +237,18 @@ export class SlideManager {
 function StateChanged(oldState: Enum.HumanoidStateType, newState: Enum.HumanoidStateType) {
 	if (newState !== Enum.HumanoidStateType.Landed) return;
 	if (ControlManager.IsKeyDown(ESettingsControls.Crouch) && ControlManager.IsKeyDown(ESettingsControls.Sprint)) {
-		if (StateManager.IsInState(EMovementState.SlidingJump)) {
-			StateManager.SetState(EMovementState.Sliding, true);
-			StateManager.SetState(EMovementState.SlidingJump, false);
+		if (States.IsInState(EMovementState.SlidingJump)) {
+			States.SetState(EMovementState.Sliding, true);
+			States.SetState(EMovementState.SlidingJump, false);
 			SlideJump.Stop(0.15);
 		}
 
 		SlideManager.SlideStart();
 		return;
 	}
-	if (Landed || !StateManager.IsInState(EMovementState.SlidingJump)) return;
+	if (Landed || !States.IsInState(EMovementState.SlidingJump)) return;
 	Landed = true;
-	StateManager.SetState(EMovementState.SlidingJump, false);
+	States.SetState(EMovementState.SlidingJump, false);
 	SlideJump.Stop(0.15);
 	RunManager.RunResume();
 }

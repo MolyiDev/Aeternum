@@ -12,6 +12,7 @@ export enum ESettingsControls {
 	LockCamera = "Settings_Controls_LockCamera",
 	Attack1 = "Settings_Controls_Attack1",
 	Feint = "Settings_Controls_Feint",
+	Weapon = "Settings_Controls_Weapon",
 	HeavyAttack = "Settings_Controls_HeavyAttack",
 	Vent = "Settings_Controls_Vent",
 	Block = "Settings_Controls_Block",

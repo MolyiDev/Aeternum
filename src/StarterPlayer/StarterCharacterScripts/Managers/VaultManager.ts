@@ -1,6 +1,5 @@
 // Imports
 import { Players, RunService, Workspace } from "@rbxts/services";
-import { StateManager } from "./StateManager";
 import { EMovementState } from "ReplicatedStorage/Enums/Movement/EMovementState";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 
@@ -16,6 +15,7 @@ const ExcludeStates = new Set<EMovementState>([]);
 // Variables
 const Player = Players.LocalPlayer;
 const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const States = Character.States;
 const Humanoid = Character.Humanoid;
 const HumanoidRootPart = Character.HumanoidRootPart;
 const Butler = Character.Butler;
@@ -34,7 +34,7 @@ RayParams.FilterType = Enum.RaycastFilterType.Exclude;
 RayParams.FilterDescendantsInstances = [Model];
 
 function RenderStepped() {
-	if (Vaulting || !IncludeStates.has(StateManager.State)) return;
+	if (Vaulting || !IncludeStates.has(States.State)) return;
 	const VaultCastHead = Workspace.Raycast(
 		HeadPart.CFrame.Position.add(new Vector3(0, -0.5, -0.5)),
 		HumanoidRootPart.CFrame.LookVector,

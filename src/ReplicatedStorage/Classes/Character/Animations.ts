@@ -13,10 +13,12 @@ export class Animations {
 
 		this.AnimationsLoaded = new Map<string, AnimationTrack>();
 
-		for (const animation of AnimFolder.GetDescendants()) {
-			if (!animation.IsA("Animation")) continue;
-			this.AnimationsLoaded.set(animation.Name, this.Animator.LoadAnimation(animation));
-		}
+		task.spawn(() => {
+			for (const animation of AnimFolder.GetDescendants()) {
+				if (!animation.IsA("Animation")) continue;
+				this.AnimationsLoaded.set(animation.Name, this.Animator.LoadAnimation(animation));
+			}
+		});
 	}
 
 	public GetAnimation = (animName: string) => this.AnimationsLoaded.get(animName) as AnimationTrack;
@@ -27,5 +29,8 @@ export class Animations {
 
 	public Destroy() {
 		this.AnimationsLoaded.clear();
+
+		this.AnimationsLoaded = undefined!;
+		this.Animator = undefined!;
 	}
 }

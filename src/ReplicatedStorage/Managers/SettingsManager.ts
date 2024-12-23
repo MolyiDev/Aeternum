@@ -42,6 +42,8 @@ export class SettingsManager {
 		[ECustomInputs.None, [ESettingsControls.Block, EControlType.Alternative]],
 		[Enum.KeyCode.R, [ESettingsControls.HeavyAttack, EControlType.Principal]],
 		[ECustomInputs.None, [ESettingsControls.HeavyAttack, EControlType.Alternative]],
+		[Enum.KeyCode.X, [ESettingsControls.Weapon, EControlType.Principal]],
+		[ECustomInputs.None, [ESettingsControls.Weapon, EControlType.Alternative]],
 		[Enum.KeyCode.One, [ESettingsControls.Ability1, EControlType.Principal]],
 		[ECustomInputs.None, [ESettingsControls.Ability1, EControlType.Alternative]],
 		[Enum.KeyCode.Two, [ESettingsControls.Ability2, EControlType.Principal]],

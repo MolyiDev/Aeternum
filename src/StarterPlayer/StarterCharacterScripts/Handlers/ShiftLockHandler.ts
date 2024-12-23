@@ -1,6 +1,6 @@
 // Imports
 import Signal from "@rbxts/lemon-signal";
-import { Workspace, Players, RunService, UserInputService } from "@rbxts/services";
+import { Workspace, Players, RunService, UserInputService, TweenService } from "@rbxts/services";
 import Spring from "@rbxts/spring";
 import { EAttribute } from "ReplicatedStorage/Enums/EAttribute";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
@@ -85,15 +85,13 @@ function RenderStepped(deltaTime: number) {
 
 	if (AutoRotate && Enabled) {
 		const [x, y, z] = Camera.CFrame.ToOrientation();
-		HumanoidRootPart.CFrame = HumanoidRootPart.CFrame.Lerp(
-			new CFrame(HumanoidRootPart.Position).mul(CFrame.Angles(0, y, 0)),
-			math.clamp(deltaTime * 2 * Config.CHARACTER_ROTATION_SPEED, 0, 1),
-		);
+		HumanoidRootPart.CFrame = new CFrame(HumanoidRootPart.Position).mul(CFrame.Angles(0, y, 0));
 	}
 
 	const actualDirection = Tools.WorldMovingDirection(
 		HumanoidRootPart.CFrame.VectorToObjectSpace(Humanoid.MoveDirection),
 	);
+
 	if (actualDirection === Direction) return;
 	Direction = actualDirection;
 	ChangedDirectionSignal.Fire(Direction);

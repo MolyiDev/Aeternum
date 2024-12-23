@@ -1,6 +1,5 @@
 // Imports
 import { Players, ReplicatedStorage } from "@rbxts/services";
-import { StateManager } from "./StateManager";
 import { EMovementState } from "ReplicatedStorage/Enums/Movement/EMovementState";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
@@ -8,6 +7,7 @@ import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 // Variables
 const Player = Players.LocalPlayer;
 const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const States = Character.States;
 const Animations = Character.Animations;
 const Butler = Character.Butler;
 
@@ -67,5 +67,5 @@ export class IdleManager {
 		if (!IdleVariantLoop) task.spawn(() => this.IdleVariants());
 	}
 
-	public static Initialize = () => StateManager.SetState(EMovementState.Idle, true);
+	public static Initialize = () => States.SetState(EMovementState.Idle, true);
 }

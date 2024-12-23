@@ -27,11 +27,11 @@ const MAX_DURATION = 300;
 
 // Variables
 const AnimationsStop = new Map<string, number>([
-	[EAnimations.Punch0, 0.25],
-	[EAnimations.Punch1, 0.25],
-	[EAnimations.Punch2, 0.25],
-	[EAnimations.Punch3, 0.25],
-	[EAnimations.Block, 0.25],
+	[EAnimations.Default_Hands_BasicAttack0, 0.25],
+	[EAnimations.Default_Hands_BasicAttack1, 0.25],
+	[EAnimations.Default_Hands_BasicAttack2, 0.25],
+	[EAnimations.Default_Hands_BasicAttack3, 0.25],
+	[EAnimations.Default_Hands_Block, 0.25],
 ]);
 
 const Stunned = new Map<Character, StunData>();
@@ -80,7 +80,7 @@ export class StunManager {
 		}
 	}
 
-	public static Stun(character: Character, duration: number, stunType: number = EStunType.Default) {
+	public static Stun(character: Character, duration: number, stunType: number = EStunType.Full) {
 		const Humanoid = character.Humanoid;
 		if (!Humanoid || Humanoid.Health <= 0) return;
 

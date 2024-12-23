@@ -15,17 +15,14 @@ const Managers = Scripts.WaitForChild("Managers");
 const Combat = Scripts.WaitForChild("Combat");
 const CombatModule = require(Combat.WaitForChild("CombatModule") as ModuleScript) as ICombatManager;
 const BlockModule = require(Combat.WaitForChild("BlockModule") as ModuleScript) as IManager;
-const GuardModule = require(Combat.WaitForChild("GuardModule") as ModuleScript) as IManager;
 const IdleModule = require(Managers.WaitForChild("IdleModule") as ModuleScript) as IManager;
 
 switch (Model.Name) {
 	case "Attacking":
-		GuardModule.Start();
 		while (true) {
 			task.wait(0.1);
 			CombatModule.Punch();
 		}
-		break;
 	case "Blocking":
 		IdleModule.Start();
 		while (true) {
@@ -34,7 +31,6 @@ switch (Model.Name) {
 			task.wait(4);
 			BlockModule.Stop();
 		}
-		break;
 	default:
 		IdleModule.Start();
 		break;

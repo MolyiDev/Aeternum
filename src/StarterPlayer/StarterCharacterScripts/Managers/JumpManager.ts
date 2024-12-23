@@ -2,7 +2,6 @@
 // Imports
 import { Players } from "@rbxts/services";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
-import { StateManager } from "./StateManager";
 import { EMovementState } from "ReplicatedStorage/Enums/Movement/EMovementState";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
@@ -10,6 +9,7 @@ import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 // Variables
 const Player = Players.LocalPlayer;
 const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const States = Character.States;
 const Animations = Character.Animations;
 const Humanoid = Character.Humanoid;
 const HumanoidRootPart = Character.HumanoidRootPart;
@@ -28,7 +28,7 @@ let DoubleJumped = false;
 
 export class JumpManager {
 	public static JumpActivate() {
-		if (StateManager.IsInState(EMovementState.Running)) RunJump.Play(0.15, 2, 1.5);
+		if (States.IsInState(EMovementState.Running)) RunJump.Play(0.15, 2, 1.5);
 		else WalkJump.Play(0.15);
 	}
 
@@ -60,7 +60,7 @@ export class JumpManager {
 
 	public static JumpDeactivate(speed: number | undefined) {
 		const Speed = speed ? speed : 0.225;
-		StateManager.SetState(EMovementState.Jumping, false);
+		States.SetState(EMovementState.Jumping, false);
 		WalkJump.Stop(Speed);
 		RunJump.Stop(Speed);
 		DoubleJump.Stop(Speed);
@@ -71,10 +71,10 @@ export class JumpManager {
 function StateChanged(oldState: Enum.HumanoidStateType, newState: Enum.HumanoidStateType) {
 	switch (newState) {
 		case Enum.HumanoidStateType.Jumping:
-			StateManager.SetState(EMovementState.Jumping, true);
+			States.SetState(EMovementState.Jumping, true);
 			break;
 		default:
-			StateManager.SetState(EMovementState.Jumping, false);
+			States.SetState(EMovementState.Jumping, false);
 			break;
 	}
 }

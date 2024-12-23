@@ -1,7 +1,7 @@
-import { EWeapons } from "ReplicatedStorage/Enums/EWeapons";
+import { EWeapon } from "ReplicatedStorage/Enums/EWeapons";
 
 export interface IAbilityInfo {
-	Weapon: EWeapons;
+	Weapon: EWeapon;
 	Cooldown: number;
 	Damage: number[];
 	ParryStunTime: number;

@@ -1,4 +1,5 @@
 export enum EStunType {
-	Default,
+	Full,
 	Partial,
+	SemiPartial,
 }

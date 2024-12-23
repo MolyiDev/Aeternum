@@ -4,7 +4,6 @@ import { EMovementSpeeds } from "ReplicatedStorage/Enums/Movement/EMovementSpeed
 import { ESettingsControls } from "ReplicatedStorage/Enums/Settings/ESettingsControls";
 import { EMovementState } from "ReplicatedStorage/Enums/Movement/EMovementState";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
-import { StateManager } from "./Managers/StateManager";
 import { CrouchManager } from "./Managers/CrouchManager";
 import { RunManager } from "./Managers/RunManager";
 import { WalkManager } from "./Managers/WalkManager";
@@ -15,18 +14,19 @@ import { IdleManager } from "./Managers/IdleManager";
 import { JumpManager } from "./Managers/JumpManager";
 import { LandManager } from "./Managers/LandManager";
 import { FallManager } from "./Managers/FallManager";
-import { VaultManager } from "./Managers/VaultManager";
-import { GuardManager } from "./Combat/Managers/GuardManager";
 import { SlideManager } from "./Managers/SlideManager";
 import { ShiftLockHandler } from "./Handlers/ShiftLockHandler";
 import { CharacterManager } from "../../ReplicatedStorage/Managers/CharacterManager";
 import Collector from "ReplicatedStorage/Libraries/Collector";
+import { EMove } from "ReplicatedStorage/Enums/MoveSets/EMove";
 
 // Variables
 const TemporalFolder = Workspace.WaitForChild("Temporal");
 const Player = Players.LocalPlayer;
 const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
+const States = Character.States;
 const Attributes = Character.Attributes;
+const Moves = Character.Moves;
 const Humanoid = Character.Humanoid;
 const HumanoidRootPart = Character.HumanoidRootPart;
 const Butler = Character.Butler;
@@ -42,34 +42,34 @@ function InputBegan(control: [string, number] | undefined, input: InputObject, d
 	if (!control) return;
 	switch (control[0]) {
 		case ESettingsControls.Forward:
-			if (StateManager.IsInState(EMovementState.Climbing)) {
+			if (States.IsInState(EMovementState.Climbing)) {
 				ClimbManager.ClimbDirection = ClimbManager.ClimbDirection.add(new Vector3(0, 1, 0));
-				if (doublePressed && StateManager.IsInState(EMovementState.Climbing)) ClimbManager.ClimbImpulse();
+				if (doublePressed && States.IsInState(EMovementState.Climbing)) ClimbManager.ClimbImpulse();
 			}
 			break;
 		case ESettingsControls.Back:
-			if (StateManager.IsInState(EMovementState.Climbing)) {
+			if (States.IsInState(EMovementState.Climbing)) {
 				ClimbManager.ClimbDirection = ClimbManager.ClimbDirection.add(new Vector3(0, -1, 0));
-				if (doublePressed && StateManager.IsInState(EMovementState.Climbing)) ClimbManager.ClimbImpulse();
+				if (doublePressed && States.IsInState(EMovementState.Climbing)) ClimbManager.ClimbImpulse();
 			}
 			break;
 		case ESettingsControls.Left:
-			if (StateManager.IsInState(EMovementState.Climbing)) {
+			if (States.IsInState(EMovementState.Climbing)) {
 				ClimbManager.ClimbDirection = ClimbManager.ClimbDirection.add(new Vector3(-1, 0, 0));
-				if (doublePressed && StateManager.IsInState(EMovementState.Climbing)) ClimbManager.ClimbImpulse();
+				if (doublePressed && States.IsInState(EMovementState.Climbing)) ClimbManager.ClimbImpulse();
 			}
 			break;
 		case ESettingsControls.Right:
-			if (StateManager.IsInState(EMovementState.Climbing)) {
+			if (States.IsInState(EMovementState.Climbing)) {
 				ClimbManager.ClimbDirection = ClimbManager.ClimbDirection.add(new Vector3(1, 0, 0));
-				if (doublePressed && StateManager.IsInState(EMovementState.Climbing)) ClimbManager.ClimbImpulse();
+				if (doublePressed && States.IsInState(EMovementState.Climbing)) ClimbManager.ClimbImpulse();
 			}
 			break;
 		case ESettingsControls.Crouch:
-			if (!StateManager.IsInState(EMovementState.Sliding) && !Attributes.IsStunned()) {
-				if (StateManager.IsInState(EMovementState.Running) && StateManager.IsMoving()) {
+			if (!States.IsInState(EMovementState.Sliding) && !Attributes.IsStunned()) {
+				if (States.IsInState(EMovementState.Running) && States.IsMoving()) {
 					SlideManager.SlideStart();
-				} else if (StateManager.IsInState(EMovementState.Crouching)) CrouchManager.CrouchStop();
+				} else if (States.IsInState(EMovementState.Crouching)) CrouchManager.CrouchStop();
 				else CrouchManager.CrouchStart();
 			}
 			break;
@@ -80,18 +80,15 @@ function InputBegan(control: [string, number] | undefined, input: InputObject, d
 			if (!Attributes.IsStunned()) DashManager.DashStart();
 			break;
 		case ESettingsControls.Jump:
-			if (StateManager.IsInState(EMovementState.Crouching)) CrouchManager.CrouchStop();
-			else if (
-				StateManager.IsInState(EMovementState.Sliding) &&
-				!StateManager.IsInState(EMovementState.SlidingJump)
-			)
+			if (States.IsInState(EMovementState.Crouching)) CrouchManager.CrouchStop();
+			else if (States.IsInState(EMovementState.Sliding) && !States.IsInState(EMovementState.SlidingJump))
 				SlideManager.SlideJump();
-			else if (StateManager.IsInState(EMovementState.Climbing)) ClimbManager.StopClimbing(true);
+			else if (States.IsInState(EMovementState.Climbing)) ClimbManager.StopClimbing(true);
 			else JumpManager.DoubleJumpStart();
 			break;
 		case ESettingsControls.Climb:
 			if (!Attributes.IsStunned()) {
-				if (StateManager.IsInState(EMovementState.Climbing)) ClimbManager.StopClimbing(true);
+				if (States.IsInState(EMovementState.Climbing)) ClimbManager.StopClimbing(true);
 				else {
 					const rayRes = ClimbManager.DetectWall(HumanoidRootPart.CFrame);
 					if (rayRes) {
@@ -121,23 +118,23 @@ function InputEnded(control: [string, number] | undefined, input: InputObject | 
 
 	switch (control[0]) {
 		case ESettingsControls.Forward:
-			if (StateManager.IsInState(EMovementState.Climbing))
+			if (States.IsInState(EMovementState.Climbing))
 				ClimbManager.ClimbDirection = ClimbManager.ClimbDirection.sub(new Vector3(0, 1, 0));
 			break;
 		case ESettingsControls.Back:
-			if (StateManager.IsInState(EMovementState.Climbing))
+			if (States.IsInState(EMovementState.Climbing))
 				ClimbManager.ClimbDirection = ClimbManager.ClimbDirection.sub(new Vector3(0, -1, 0));
 			break;
 		case ESettingsControls.Left:
-			if (StateManager.IsInState(EMovementState.Climbing))
+			if (States.IsInState(EMovementState.Climbing))
 				ClimbManager.ClimbDirection = ClimbManager.ClimbDirection.sub(new Vector3(-1, 0, 0));
 			break;
 		case ESettingsControls.Right:
-			if (StateManager.IsInState(EMovementState.Climbing))
+			if (States.IsInState(EMovementState.Climbing))
 				ClimbManager.ClimbDirection = ClimbManager.ClimbDirection.sub(new Vector3(1, 0, 0));
 			break;
 		case ESettingsControls.Crouch:
-			if (StateManager.IsInState(EMovementState.Sliding)) SlideManager.SlideStop();
+			if (States.IsInState(EMovementState.Sliding)) SlideManager.SlideStop();
 			break;
 		case ESettingsControls.Sprint:
 			RunManager.RunStop();
@@ -150,7 +147,7 @@ function InputEnded(control: [string, number] | undefined, input: InputObject | 
 function StateChanged(oldState: EMovementState, newState: EMovementState, speed: number | undefined) {
 	switch (newState) {
 		case EMovementState.Climbing:
-			GuardManager.Stop();
+			Moves.Get(EMove.Guard).Stop!();
 			IdleManager.IdleDeactivate();
 			JumpManager.JumpDeactivate(speed);
 			FallManager.FallingDeactivate(speed);
@@ -163,14 +160,14 @@ function StateChanged(oldState: EMovementState, newState: EMovementState, speed:
 			RunManager.RunDeactivate();
 			break;
 		case EMovementState.Idle:
-			GuardManager.Stop();
+			Moves.Get(EMove.Guard).Stop!();
 			FallManager.FallingDeactivate(speed);
 			WalkManager.WalkDeactivate(speed);
 			IdleManager.IdleActivate();
 			RunManager.RunDeactivate();
 			break;
 		case EMovementState.Falling:
-			GuardManager.Stop();
+			Moves.Get(EMove.Guard).Stop!();
 			IdleManager.IdleDeactivate();
 			FallManager.FallingActivate();
 			WalkManager.WalkDeactivate(speed);
@@ -178,14 +175,14 @@ function StateChanged(oldState: EMovementState, newState: EMovementState, speed:
 			RunManager.RunPause();
 			break;
 		case EMovementState.Running:
-			GuardManager.Stop();
+			Moves.Get(EMove.Guard).Stop!();
 			FallManager.FallingDeactivate(speed);
 			WalkManager.WalkDeactivate(speed);
 			RunManager.RunActivate();
 			break;
 		case EMovementState.SlidingJump:
 		case EMovementState.Sliding:
-			GuardManager.Stop();
+			Moves.Get(EMove.Guard).Stop!();
 			LandManager.LandDeactivate(speed);
 			FallManager.FallingDeactivate(speed);
 			WalkManager.WalkDeactivate(speed);
@@ -193,21 +190,18 @@ function StateChanged(oldState: EMovementState, newState: EMovementState, speed:
 			RunManager.RunPause();
 			break;
 		case EMovementState.Jumping:
-			GuardManager.Stop();
+			Moves.Get(EMove.Guard).Stop!();
 			JumpManager.JumpActivate();
 			FallManager.FallingDeactivate(speed);
 			WalkManager.WalkDeactivate(speed);
 			RunManager.RunPause();
 			break;
 		case EMovementState.Landing:
-			GuardManager.Stop();
+			Moves.Get(EMove.Guard).Stop!();
 			JumpManager.JumpDeactivate(speed);
 			FallManager.FallingDeactivate(speed);
-			if (
-				!StateManager.IsInState(EMovementState.SlidingJump) &&
-				!StateManager.IsInState(EMovementState.Sliding)
-			) {
-				StateManager.SetState(EMovementState.Idle, true);
+			if (!States.IsInState(EMovementState.SlidingJump) && !States.IsInState(EMovementState.Sliding)) {
+				States.SetState(EMovementState.Idle, true);
 				RunManager.RunResume();
 			}
 			break;
@@ -217,7 +211,7 @@ function StateChanged(oldState: EMovementState, newState: EMovementState, speed:
 		case EMovementState.Guarding:
 			break;
 		default:
-			GuardManager.Stop();
+			Moves.Get(EMove.Guard).Stop!();
 			FallManager.FallingDeactivate(speed);
 			WalkManager.WalkDeactivate(speed);
 			RunManager.RunDeactivate();
@@ -308,10 +302,8 @@ Butler.Connect(
 	},
 );
 
-Butler.Connect(
-	StateManager.StateChanged,
-	(oldState: EMovementState, newState: EMovementState, speed: number | undefined) =>
-		StateChanged(oldState, newState, speed),
+Butler.Connect(States.StateChanged, (oldState: EMovementState, newState: EMovementState, speed: number | undefined) =>
+	StateChanged(oldState, newState, speed),
 );
 
 Butler.Connect(RunService.Heartbeat, () => Movement());

@@ -24,6 +24,10 @@ export class Tools {
 		return new Color3(c1.R + (c2.R - c1.R) * alpha, c1.G + (c2.G - c1.G) * alpha, c1.B + (c2.B - c1.B) * alpha);
 	}
 
+	public static LerpNumber(start: number, final: number, alpha: number): number {
+		return start + (final - start) * alpha;
+	}
+
 	public static IdToName = (name: string) => AnimIdToName.get(name) as string;
 
 	public static SoundNameToSound = (name: string) => SoundNameToSound.get(name) as Sound;
@@ -72,6 +76,46 @@ export class Tools {
 		gradient.Color = finalGradient;
 	}
 
+	private static _TweenTransparency(beam: Beam, tweenInfo: TweenInfo, finalSequence: NumberSequence) {
+		const time = tweenInfo.Time;
+		const easingStyle = tweenInfo.EasingStyle;
+		const easingDirection = tweenInfo.EasingDirection;
+
+		const startSequence = beam.Transparency.Keypoints;
+
+		if (startSequence.size() !== finalSequence.Keypoints.size()) {
+			beam.Transparency = finalSequence;
+			return;
+		}
+
+		const startTime = tick();
+		let timeElapsed = 0;
+
+		while (timeElapsed < time) {
+			timeElapsed = tick() - startTime;
+			let alpha = timeElapsed / time;
+
+			alpha = TweenService.GetValue(alpha, easingStyle, easingDirection);
+
+			const newKeypoints = [];
+
+			for (let i = 0; i < startSequence.size(); i++) {
+				const startPoint = startSequence[i];
+				const endPoint = finalSequence.Keypoints[i];
+
+				const newColor = Tools.LerpNumber(startPoint.Value, endPoint.Value, alpha);
+				const newTime = startPoint.Time + (endPoint.Time - startPoint.Time) * alpha;
+
+				newKeypoints.push(new NumberSequenceKeypoint(newTime, newColor));
+			}
+
+			beam.Transparency = new NumberSequence(newKeypoints);
+			RunService.RenderStepped.Wait();
+		}
+
+		beam.Transparency = finalSequence;
+	}
+
 	public static VectorDistance(pointA: Vector3, pointB: Vector3): number {
 		return pointB.sub(pointA).Magnitude;
 	}
@@ -90,6 +134,10 @@ export class Tools {
 
 	public static TweenGradient(gradient: UIGradient, tweenInfo: TweenInfo, finalGradient: ColorSequence) {
 		task.spawn(() => Tools.TweenGradientInternal(gradient, tweenInfo, finalGradient));
+	}
+
+	public static TweenTransparency(beam: Beam, tweenInfo: TweenInfo, finalSequence: NumberSequence) {
+		task.spawn(() => Tools._TweenTransparency(beam, tweenInfo, finalSequence));
 	}
 
 	public static DarkenColor(color: Color3, factor: number): Color3 {

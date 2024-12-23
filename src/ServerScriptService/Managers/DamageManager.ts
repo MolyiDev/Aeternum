@@ -1,6 +1,5 @@
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
 import { StunManager } from "./StunManager";
-import { Debris } from "@rbxts/services";
 import { RagdollManager } from "./RagdollManager";
 import { Character } from "ReplicatedStorage/Classes/Character";
 import Collector from "ReplicatedStorage/Libraries/Collector";
@@ -23,10 +22,6 @@ export class DamageManager {
 		const knockbackVelocity = new Instance("BodyVelocity", character.HumanoidRootPart);
 		knockbackVelocity.MaxForce = new Vector3(math.huge, math.huge, math.huge);
 		knockbackVelocity.Velocity = velocity;
-
-		Tools.TweenPlay(knockbackVelocity, new TweenInfo(time, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-			Velocity: Vector3.zero,
-		});
 
 		Collector.AddItem(knockbackVelocity, time);
 	}

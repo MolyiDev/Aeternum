@@ -56,18 +56,20 @@ export enum EAnimations {
 	DashRight = "DashRight",
 
 	// Combat
-	Block = "Block",
-	Guard = "Guard",
+	Default_Hands_Block = "Default_Hands_Block",
+	Default_Hands_Guard = "Default_Hands_Guard",
 
-	// Punch
-	Punch0 = "Punch0",
-	Punch1 = "Punch1",
-	Punch2 = "Punch2",
-	Punch3 = "Punch3",
+	Default_Hands_BasicAttack0 = "Default_Hands_BasicAttack0",
+	Default_Hands_BasicAttack1 = "Default_Hands_BasicAttack1",
+	Default_Hands_BasicAttack2 = "Default_Hands_BasicAttack2",
+	Default_Hands_BasicAttack3 = "Default_Hands_BasicAttack3",
 
-	HeavyPunch = "HeavyPunch",
-	StealthAttack = "StealthAttack",
-	ReceiveStealthAttack = "ReceiveStealthAttack",
+	Default_Hands_RunAttack = "Default_Hands_RunAttack",
+	Default_Hands_HeavyAttack = "Default_Hands_HeavyAttack",
+	Default_Hands_CrouchAttack = "Default_Hands_CrouchAttack",
+	Default_Hands_ReceiveCrouchAttack = "Default_Hands_ReceiveCrouchAttack",
+
+	Default_Hands_AirAttack = "Default_Hands_AirAttack",
 
 	// Abilities
 	SeriousPunch = "SeriousPunch",

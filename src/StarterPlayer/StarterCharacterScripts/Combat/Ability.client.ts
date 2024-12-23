@@ -6,7 +6,7 @@ import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { ControlManager } from "../Managers/ControlsManager";
 import { IAbility } from "ReplicatedStorage/Interfaces/IAbility";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
-import { EWeapons } from "ReplicatedStorage/Enums/EWeapons";
+import { EWeapon } from "ReplicatedStorage/Enums/EWeapons";
 import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
 import { EStopGlobal } from "ReplicatedStorage/Enums/Replicate/EStopGlobal";
@@ -24,12 +24,12 @@ const Abilities = Character.Abilities;
 const Attributes = Character.Attributes;
 const Butler = Character.Butler;
 
-const ModuleAbilities = new Map<number, Map<EWeapons, IAbility>>();
+const ModuleAbilities = new Map<number, Map<EWeapon, IAbility>>();
 
 function AbilityStart(ability: number) {
 	const AbilityPerWeapon = ModuleAbilities.get(ability);
 	if (!AbilityPerWeapon) return;
-	const AbilityModule = AbilityPerWeapon.get(EWeapons.Hands);
+	const AbilityModule = AbilityPerWeapon.get(EWeapon.Hands);
 	if (!AbilityModule) return;
 
 	const Ability = AbilityModule.Name!;
@@ -41,10 +41,10 @@ function AbilityStart(ability: number) {
 	AbilityModule.Start();
 }
 
-function AbilityAdd(abilityPlace: number, weapon: EWeapons, ability: EAbility) {
+function AbilityAdd(abilityPlace: number, weapon: EWeapon, ability: EAbility) {
 	let AbilityPlaces = ModuleAbilities.get(abilityPlace);
 	if (!AbilityPlaces) {
-		ModuleAbilities.set(abilityPlace, new Map<EWeapons, IAbility>());
+		ModuleAbilities.set(abilityPlace, new Map<EWeapon, IAbility>());
 		AbilityPlaces = ModuleAbilities.get(abilityPlace)!;
 	}
 
@@ -53,7 +53,7 @@ function AbilityAdd(abilityPlace: number, weapon: EWeapons, ability: EAbility) {
 	AbilityPlaces.set(weapon, Ability);
 }
 
-function AbilityRemove(abilityPlace: number, weapon: EWeapons) {
+function AbilityRemove(abilityPlace: number, weapon: EWeapon) {
 	ModuleAbilities.get(abilityPlace)?.delete(weapon);
 }
 
@@ -66,7 +66,7 @@ function InputBegan(control: [string, number] | undefined, input: InputObject, d
 				const UsingAbility = Attributes.UsingAbilityAnim();
 				if (!UsingAbility) return;
 				const ReplicateInfo = ModuleManager.GetReplicateInfo(UsingAbility);
-				if (!ReplicateInfo || !ReplicateInfo.CanFeint || !Abilities.AbilitiesFeint.get(UsingAbility)) return;
+				if (!ReplicateInfo || !ReplicateInfo.CanFeint || !Abilities.AbilitiesFeint.has(UsingAbility)) return;
 				const AnimAbility = Character.Animations.Animator.GetPlayingAnimationTracks().find(
 					(animTrack) => Tools.IdToName(animTrack.Animation!.AnimationId) === UsingAbility,
 				);
@@ -97,10 +97,10 @@ Butler.Connect(
 		InputBegan(control, input, doublePressed),
 );
 
-Butler.Connect(Abilities.AbilityAdded, (abilityPlace: number, weapon: EWeapons, ability: EAbility) =>
+Butler.Connect(Abilities.AbilityAdded, (abilityPlace: number, weapon: EWeapon, ability: EAbility) =>
 	AbilityAdd(abilityPlace, weapon, ability),
 );
 
-Butler.Connect(Abilities.AbilityRemoved, (abilityPlace: number, weapon: EWeapons) =>
+Butler.Connect(Abilities.AbilityRemoved, (abilityPlace: number, weapon: EWeapon) =>
 	AbilityRemove(abilityPlace, weapon),
 );

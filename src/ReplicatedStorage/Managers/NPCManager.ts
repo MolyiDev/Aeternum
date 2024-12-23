@@ -25,6 +25,11 @@ export class NPCManager {
 		if (!RunService.IsServer()) return;
 		const NPCScripts = ServerScriptService.NPC.Scripts as Folder;
 
+		for (const part of model.GetDescendants()) {
+			if (!part.IsA("BasePart")) continue;
+			part.SetNetworkOwner(undefined);
+		}
+
 		const Scripts = NPCScripts.Clone();
 		Scripts.Parent = model;
 		for (const scr of Scripts.GetDescendants()) {

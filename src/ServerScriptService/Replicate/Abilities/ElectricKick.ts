@@ -1,5 +1,5 @@
 // Imports
-import { HitboxManager } from "ServerScriptService/Managers/HitboxManager";
+import { HitboxManager } from "ReplicatedStorage/Managers/HitboxManager";
 import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { DamageManager } from "ServerScriptService/Managers/DamageManager";
@@ -11,7 +11,8 @@ import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
 import { ReplicateInfo } from "ReplicatedStorage/Attributes/ReplicateInfo";
 import { EStopGlobal } from "ReplicatedStorage/Enums/Replicate/EStopGlobal";
 import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
-import { ElectricKickInfo } from "ReplicatedStorage/Abilities/ElectricKick";
+import { ElectricKickInfo } from "ReplicatedStorage/Abilities/Hands/ElectricKick";
+import { RagdollManager } from "ServerScriptService/Managers/RagdollManager";
 
 // Variables
 const Ability = EAbility.ElectricKick;
@@ -89,12 +90,7 @@ export class ElectricKick implements IReplicateClass {
 			this.CharacterList.forEach((character) => {
 				character.Animations.GetAnimation(EAnimations.ReceiveElectricKick).Stop();
 				DamageManager.Damage(character, 20);
-				DamageManager.KnockbackRagdoll(
-					character,
-					Character.HumanoidRootPart.CFrame.LookVector.mul(100),
-					0.85,
-					5,
-				);
+				DamageManager.KnockbackRagdoll(character, Character.HumanoidRootPart.CFrame.LookVector.mul(100), 1, 5);
 			});
 		});
 	}
@@ -105,6 +101,7 @@ export class ElectricKick implements IReplicateClass {
 		const Butler = Character.Butler;
 
 		Butler.RemoveList(this.MarkRockHand, this.MarkDamage, this.MarkDamageFinal, this.MarkStop);
+
 		const Cooldown = Attributes.UsingAbility() === Ability ? tick() : tick() - AbilityInfo.Cooldown / 2;
 		Attributes.SetTickAnim(Ability, Cooldown);
 	}
@@ -139,6 +136,7 @@ export class ElectricKick implements IReplicateClass {
 
 		this.CharacterList.push(HitCharacter);
 
+		RagdollManager.UnRagdollCharacter(HitCharacter);
 		StunManager.Stun(HitCharacter, 5);
 		const ReceiveElectricKick = HitCharacter.Animations.GetAnimation(EAnimations.ReceiveElectricKick);
 		ReceiveElectricKick.Play();
