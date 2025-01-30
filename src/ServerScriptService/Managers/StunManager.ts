@@ -1,6 +1,6 @@
 /* eslint-disable roblox-ts/lua-truthiness */
 // Imports
-import { ReplicatedStorage, RunService } from "@rbxts/services";
+import { ReplicatedStorage, RunService, Workspace } from "@rbxts/services";
 import { EMovementJumps } from "ReplicatedStorage/Enums/Movement/EMovementJumps";
 import { EMovementSpeeds } from "ReplicatedStorage/Enums/Movement/EMovementSpeeds";
 import { HaloManager } from "./HaloManager";
@@ -9,10 +9,17 @@ import { EStunType } from "ReplicatedStorage/Enums/EStunType";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { Character } from "ReplicatedStorage/Classes/Character";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
+import Visuals from "ReplicatedStorage/Libraries/Visuals";
 
 // Events
 const Events = ReplicatedStorage.WaitForChild("Events");
 const SelfStun = Events.WaitForChild("SelfStun") as RemoteEvent;
+
+interface CastVisualizer {
+	Raycast(Origin: Vector3, Direction: Vector3): void;
+	Hide(): void;
+	Destroy(): void;
+}
 
 // Interfaces
 interface StunData {
@@ -27,11 +34,12 @@ const MAX_DURATION = 300;
 
 // Variables
 const AnimationsStop = new Map<string, number>([
-	[EAnimations.Default_Hands_BasicAttack0, 0.25],
 	[EAnimations.Default_Hands_BasicAttack1, 0.25],
 	[EAnimations.Default_Hands_BasicAttack2, 0.25],
 	[EAnimations.Default_Hands_BasicAttack3, 0.25],
-	[EAnimations.Default_Hands_Block, 0.25],
+	[EAnimations.Default_Hands_BasicAttack4, 0.25],
+	[EAnimations.Default_Hands_BlockUpper, 0.25],
+	[EAnimations.Default_Hands_BlockBottom, 0.25],
 ]);
 
 const Stunned = new Map<Character, StunData>();
@@ -47,8 +55,8 @@ SelfStun.OnServerEvent.Connect((player: Player, ...args: Array<unknown>) => {
 	if (Duration !== Duration || Type !== Type) return;
 	if (!typeIs(Duration, "number") || !typeIs(Type, "number")) return;
 	if (Duration < 0 || Duration > MAX_DURATION) return;
-	const Character = CharacterManager.GetCharacter(player.Character);
-	if (!Character) return;
+	const Character = CharacterManager.GetCharacterByModel(player.Character);
+	if (!Character || Character.IsDestroyed) return;
 	StunManager.Stun(Character, Duration, Type);
 });
 
@@ -161,6 +169,7 @@ export class StunManager {
 
 		Attributes.SetStunnedFull(false);
 		Attributes.SetStunnedPartial(false);
+		character.HumanoidRootPart.SetNetworkOwner(character.Player);
 		Stunned.delete(character);
 
 		HaloManager.DefaultColor(Humanoid);

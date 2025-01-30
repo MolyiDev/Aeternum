@@ -1,6 +1,6 @@
 export enum ECameraFovs {
 	Default = 70,
-	Crouch = 60,
+	Dash = 80,
 	Run = 85,
 	RunMomentum = 95,
 }

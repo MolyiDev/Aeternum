@@ -1,46 +1,107 @@
 // Imports
 import { RockManager } from "ReplicatedStorage/Managers/RockManager";
-import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
 import { Character } from "ReplicatedStorage/Classes/Character";
 import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 import { Workspace } from "@rbxts/services";
-import { EStopGlobal } from "ReplicatedStorage/Enums/Replicate/EStopGlobal";
 import { ReplicateInfo } from "ReplicatedStorage/Attributes/ReplicateInfo";
 import { GroundSmashInfo } from "ReplicatedStorage/Abilities/Hands/GroundSmash";
+import { CReplicate } from "ReplicatedStorage/Classes/Abstracts/CReplicate";
+import { EGlobal } from "ReplicatedStorage/Enums/Globals/EGlobal";
 
 const MaxRocks = 16;
 const MaxSize = 1.3;
 
 @ReplicateInfo(GroundSmashInfo)
-export class GroundSmash implements IReplicateClass {
-	public Character: Character;
-	public Height: number;
+export class GroundSmash extends CReplicate {
+	public Height: number = 0;
+	public SelfMarkSmash1: RBXScriptConnection = undefined!;
+	public SelfMarkSmash2: RBXScriptConnection = undefined!;
+	public SelfMarkSmash3: RBXScriptConnection = undefined!;
 	public MarkSmash: RBXScriptConnection = undefined!;
 	public MarkSmash1: RBXScriptConnection = undefined!;
 	public MarkSmash2: RBXScriptConnection = undefined!;
 	public MarkSmash3: RBXScriptConnection = undefined!;
-	public RayParams: RaycastParams;
+	public VectorForce: VectorForce = undefined!;
+	public VectorAttachment: Attachment = undefined!;
+	public RayParams: RaycastParams = new RaycastParams();
 
 	constructor(character: Character) {
-		this.Character = character;
+		super(character);
 
-		this.Height = 0;
+		this.RayParams.AddToFilter(character.Model);
+		this.RayParams.FilterType = Enum.RaycastFilterType.Exclude;
+	}
 
-		const rayParams = new RaycastParams();
-		rayParams.FilterDescendantsInstances = [character.Model];
-		rayParams.FilterType = Enum.RaycastFilterType.Exclude;
-		this.RayParams = rayParams;
+	public SelfConstruct(): void {
+		const VectorForce = new Instance("VectorForce", this.HumanoidRootPart);
+		const Attachment = this.HumanoidRootPart.FindFirstChild("RootAttachment")!.Clone() as Attachment;
+		Attachment.Parent = this.HumanoidRootPart;
+		VectorForce.Attachment0 = Attachment;
+		VectorForce.Enabled = false;
+		this.VectorForce = VectorForce;
+		this.VectorAttachment = Attachment;
 	}
 
 	Destroy() {
-		this.Character.Butler.RemoveList(this.MarkSmash, this.MarkSmash1, this.MarkSmash2, this.MarkSmash3);
+		this.Butler.RemoveList(
+			this.SelfMarkSmash1,
+			this.SelfMarkSmash2,
+			this.SelfMarkSmash3,
+			this.MarkSmash,
+			this.MarkSmash1,
+			this.MarkSmash2,
+			this.MarkSmash3,
+		);
 
 		this.Height = undefined!;
-		this.Character = undefined!;
+		this.SelfMarkSmash1 = undefined!;
+		this.SelfMarkSmash2 = undefined!;
+		this.SelfMarkSmash3 = undefined!;
 		this.MarkSmash = undefined!;
 		this.MarkSmash1 = undefined!;
 		this.MarkSmash2 = undefined!;
 		this.MarkSmash3 = undefined!;
+		this.RayParams = undefined!;
+
+		super.Destroy();
+	}
+
+	public SelfDestroy(): void {
+		this.VectorForce.Destroy();
+		this.VectorAttachment.Destroy();
+
+		this.VectorForce = undefined!;
+		this.VectorAttachment = undefined!;
+	}
+
+	public SelfAnimPlayOnce(animTrack: AnimationTrack, animName: string) {
+		switch (animName) {
+			case EAnimations.GroundSmash:
+				this.SelfMarkSmash1 = this.Butler.Connect(animTrack.GetMarkerReachedSignal("Smash1"), () => {
+					if (!this.Attributes.UsingAbility()) return;
+
+					this.Tweens.GetCameraShaker().ShakeOnce(4, 8, 0, 0.6);
+				});
+
+				this.SelfMarkSmash2 = this.Butler.Connect(animTrack.GetMarkerReachedSignal("Smash2"), () =>
+					this.Tweens.GetCameraShaker().ShakeOnce(6, 8, 0, 0.8),
+				);
+
+				this.SelfMarkSmash3 = this.Butler.Connect(animTrack.GetMarkerReachedSignal("Smash3"), () =>
+					this.Tweens.GetCameraShaker().ShakeOnce(6.5, 6, 0, 1),
+				);
+				break;
+			case EAnimations.GroundSmashIdle:
+				this.VectorForce.Enabled = true;
+				this.Attributes.SetIgnoreLandStun(true);
+				break;
+			case EAnimations.GroundSmashLand:
+				this.VectorForce.Enabled = false;
+				task.delay(1, () => {
+					if (this.Attributes) this.Attributes.SetIgnoreLandStun(false);
+				});
+				break;
+		}
 	}
 
 	public AnimPlay(animTrack: AnimationTrack, animName: string): void {
@@ -58,18 +119,13 @@ export class GroundSmash implements IReplicateClass {
 	}
 
 	public AnimPlayOnce(animTrack: AnimationTrack, animName: string) {
-		const Character = this.Character;
-		const Attributes = Character.Attributes;
-		const Butler = Character.Butler;
-		const HumanoidRootPart = Character.HumanoidRootPart;
-
 		switch (animName) {
 			case EAnimations.GroundSmash:
-				this.MarkSmash1 = Butler.Connect(animTrack.GetMarkerReachedSignal("Smash1"), () => {
-					const CF = HumanoidRootPart.CFrame;
+				this.MarkSmash1 = this.Butler.Connect(animTrack.GetMarkerReachedSignal("Smash1"), () => {
+					const CF = this.HumanoidRootPart.CFrame;
 
-					if (!Attributes.UsingAbility()) {
-						animTrack.Stop(EStopGlobal);
+					if (!this.Attributes.UsingAbility()) {
+						animTrack.Stop(EGlobal.Feint);
 						RockManager.Crater(CF, 0, 0.55, 4, 8, 1, 0.15, true);
 						return;
 					}
@@ -103,8 +159,8 @@ export class GroundSmash implements IReplicateClass {
 					RockManager.Explosion(CF.Position, 0.35, 1, 1, 20);
 				});
 
-				this.MarkSmash2 = Butler.Connect(animTrack.GetMarkerReachedSignal("Smash2"), () => {
-					const CF = HumanoidRootPart.CFrame;
+				this.MarkSmash2 = this.Butler.Connect(animTrack.GetMarkerReachedSignal("Smash2"), () => {
+					const CF = this.HumanoidRootPart.CFrame;
 					const Directions = [
 						CF,
 						CF.mul(CFrame.Angles(0, math.rad(140), 0)),
@@ -137,8 +193,8 @@ export class GroundSmash implements IReplicateClass {
 					RockManager.Explosion(CF.Position, 0.4, 1.25, 2, 30);
 				});
 
-				this.MarkSmash3 = Butler.Connect(animTrack.GetMarkerReachedSignal("Smash3"), () => {
-					const CF = HumanoidRootPart.CFrame;
+				this.MarkSmash3 = this.Butler.Connect(animTrack.GetMarkerReachedSignal("Smash3"), () => {
+					const CF = this.HumanoidRootPart.CFrame;
 					const Directions = [
 						CF,
 						CF.mul(CFrame.Angles(0, math.rad(55), 0)),
@@ -174,13 +230,13 @@ export class GroundSmash implements IReplicateClass {
 				});
 				break;
 			case EAnimations.GroundSmashLand:
-				this.MarkSmash = Butler.Connect(animTrack.GetMarkerReachedSignal("Smash"), () => {
-					if (!Attributes.UsingAbility()) {
-						animTrack.Stop(EStopGlobal);
+				this.MarkSmash = this.Butler.Connect(animTrack.GetMarkerReachedSignal("Smash"), () => {
+					if (!this.Attributes.UsingAbility()) {
+						animTrack.Stop(EGlobal.Feint);
 						return;
 					}
 
-					const CF = HumanoidRootPart.CFrame;
+					const CF = this.HumanoidRootPart.CFrame;
 
 					const Directions = [
 						CF,

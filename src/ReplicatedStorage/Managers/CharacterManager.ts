@@ -1,6 +1,6 @@
 /* eslint-disable no-constant-condition */
 // Imports
-import { Players, RunService } from "@rbxts/services";
+import { HttpService, Players, RunService } from "@rbxts/services";
 import { NPCManager } from "ReplicatedStorage/Managers/NPCManager";
 import Signal from "@rbxts/lemon-signal";
 import { Character } from "ReplicatedStorage/Classes/Character";
@@ -10,6 +10,7 @@ import { Butler } from "ReplicatedStorage/Modules/Butler";
 // Variables
 const ButlerPerPlayer = new Map<Player, Butler>();
 const CharacterPerModel = new Map<Model, Character>();
+const CharacterPerId = new Map<string, Character>();
 
 const AddedCharacterSignal = new Signal<[character: Character]>();
 const RemovedCharacterSignal = new Signal<[character: Character]>();
@@ -18,10 +19,14 @@ export class CharacterManager {
 	public static AddedCharacter = AddedCharacterSignal;
 	public static RemovedCharacter = RemovedCharacterSignal;
 
-	public static GetCharacter(model: Model | Instance | undefined) {
+	public static GetCharacterByModel(model: Model | Instance | undefined) {
 		if (!model || !model.IsA("Model")) return undefined;
-		const existingPlayer = CharacterPerModel.get(model);
-		return existingPlayer;
+		return CharacterPerModel.get(model);
+	}
+
+	public static GetCharacterById(characterId: string) {
+		const character = CharacterPerId.get(characterId);
+		return character;
 	}
 
 	public static WaitCharacter(model: Model) {
@@ -35,16 +40,19 @@ export class CharacterManager {
 	}
 }
 
-function RegisterCharacter(model: Model, player: Player = undefined!) {
-	const character = new Character(model as IModel, player);
+function RegisterCharacter(model: Model) {
+	if (CharacterPerModel.has(model)) return;
+	const characterId = HttpService.GenerateGUID(false);
+	const character = new Character(model as IModel, characterId);
 	CharacterPerModel.set(model, character);
+	CharacterPerId.set(characterId, character);
 
 	AddedCharacterSignal.Fire(character);
 }
 
 function UnRegisterCharacter(model: Model) {
 	const character = CharacterPerModel.get(model);
-	if (!character) return;
+	if (!character || character.IsDestroyed) return;
 
 	RemovedCharacterSignal.Fire(character);
 	character.Destroy();
@@ -55,9 +63,9 @@ function RegisterPlayer(player: Player) {
 	const butler = new Butler();
 	ButlerPerPlayer.set(player, butler);
 
-	RegisterCharacter(player.Character ?? player.CharacterAdded.Wait()[0], player);
+	RegisterCharacter(player.Character ?? player.CharacterAdded.Wait()[0]);
 
-	butler.Connect(player.CharacterAdded, (model) => RegisterCharacter(model, player));
+	butler.Connect(player.CharacterAdded, (model) => RegisterCharacter(model));
 	butler.Connect(player.CharacterRemoving, (model) => UnRegisterCharacter(model));
 }
 
@@ -75,15 +83,11 @@ Players.PlayerAdded.Connect((player) => RegisterPlayer(player));
 Players.PlayerRemoving.Connect((player) => UnRegisterPlayer(player));
 
 if (RunService.IsClient()) {
-	if (!game.IsLoaded()) game.Loaded.Wait();
+	NPCManager.NPCAddedClient.OnClientEvent.Connect((character) => RegisterCharacter(character));
+	NPCManager.NPCRemovedClient.OnClientEvent.Connect((character) => UnRegisterCharacter(character));
 
-	task.delay(2, () => {
-		NPCManager.NPCAddedClient.OnClientEvent.Connect((character) => RegisterCharacter(character));
-		NPCManager.NPCRemovedClient.OnClientEvent.Connect((character) => UnRegisterCharacter(character));
-
-		for (const player of Players.GetPlayers()) RegisterPlayer(player);
-		for (const npc of NPCManager.GetNPCs()) RegisterCharacter(npc);
-	});
+	for (const player of Players.GetPlayers()) RegisterPlayer(player);
+	for (const npc of NPCManager.GetNPCs()) RegisterCharacter(npc);
 } else {
 	NPCManager.NPCAddedServer.Connect((model) => RegisterCharacter(model));
 	NPCManager.NPCRemovedServer.Connect((model) => UnRegisterCharacter(model));

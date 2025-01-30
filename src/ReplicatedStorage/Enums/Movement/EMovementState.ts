@@ -8,7 +8,6 @@ export enum EMovementState {
 	Climbing,
 	Sliding,
 	SlidingJump,
-	Crouching,
 	Attacking,
 	Blocking,
 	Guarding,

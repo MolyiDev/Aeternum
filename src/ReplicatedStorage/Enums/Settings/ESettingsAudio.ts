@@ -1,5 +1,6 @@
 export enum ESettingsAudio {
 	Overall = "Settings_Audio_Overall",
-	Effects = "Settings_Audio_Effects",
 	Music = "Settings_Audio_Music",
+	Effects = "Settings_Audio_Effects",
+	UI = "Settings_Audio_UI",
 }

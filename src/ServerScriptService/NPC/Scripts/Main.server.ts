@@ -1,37 +1,32 @@
 /* eslint-disable no-constant-condition */
 /* eslint-disable @typescript-eslint/no-require-imports */
 // Imports
-import { ICombatManager } from "ServerScriptService/NPC/Scripts/Interfaces/ICombatManager";
-import { IManager } from "./Interfaces/IManager";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
+import { EStyleType } from "ReplicatedStorage/Enums/Style/EStyleType";
 
 // Variables
-const Character = CharacterManager.GetCharacter(script.Parent!.Parent)!;
+const Character = CharacterManager.GetCharacterByModel(script.Parent!.Parent)!;
+const Styles = Character.Styles;
 const Model = Character.Model;
 
-// Events
-const Scripts = Model.WaitForChild("Scripts");
-const Managers = Scripts.WaitForChild("Managers");
-const Combat = Scripts.WaitForChild("Combat");
-const CombatModule = require(Combat.WaitForChild("CombatModule") as ModuleScript) as ICombatManager;
-const BlockModule = require(Combat.WaitForChild("BlockModule") as ModuleScript) as IManager;
-const IdleModule = require(Managers.WaitForChild("IdleModule") as ModuleScript) as IManager;
+Styles.StylesChanged.Wait();
 
 switch (Model.Name) {
 	case "Attacking":
+		Styles.Start(EStyleType.Idle);
 		while (true) {
 			task.wait(0.1);
-			CombatModule.Punch();
+			Styles.Start(EStyleType.BasicAttack);
 		}
 	case "Blocking":
-		IdleModule.Start();
+		Styles.Start(EStyleType.Idle);
 		while (true) {
 			task.wait(1);
-			BlockModule.Start();
+			Styles.Start(EStyleType.Block);
 			task.wait(4);
-			BlockModule.Stop();
+			Styles.Stop(EStyleType.Block);
 		}
 	default:
-		IdleModule.Start();
+		Styles.Start(EStyleType.Idle);
 		break;
 }

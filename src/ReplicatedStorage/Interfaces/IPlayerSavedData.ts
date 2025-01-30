@@ -9,7 +9,7 @@ export interface IPlayerSavedData {
 		[key: string]: boolean | number;
 	};
 
-	DataGeneral?: {
+	General?: {
 		[key: string]: boolean | number;
 	};
 }

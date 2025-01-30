@@ -1,27 +1,27 @@
-import { AnchorPoints, CanvasGroup, Frame, GridLayout, Image } from "@rbxts/better-react-components";
-import { createColorSequence, GradientElement } from "@rbxts/better-react-components/out/helpers/Gradient";
 import React, { useEffect, useRef, useState } from "@rbxts/react";
 import { ImageButtonShadow, TextLabelShadow } from "StarterPlayer/StarterPlayerScripts/UI/Components/Shadows";
 import { ESettingsPanels } from "./Components/Enums/ESettingsPanels";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
+import { AnchorPoints } from "ReplicatedStorage/Enums/UI/EAnchorPoint";
 
 interface IUpBar {
 	initialPanel: ESettingsPanels;
 	audioPanel: React.MutableRefObject<CanvasGroup>;
-	controlsPanel?: React.MutableRefObject<CanvasGroup>;
+	controlsPanel: React.MutableRefObject<CanvasGroup>;
 	visualPanel: React.MutableRefObject<CanvasGroup>;
 	generalPanel: React.MutableRefObject<CanvasGroup>;
 	PanelSelected?: (panel: ESettingsPanels) => void;
 }
 
-const PANEL_DEFAULT_POSITION = UDim2.fromScale(0.5, 0.5);
+const PANEL_DEFAULT_POSITION = UDim2.fromScale(0.5, 0.025);
 const PANEL_RIGHT_POSITION = UDim2.fromScale(1.15, 0.5);
 const PANEL_LEFT_POSITION = UDim2.fromScale(-0.15, 0.5);
-const SELECTED_COLOR = Color3.fromRGB(167, 59, 73);
+const SELECTED_COLOR = Color3.fromRGB(0, 0, 0);
 const DEFAULT_COLOR = Color3.fromRGB(255, 255, 255);
 const DEFAULT_TRANSPARENCY = 0.55;
 const HOVER_TRANSPARENCY = 0.25;
 const TWEEN_PANEL = new TweenInfo(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut);
+const TWEEN_HOVER_BUTTON = new TweenInfo(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut);
 
 const Offset = 0.011;
 
@@ -64,13 +64,13 @@ export function UpBar(props: IUpBar) {
 		Tools.TweenGradient(
 			diamondsGradientRef.current,
 			TWEEN_PANEL,
-			createColorSequence([
+			new ColorSequence([
 				new ColorSequenceKeypoint(0, SELECTED_COLOR),
 				new ColorSequenceKeypoint(0.15, DEFAULT_COLOR),
 
-				new ColorSequenceKeypoint(scaleX - 0.025 + Offset, DEFAULT_COLOR),
+				new ColorSequenceKeypoint(scaleX - 0.03 + Offset, DEFAULT_COLOR),
 				new ColorSequenceKeypoint(scaleX + Offset, SELECTED_COLOR),
-				new ColorSequenceKeypoint(scaleX + 0.025 + Offset, DEFAULT_COLOR),
+				new ColorSequenceKeypoint(scaleX + 0.03 + Offset, DEFAULT_COLOR),
 
 				new ColorSequenceKeypoint(0.85, DEFAULT_COLOR),
 				new ColorSequenceKeypoint(1, SELECTED_COLOR),
@@ -78,7 +78,6 @@ export function UpBar(props: IUpBar) {
 		);
 
 		Tools.TweenPlay(IconPanel, TWEEN_PANEL, { GroupTransparency: 0 });
-		Tools.TweenPlay(button, TWEEN_PANEL, { ImageColor3: SELECTED_COLOR });
 		Tools.TweenPlay(DiamondPanel, TWEEN_PANEL, { ImageColor3: SELECTED_COLOR });
 
 		Tools.TweenPlay(panel, TWEEN_PANEL, { Position: PANEL_DEFAULT_POSITION, GroupTransparency: 0 });
@@ -102,13 +101,11 @@ export function UpBar(props: IUpBar) {
 					.find((inst) => inst.IsA("ImageButton"));
 				break;
 			case ESettingsPanels.Controls:
-				if (props.controlsPanel) {
-					panel = props.controlsPanel.current;
-					button = upBarIcons.current
-						.FindFirstChild("Controls")!
-						.GetDescendants()
-						.find((inst) => inst.IsA("ImageButton"));
-				}
+				panel = props.controlsPanel.current;
+				button = upBarIcons.current
+					.FindFirstChild("Controls")!
+					.GetDescendants()
+					.find((inst) => inst.IsA("ImageButton"));
 				break;
 			case ESettingsPanels.Visual:
 				panel = props.visualPanel.current;
@@ -130,134 +127,147 @@ export function UpBar(props: IUpBar) {
 	}, []);
 
 	return (
-		<CanvasGroup noBackground size={UDim2.fromScale(1, 0.15)}>
+		<canvasgroup BackgroundTransparency={1} Size={UDim2.fromScale(1, 0.15)}>
 			<ImageButtonShadow
-				anchorPoint={"mr"}
-				position={UDim2.fromScale(0.992, 0.37)}
-				size={UDim2.fromScale(0.042, 0.496)}
-				image={"rbxassetid://107893206131443"}
-				shadowAngle={45}
-				shadowTransparency={0.55}
-				shadowDistance={5}
+				AnchorPoint={AnchorPoints.CenterRight}
+				Position={UDim2.fromScale(0.985, 0.435)}
+				Size={UDim2.fromScale(0.042, 0.496)}
+				Image={"rbxassetid://107893206131443"}
+				AspectRatio={1.006}
+				ShadowAngle={45}
+				ShadowTransparency={0.55}
+				ShadowDistance={5}
 			/>
 
 			<TextLabelShadow
-				anchorPoint={"tl"}
-				position={UDim2.fromScale(0.0125, 0.11)}
-				size={UDim2.fromScale(0.24, 0.55)}
-				font={Font.fromName("TitilliumWeb", Enum.FontWeight.Bold)}
-				text={text}
-				textColor={Color3.fromRGB(255, 255, 255)}
-				textSize={"AUTO"}
-				textAlign={Enum.TextXAlignment.Left}
-				shadowAngle={45}
-				shadowTransparency={0.55}
-				shadowDistance={5}
+				AnchorPoint={AnchorPoints.TopLeft}
+				Position={UDim2.fromScale(0.018, 0.2)}
+				Size={UDim2.fromScale(0.24, 0.55)}
+				FontFace={Font.fromName("TitilliumWeb", Enum.FontWeight.Bold)}
+				Text={text}
+				TextColor3={Color3.fromRGB(255, 255, 255)}
+				TextXAlignment={Enum.TextXAlignment.Left}
+				ShadowAngle={45}
+				ShadowTransparency={0.55}
+				ShadowDistance={5}
 			/>
 
-			<Frame
+			<frame
 				ref={upBarDiamonds}
-				anchorPoint={AnchorPoints.Bottom}
-				position={UDim2.fromScale(0.5, 0.78)}
-				size={UDim2.fromScale(1, 0.035)}
+				AnchorPoint={AnchorPoints.Bottom}
+				BackgroundColor3={DEFAULT_COLOR}
+				BorderSizePixel={0}
+				Position={UDim2.fromScale(0.5, 0.8)}
+				Size={UDim2.fromScale(0.983, 0.035)}
 			>
-				<GradientElement
+				<uigradient
 					ref={diamondsGradientRef}
-					color={createColorSequence([
-						new ColorSequenceKeypoint(0, SELECTED_COLOR),
-						new ColorSequenceKeypoint(0.15, DEFAULT_COLOR),
+					Color={
+						new ColorSequence([
+							new ColorSequenceKeypoint(0, SELECTED_COLOR),
+							new ColorSequenceKeypoint(0.15, DEFAULT_COLOR),
 
-						new ColorSequenceKeypoint(0.5 - 0.025, DEFAULT_COLOR),
-						new ColorSequenceKeypoint(0.5, SELECTED_COLOR),
-						new ColorSequenceKeypoint(0.5 + 0.025, DEFAULT_COLOR),
+							new ColorSequenceKeypoint(0.5 - 0.03, DEFAULT_COLOR),
+							new ColorSequenceKeypoint(0.5, SELECTED_COLOR),
+							new ColorSequenceKeypoint(0.5 + 0.03, DEFAULT_COLOR),
 
-						new ColorSequenceKeypoint(0.85, DEFAULT_COLOR),
-						new ColorSequenceKeypoint(1, SELECTED_COLOR),
-					])}
+							new ColorSequenceKeypoint(0.85, DEFAULT_COLOR),
+							new ColorSequenceKeypoint(1, SELECTED_COLOR),
+						])
+					}
 				/>
 
-				<GridLayout
-					cellPadding={UDim2.fromScale(0.054, 0.048)}
-					cellSize={UDim2.fromScale(0.021, 7.061)}
-					direction={"Vertical"}
-					horizontalAlign={"Center"}
-					verticalAlign={"Center"}
-					sortOrder={"LayoutOrder"}
+				<uigridlayout
+					CellPadding={UDim2.fromScale(0.054, 0.048)}
+					CellSize={UDim2.fromScale(0.022, 7.061)}
+					FillDirection={"Vertical"}
+					HorizontalAlignment={"Center"}
+					VerticalAlignment={"Center"}
+					SortOrder={"LayoutOrder"}
 				/>
 
-				<Image
-					name={"Audio"}
-					noBackground
-					anchorPoint={AnchorPoints.Middle}
-					image={"rbxassetid://109254184865400"}
-					layoutOrder={4}
-				/>
+				<imagelabel
+					key={"Audio"}
+					BackgroundTransparency={1}
+					AnchorPoint={AnchorPoints.Center}
+					Image={"rbxassetid://109254184865400"}
+					LayoutOrder={4}
+				>
+					<uiaspectratioconstraint AspectRatio={1.038} />
+				</imagelabel>
 
-				<Image
-					name={"Controls"}
-					noBackground
-					anchorPoint={AnchorPoints.Middle}
-					image={"rbxassetid://109254184865400"}
-					layoutOrder={3}
-				/>
+				<imagelabel
+					key={"Controls"}
+					BackgroundTransparency={1}
+					AnchorPoint={AnchorPoints.Center}
+					Image={"rbxassetid://109254184865400"}
+					LayoutOrder={3}
+				>
+					<uiaspectratioconstraint AspectRatio={1.038} />
+				</imagelabel>
 
-				<Image
-					name={"Visual"}
-					noBackground
-					anchorPoint={AnchorPoints.Middle}
-					image={"rbxassetid://109254184865400"}
-					layoutOrder={2}
-				/>
+				<imagelabel
+					key={"Visual"}
+					BackgroundTransparency={1}
+					AnchorPoint={AnchorPoints.Center}
+					Image={"rbxassetid://109254184865400"}
+					LayoutOrder={2}
+				>
+					<uiaspectratioconstraint AspectRatio={1.038} />
+				</imagelabel>
 
-				<Image
-					name={"General"}
-					noBackground
-					anchorPoint={AnchorPoints.Middle}
-					image={"rbxassetid://109254184865400"}
-					layoutOrder={1}
-				/>
-			</Frame>
+				<imagelabel
+					key={"General"}
+					BackgroundTransparency={1}
+					AnchorPoint={AnchorPoints.Center}
+					Image={"rbxassetid://109254184865400"}
+					LayoutOrder={1}
+				>
+					<uiaspectratioconstraint AspectRatio={1.038} />
+				</imagelabel>
+			</frame>
 
-			<Frame
+			<frame
 				ref={upBarIcons}
-				noBackground
-				anchorPoint={AnchorPoints.Top}
-				position={UDim2.fromScale(0.5, 0)}
-				size={UDim2.fromScale(1, 0.75)}
+				BackgroundTransparency={1}
+				AnchorPoint={AnchorPoints.Top}
+				Position={UDim2.fromScale(0.5, 0.02)}
+				Size={UDim2.fromScale(1, 0.75)}
 			>
-				<GridLayout
-					cellPadding={UDim2.fromScale(0.02, 0.02)}
-					cellSize={UDim2.fromScale(0.055, 0.865)}
-					horizontalAlign={"Center"}
-					verticalAlign={"Center"}
-					sortOrder={"LayoutOrder"}
+				<uigridlayout
+					CellPadding={UDim2.fromScale(0.02, 0.02)}
+					CellSize={UDim2.fromScale(0.055, 0.865)}
+					HorizontalAlignment={"Center"}
+					VerticalAlignment={"Center"}
+					SortOrder={"LayoutOrder"}
 				/>
-				<CanvasGroup
-					name={"Audio"}
-					noBackground
-					opacity={DEFAULT_TRANSPARENCY}
-					anchorPoint={AnchorPoints.Middle}
-					layoutOrder={4}
+				<canvasgroup
+					key={"Audio"}
+					BackgroundTransparency={1}
+					GroupTransparency={DEFAULT_TRANSPARENCY}
+					AnchorPoint={AnchorPoints.Center}
+					LayoutOrder={4}
 				>
 					<ImageButtonShadow
-						anchorPoint={"m"}
-						position={UDim2.fromScale(0.5, 0.5)}
-						size={UDim2.fromScale(0.8, 0.8)}
-						image={"rbxassetid://72441646416779"}
-						shadowAngle={45}
-						shadowTransparency={0.55}
-						shadowDistance={5}
-						imageEvent={{
+						AnchorPoint={AnchorPoints.Center}
+						Position={UDim2.fromScale(0.5, 0.5)}
+						Size={UDim2.fromScale(0.8, 0.8)}
+						Image={"rbxassetid://72441646416779"}
+						AspectRatio={1.006}
+						ShadowAngle={45}
+						ShadowTransparency={0.55}
+						ShadowDistance={5}
+						Event={{
 							MouseEnter: (butt) => {
 								if (butt === selectedButtonRef.current) return;
-								Tools.TweenPlay(butt.Parent!.Parent!, TWEEN_PANEL, {
+								Tools.TweenPlay(butt.Parent!.Parent!, TWEEN_HOVER_BUTTON, {
 									GroupTransparency: HOVER_TRANSPARENCY,
 								});
 							},
 
 							MouseLeave: (butt) => {
 								if (butt === selectedButtonRef.current) return;
-								Tools.TweenPlay(butt.Parent!.Parent!, TWEEN_PANEL, {
+								Tools.TweenPlay(butt.Parent!.Parent!, TWEEN_HOVER_BUTTON, {
 									GroupTransparency: DEFAULT_TRANSPARENCY,
 								});
 							},
@@ -268,72 +278,74 @@ export function UpBar(props: IUpBar) {
 							},
 						}}
 					/>
-				</CanvasGroup>
+				</canvasgroup>
 
-				<CanvasGroup
-					name={"Controls"}
-					noBackground
-					opacity={DEFAULT_TRANSPARENCY}
-					anchorPoint={AnchorPoints.Middle}
-					layoutOrder={3}
+				<canvasgroup
+					key={"Controls"}
+					BackgroundTransparency={1}
+					GroupTransparency={DEFAULT_TRANSPARENCY}
+					AnchorPoint={AnchorPoints.Center}
+					LayoutOrder={3}
 				>
 					<ImageButtonShadow
-						anchorPoint={"m"}
-						position={UDim2.fromScale(0.5, 0.5)}
-						size={UDim2.fromScale(0.85, 0.85)}
-						image={"rbxassetid://90196346676136"}
-						shadowAngle={45}
-						shadowTransparency={0.55}
-						shadowDistance={5}
-						imageEvent={{
+						AnchorPoint={AnchorPoints.Center}
+						Position={UDim2.fromScale(0.5, 0.5)}
+						Size={UDim2.fromScale(0.85, 0.85)}
+						Image={"rbxassetid://90196346676136"}
+						AspectRatio={1.006}
+						ShadowAngle={45}
+						ShadowTransparency={0.55}
+						ShadowDistance={5}
+						Event={{
 							MouseEnter: (butt) => {
 								if (butt === selectedButtonRef.current) return;
-								Tools.TweenPlay(butt.Parent!.Parent!, TWEEN_PANEL, {
+								Tools.TweenPlay(butt.Parent!.Parent!, TWEEN_HOVER_BUTTON, {
 									GroupTransparency: HOVER_TRANSPARENCY,
 								});
 							},
 
 							MouseLeave: (butt) => {
 								if (butt === selectedButtonRef.current) return;
-								Tools.TweenPlay(butt.Parent!.Parent!, TWEEN_PANEL, {
+								Tools.TweenPlay(butt.Parent!.Parent!, TWEEN_HOVER_BUTTON, {
 									GroupTransparency: DEFAULT_TRANSPARENCY,
 								});
 							},
 
 							Activated: (butt) => {
 								if (butt === selectedButtonRef.current) return;
-								//ChangePanel(props.controlsPanel.current, butt);
+								ChangePanel(props.controlsPanel.current, butt);
 							},
 						}}
 					/>
-				</CanvasGroup>
+				</canvasgroup>
 
-				<CanvasGroup
-					name={"Visual"}
-					noBackground
-					opacity={DEFAULT_TRANSPARENCY}
-					anchorPoint={AnchorPoints.Middle}
-					layoutOrder={2}
+				<canvasgroup
+					key={"Visual"}
+					BackgroundTransparency={1}
+					GroupTransparency={DEFAULT_TRANSPARENCY}
+					AnchorPoint={AnchorPoints.Center}
+					LayoutOrder={2}
 				>
 					<ImageButtonShadow
-						anchorPoint={"m"}
-						position={UDim2.fromScale(0.5, 0.5)}
-						size={UDim2.fromScale(0.7, 0.7)}
-						image={"rbxassetid://91690284827643"}
-						shadowAngle={45}
-						shadowTransparency={0.55}
-						shadowDistance={5}
-						imageEvent={{
+						AnchorPoint={AnchorPoints.Center}
+						Position={UDim2.fromScale(0.5, 0.5)}
+						Size={UDim2.fromScale(0.7, 0.7)}
+						Image={"rbxassetid://91690284827643"}
+						AspectRatio={1.006}
+						ShadowAngle={45}
+						ShadowTransparency={0.55}
+						ShadowDistance={5}
+						Event={{
 							MouseEnter: (butt) => {
 								if (butt === selectedButtonRef.current) return;
-								Tools.TweenPlay(butt.Parent!.Parent!, TWEEN_PANEL, {
+								Tools.TweenPlay(butt.Parent!.Parent!, TWEEN_HOVER_BUTTON, {
 									GroupTransparency: HOVER_TRANSPARENCY,
 								});
 							},
 
 							MouseLeave: (butt) => {
 								if (butt === selectedButtonRef.current) return;
-								Tools.TweenPlay(butt.Parent!.Parent!, TWEEN_PANEL, {
+								Tools.TweenPlay(butt.Parent!.Parent!, TWEEN_HOVER_BUTTON, {
 									GroupTransparency: DEFAULT_TRANSPARENCY,
 								});
 							},
@@ -344,34 +356,35 @@ export function UpBar(props: IUpBar) {
 							},
 						}}
 					/>
-				</CanvasGroup>
+				</canvasgroup>
 
-				<CanvasGroup
-					name={"General"}
-					noBackground
-					opacity={DEFAULT_TRANSPARENCY}
-					anchorPoint={AnchorPoints.Middle}
-					layoutOrder={1}
+				<canvasgroup
+					key={"General"}
+					BackgroundTransparency={1}
+					GroupTransparency={DEFAULT_TRANSPARENCY}
+					AnchorPoint={AnchorPoints.Center}
+					LayoutOrder={1}
 				>
 					<ImageButtonShadow
-						anchorPoint={"m"}
-						position={UDim2.fromScale(0.5, 0.5)}
-						size={UDim2.fromScale(0.65, 0.65)}
-						image={"rbxassetid://117575756600362"}
-						shadowAngle={45}
-						shadowTransparency={0.55}
-						shadowDistance={5}
-						imageEvent={{
+						AnchorPoint={AnchorPoints.Center}
+						Position={UDim2.fromScale(0.5, 0.5)}
+						Size={UDim2.fromScale(0.65, 0.65)}
+						Image={"rbxassetid://117575756600362"}
+						AspectRatio={1.006}
+						ShadowAngle={45}
+						ShadowTransparency={0.55}
+						ShadowDistance={5}
+						Event={{
 							MouseEnter: (butt) => {
 								if (butt === selectedButtonRef.current) return;
-								Tools.TweenPlay(butt.Parent!.Parent!, TWEEN_PANEL, {
+								Tools.TweenPlay(butt.Parent!.Parent!, TWEEN_HOVER_BUTTON, {
 									GroupTransparency: HOVER_TRANSPARENCY,
 								});
 							},
 
 							MouseLeave: (butt) => {
 								if (butt === selectedButtonRef.current) return;
-								Tools.TweenPlay(butt.Parent!.Parent!, TWEEN_PANEL, {
+								Tools.TweenPlay(butt.Parent!.Parent!, TWEEN_HOVER_BUTTON, {
 									GroupTransparency: DEFAULT_TRANSPARENCY,
 								});
 							},
@@ -382,8 +395,8 @@ export function UpBar(props: IUpBar) {
 							},
 						}}
 					/>
-				</CanvasGroup>
-			</Frame>
-		</CanvasGroup>
+				</canvasgroup>
+			</frame>
+		</canvasgroup>
 	);
 }

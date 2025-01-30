@@ -4,15 +4,15 @@ import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
 import { ReplicatedStorage } from "@rbxts/services";
 import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
-import { EStopGlobal } from "ReplicatedStorage/Enums/Replicate/EStopGlobal";
+import { EGlobal } from "ReplicatedStorage/Enums/Globals/EGlobal";
 
 // Events
 const FeintEvent = ReplicatedStorage.WaitForChild("Events").WaitForChild("Combat").WaitForChild("Feint") as RemoteEvent;
 
 FeintEvent.OnServerEvent.Connect((player, ...args) => {
 	if (args.size() < 1) return;
-	const Character = CharacterManager.GetCharacter(player.Character);
-	if (!Character) return;
+	const Character = CharacterManager.GetCharacterByModel(player.Character);
+	if (!Character || Character.IsDestroyed) return;
 	const FeintObject = args[0] as string;
 	if (!FeintObject || !typeIs(FeintObject, "string") || FeintObject !== FeintObject) return;
 	const Attributes = Character.Attributes;
@@ -28,26 +28,26 @@ FeintEvent.OnServerEvent.Connect((player, ...args) => {
 		if (!Animation) return;
 		if (Attributes.UsingAbility() === UsingAbility) Attributes.SetUsingAbility(undefined);
 		else {
-			Animation.Stop(EStopGlobal);
+			Animation.Stop(EGlobal.Feint);
 			Attributes.SetUsingAbilityAnim(undefined);
 			StunManager.UnStun(Character);
 		}
 		return;
 	}
 
-	const UsingMove = Attributes.UsingMoveAnim();
-	if (!UsingMove) return;
-	const Moves = Character.Moves;
-	const ReplicateInfo = ModuleManager.GetReplicateInfo(UsingMove);
-	if (!ReplicateInfo || !ReplicateInfo.CanFeint || !Moves.MovesFeint.has(UsingMove)) return;
+	const UsingStyle = Attributes.UsingStyleAnim();
+	if (!UsingStyle) return;
+	const Styles = Character.Styles;
+	const ReplicateInfo = ModuleManager.GetReplicateInfo(UsingStyle);
+	if (!ReplicateInfo || !ReplicateInfo.CanFeint || !Styles.StylesFeint.has(UsingStyle)) return;
 	const Animation = Character.Animations.Animator.GetPlayingAnimationTracks().find(
-		(animTrack) => Tools.IdToName(animTrack.Animation!.AnimationId) === UsingMove,
+		(animTrack) => Tools.IdToName(animTrack.Animation!.AnimationId) === UsingStyle,
 	);
 	if (!Animation) return;
-	if (Attributes.UsingMove() === UsingMove) Attributes.SetUsingMove(undefined);
+	if (Attributes.UsingStyle() === UsingStyle) Attributes.SetUsingStyle(undefined);
 	else {
-		Animation.Stop(EStopGlobal);
-		Attributes.SetUsingMoveAnim(undefined);
+		Animation.Stop(EGlobal.Feint);
+		Attributes.SetUsingStyleAnim(undefined);
 		StunManager.UnStun(Character);
 	}
 });

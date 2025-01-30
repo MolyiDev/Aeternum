@@ -12,13 +12,13 @@ AbilityUse.OnServerEvent.Connect((player, ...args: Array<unknown>) => {
 	if (args.size() < 1) return;
 	const Ability = args[0] as EAbility;
 	if (!Ability || Ability !== Ability || !typeIs(Ability, "string")) return;
-	const Character = CharacterManager.GetCharacter(player.Character);
-	if (!Character) return;
+	const Character = CharacterManager.GetCharacterByModel(player.Character);
+	if (!Character || Character.IsDestroyed) return;
 	const Humanoid = Character.Humanoid;
 	if (!Humanoid || Humanoid.Health <= 0) return;
 	const Abilities = Character.Abilities;
 	if (!Abilities.Has(Ability)) return;
-	Character.ReplicateServer.SignalFired(Ability);
+	return Character.ReplicateServer.SignalFired(Ability, ...args);
 });
 
 export class AbilityManager {

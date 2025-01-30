@@ -1,7 +1,7 @@
 import { ISettingsDefault } from "./ISettingsDefault";
 
 export interface ISettingsToggle extends ISettingsDefault {
-	initialValue: boolean;
-	layoutOrder: number;
+	InitialValue: boolean;
+	LayoutOrder: number;
 	ToggleChanged: (activated: boolean) => void;
 }

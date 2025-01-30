@@ -8,6 +8,7 @@ import { ESettingsAudio } from "ReplicatedStorage/Enums/Settings/ESettingsAudio"
 import { ESettingsVisual } from "ReplicatedStorage/Enums/Settings/ESettingsVisual";
 import Object from "@rbxts/object-utils";
 import { ESettingsGeneral } from "ReplicatedStorage/Enums/Settings/ESettingsGeneral";
+import { EDecision } from "ReplicatedStorage/Enums/UI/EDecision";
 
 // Events
 const SettingsSet = ReplicatedStorage.WaitForChild("Events").WaitForChild("SettingsSet") as RemoteEvent;
@@ -211,14 +212,16 @@ export class SettingsManager {
 			const dataAudio = data?.Audio;
 			const dataControls = data?.Controls;
 			const dataVisual = data?.Visual;
-			const dataGeneral = data?.DataGeneral;
+			const dataGeneral = data?.General;
 
 			// Audio
 			this.CheckSetting(player, ESettingsAudio.Overall, dataAudio, 1);
 			this.CheckSetting(player, ESettingsAudio.Music, dataAudio, 1);
 			this.CheckSetting(player, ESettingsAudio.Effects, dataAudio, 1);
+			this.CheckSetting(player, ESettingsAudio.UI, dataAudio, 1);
 
 			// Controls
+			this.CheckSetting(player, ESettingsControls.DoubleTapThreshold, dataControls, 0.2);
 			this.SaveControls(player, this.DefaultControls);
 			//this.CheckSetting(player, ECustomInputs.All, dataControls, this.EncodeControls(this.DefaultControls));
 
@@ -230,12 +233,13 @@ export class SettingsManager {
 			this.CheckSetting(player, ESettingsVisual.DepthOfField, dataVisual, true);
 			this.CheckSetting(player, ESettingsVisual.SunRays, dataVisual, true);
 			this.CheckSetting(player, ESettingsVisual.Shadows, dataVisual, true);
-			this.CheckSetting(player, ESettingsVisual.VolumetricShadows, dataVisual, false);
-			this.CheckSetting(player, ESettingsVisual.Debris, dataVisual, 1);
-			this.CheckSetting(player, ESettingsVisual.SubDebris, dataVisual, 1);
+			this.CheckSetting(player, ESettingsVisual.Particles, dataVisual, 0.75);
+			this.CheckSetting(player, ESettingsVisual.Debris, dataVisual, 0.75);
+			this.CheckSetting(player, ESettingsVisual.SubDebris, dataVisual, 0.75);
 
 			// General
 			this.CheckSetting(player, ESettingsGeneral.FPSMS, dataGeneral, false);
+			this.CheckSetting(player, ESettingsGeneral.LockedCamera, dataGeneral, EDecision.Two);
 			this.CheckSetting(player, ESettingsGeneral.ServerInfo, dataGeneral, false);
 
 			player.SetAttribute("SettingsLoaded", true);

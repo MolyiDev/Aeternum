@@ -1,5 +1,5 @@
 // Imports
-import { PhysicsService, Players, Workspace } from "@rbxts/services";
+import { PhysicsService, Players, ReplicatedStorage, Workspace } from "@rbxts/services";
 import { NPCManager } from "ReplicatedStorage/Managers/NPCManager";
 import { SettingsManager } from "ReplicatedStorage/Managers/SettingsManager";
 import { AbilityManager } from "./Managers/AbilityManager";
@@ -7,22 +7,36 @@ import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
 import { ECollisionGroup } from "ReplicatedStorage/Enums/ECollisionGroup";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { IModel } from "ReplicatedStorage/Interfaces/IModel";
-import { WeaponManager } from "./Managers/WeaponManager";
-import { EWeapon } from "ReplicatedStorage/Enums/EWeapons";
-import { MovesManager } from "./Managers/MovesManager";
-import { EMove } from "ReplicatedStorage/Enums/MoveSets/EMove";
-import { EMoveSet } from "ReplicatedStorage/Enums/MoveSets/EMoveSet";
+import { StylesManager } from "./Managers/StylesManager";
+import { EStyle } from "ReplicatedStorage/Enums/Style/EStyle";
 
-PhysicsService.RegisterCollisionGroup(ECollisionGroup.RockDebris);
+Players.CharacterAutoLoads = false;
+
+// Events
+const PlayEvent = ReplicatedStorage.WaitForChild("Events").WaitForChild("Play") as RemoteEvent;
+
+// Physics
 PhysicsService.RegisterCollisionGroup(ECollisionGroup.Player);
+PhysicsService.RegisterCollisionGroup(ECollisionGroup.RockDebris);
+PhysicsService.RegisterCollisionGroup(ECollisionGroup.PlayerNoCollision);
 PhysicsService.CollisionGroupSetCollidable(ECollisionGroup.Player, ECollisionGroup.Player, true);
 PhysicsService.CollisionGroupSetCollidable(ECollisionGroup.RockDebris, ECollisionGroup.Player, false);
 PhysicsService.CollisionGroupSetCollidable(ECollisionGroup.RockDebris, ECollisionGroup.RockDebris, false);
+PhysicsService.CollisionGroupSetCollidable(ECollisionGroup.PlayerNoCollision, ECollisionGroup.Player, false);
+PhysicsService.CollisionGroupSetCollidable(ECollisionGroup.PlayerNoCollision, ECollisionGroup.PlayerNoCollision, false);
+PhysicsService.CollisionGroupSetCollidable(ECollisionGroup.PlayerNoCollision, ECollisionGroup.RockDebris, false);
 SettingsManager.Initialize();
 
 // Variables
 const SimulatedJoints = new Set<string>(["Shoulder", "Elbow", "Wrist"]);
 const CharactersFolder = Workspace.WaitForChild("Characters");
+
+const Map = Workspace.Terrain.WaitForChild("Map").GetDescendants();
+
+for (const part of Map) {
+	if (!part.IsA("Part")) continue;
+	part.AddTag("Destroyable");
+}
 
 task.delay(5, () => {
 	const NPCModelFolder = CharactersFolder.WaitForChild("NPC");
@@ -42,15 +56,22 @@ CharacterManager.AddedCharacter.Connect((character) => {
 		Joint.MaxTorque = 700;
 	}
 
-	if (!character.Player) return;
+	StylesManager.ChangeStyle(character, EStyle.Default);
 
-	character.Humanoid.ApplyDescription(character.Humanoid.HumanoidDescription);
+	if (!character.Player) {
+		//MovementTracker.TrackMovement(character);
+		return;
+	}
 
 	Model.Parent = CharactersFolder;
-	MovesManager.ChangeMoveSet(character, EMoveSet.Default);
-	task.wait(10);
 	AbilityManager.AddAbility(character, 1, EAbility.SeriousPunch);
 	AbilityManager.AddAbility(character, 2, EAbility.ElectricKick);
 	AbilityManager.AddAbility(character, 3, EAbility.GroundSmash);
+	//AbilityManager.AddAbility(character, 4, EAbility.InfernalThrow);
 	//WeaponManager.AddWeapon(character, EWeapon.Sword);
+});
+
+PlayEvent.OnServerEvent.Connect((player: Player) => {
+	if (player.Character) return;
+	player.LoadCharacter();
 });

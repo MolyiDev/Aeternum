@@ -36,6 +36,7 @@
     "@rbxts/spring": "^1.0.2",
     "@rbxts/topbar-plus": "^3.0.2-ts.2",
     "@rbxts/ui-labs": "^2.3.0",
-    "io-serve": "^1.1.2"
+    "io-serve": "^1.1.2",
+    "rbxts-transformer-setget": "^2.0.0"
   }
 }

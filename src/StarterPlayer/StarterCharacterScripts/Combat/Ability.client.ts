@@ -3,50 +3,46 @@
 import { Players, ReplicatedStorage } from "@rbxts/services";
 import { ESettingsControls } from "ReplicatedStorage/Enums/Settings/ESettingsControls";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
-import { ControlManager } from "../Managers/ControlsManager";
-import { IAbility } from "ReplicatedStorage/Interfaces/IAbility";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
 import { EWeapon } from "ReplicatedStorage/Enums/EWeapons";
 import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
-import { EStopGlobal } from "ReplicatedStorage/Enums/Replicate/EStopGlobal";
+import { CAbility } from "ReplicatedStorage/Classes/Abstracts/CAbility";
+import { EGlobal } from "ReplicatedStorage/Enums/Globals/EGlobal";
 
 // Events
 const FeintEvent = ReplicatedStorage.WaitForChild("Events").WaitForChild("Combat").WaitForChild("Feint") as RemoteEvent;
-
-// Constants
-const FEINT_OUT = 0.1;
 
 // Variables
 const Player = Players.LocalPlayer;
 const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
 const Abilities = Character.Abilities;
 const Attributes = Character.Attributes;
+const Controls = Character.Controls;
+const Weapons = Character.Weapons;
 const Butler = Character.Butler;
 
-const ModuleAbilities = new Map<number, Map<EWeapon, IAbility>>();
+const ModuleAbilities = new Map<number, Map<EWeapon | string, CAbility>>();
 
 function AbilityStart(ability: number) {
 	const AbilityPerWeapon = ModuleAbilities.get(ability);
 	if (!AbilityPerWeapon) return;
-	const AbilityModule = AbilityPerWeapon.get(EWeapon.Hands);
+	const AbilityModule = AbilityPerWeapon.get(Weapons.EquippedWeapon);
 	if (!AbilityModule) return;
 
-	const Ability = AbilityModule.Name!;
-	const AbilityInfo = ModuleManager.GetAbilityInfo(Ability)!;
-	const UsedTick = Attributes.TickAnim(Ability);
+	const Ability = AbilityModule.Ability!;
 
-	if (tick() - UsedTick < AbilityInfo.Cooldown) return;
+	if (tick() - Attributes.TickAnim(Ability) < ModuleManager.GetAbilityInfo(Ability)!.Cooldown) return;
 
 	AbilityModule.Start();
 }
 
-function AbilityAdd(abilityPlace: number, weapon: EWeapon, ability: EAbility) {
+function AbilityAdd(abilityPlace: number, weapon: EWeapon | string, ability: EAbility | string) {
 	let AbilityPlaces = ModuleAbilities.get(abilityPlace);
 	if (!AbilityPlaces) {
-		ModuleAbilities.set(abilityPlace, new Map<EWeapon, IAbility>());
+		ModuleAbilities.set(abilityPlace, new Map<EWeapon, CAbility>());
 		AbilityPlaces = ModuleAbilities.get(abilityPlace)!;
-	}
+	} else if (AbilityPlaces.has(weapon)) return;
 
 	const Ability = new (ModuleManager.GetAbility(ability))(Character);
 
@@ -73,7 +69,7 @@ function InputBegan(control: [string, number] | undefined, input: InputObject, d
 				if (!AnimAbility) return;
 				FeintEvent.FireServer(UsingAbility);
 				if (Attributes.UsingAbility() === UsingAbility) return;
-				AnimAbility.Stop(EStopGlobal);
+				AnimAbility.Stop(EGlobal.Feint);
 			}
 			break;
 		case ESettingsControls.Ability1:
@@ -92,7 +88,7 @@ function InputBegan(control: [string, number] | undefined, input: InputObject, d
 }
 
 Butler.Connect(
-	ControlManager.LocalInputBegan,
+	Controls.InputBeganSignal,
 	(control: [string, number] | undefined, input: InputObject, doublePressed: boolean) =>
 		InputBegan(control, input, doublePressed),
 );
@@ -103,4 +99,8 @@ Butler.Connect(Abilities.AbilityAdded, (abilityPlace: number, weapon: EWeapon, a
 
 Butler.Connect(Abilities.AbilityRemoved, (abilityPlace: number, weapon: EWeapon) =>
 	AbilityRemove(abilityPlace, weapon),
+);
+
+Abilities.AbilitiesPerPlace.forEach((values, place) =>
+	values.forEach((ability, weapon) => AbilityAdd(place, weapon, ability)),
 );

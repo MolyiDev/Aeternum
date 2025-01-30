@@ -1,11 +1,13 @@
 export interface IReplicateInfo {
-	Ability?: boolean;
-	Move?: boolean;
+	Receive?: boolean;
 	Signal?: boolean;
 	CanFeint?: boolean;
 	HasFeintStop?: boolean;
-	CanUseStunned?: boolean;
+	ReplicateStunned?: boolean;
+	CanOverride?: boolean;
 	Sound?: boolean;
 	Cooldown: number;
-	Class?: string;
+	ReplicateClass?: string;
+	AbilityClass?: string;
+	StyleClass?: string;
 }

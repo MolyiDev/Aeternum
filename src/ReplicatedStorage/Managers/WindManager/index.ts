@@ -10,8 +10,8 @@ export class WindManager {
 		WindLines.Init({
 			Direction: WIND_DIRECTION,
 			Speed: WIND_SPEED,
-			Lifetime: 2,
-			SpawnRate: 20,
+			Lifetime: 1.75,
+			SpawnRate: 45,
 		});
 
 		WindShake.SetDefaultSettings({

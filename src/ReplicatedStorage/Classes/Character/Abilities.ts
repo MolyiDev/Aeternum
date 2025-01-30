@@ -4,6 +4,7 @@ import { EWeapon } from "ReplicatedStorage/Enums/EWeapons";
 import Signal from "@rbxts/lemon-signal";
 import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
 
+// Interfaces
 interface PlaceWeapon {
 	Place: number;
 	Weapon: EWeapon;
@@ -12,7 +13,7 @@ interface PlaceWeapon {
 export class Abilities {
 	public AbilitiesFolder: Folder;
 
-	private AbilitiesPerPlace: Map<number | string, Map<EWeapon | string, EAbility | string>>;
+	public AbilitiesPerPlace: Map<number, Map<EWeapon | string, EAbility | string>>;
 	private PlacesPerAbility: Map<EAbility | string, PlaceWeapon>; // Reverse to clean AbilitiesPerPlace on undefined
 	public AbilitiesFeint: Set<EAbility | string>;
 	private Abilities: Set<EAbility | string>;
@@ -26,8 +27,6 @@ export class Abilities {
 
 		this.AbilitiesFolder = Model.WaitForChild("Abilities") as Folder;
 
-		Butler.Connect(this.AbilitiesFolder.AttributeChanged, (attribute) => this.AbilitiesChanged(attribute));
-
 		this.AbilitiesPerPlace = new Map();
 		this.PlacesPerAbility = new Map();
 		this.AbilitiesFeint = new Set();
@@ -36,13 +35,14 @@ export class Abilities {
 		this.AbilityAdded = new Signal();
 		this.AbilityRemoved = new Signal();
 
+		Butler.Connect(this.AbilitiesFolder.AttributeChanged, (attribute) => this.AbilitiesChanged(attribute));
 		this.AbilitiesFolder.GetAttributes().forEach((attributeValue, ability) => this.AbilitiesChanged(ability));
 	}
 
 	public Has = (ability: string) => this.Abilities.has(ability);
 
 	public AbilitiesChanged(abilityName: string) {
-		const abilityPlace = this.AbilitiesFolder.GetAttribute(abilityName) as string;
+		const abilityPlace = this.AbilitiesFolder.GetAttribute(abilityName) as number;
 		if (!abilityPlace) {
 			this.Abilities.delete(abilityName);
 			const PlacesPerAbility = this.PlacesPerAbility.get(abilityName);

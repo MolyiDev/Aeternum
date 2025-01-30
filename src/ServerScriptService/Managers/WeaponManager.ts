@@ -1,5 +1,5 @@
 // Imports
-import { ServerStorage } from "@rbxts/services";
+import { ServerStorage, Workspace } from "@rbxts/services";
 import { Character } from "ReplicatedStorage/Classes/Character";
 import { EWeapon } from "ReplicatedStorage/Enums/EWeapons";
 

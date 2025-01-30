@@ -1,25 +1,22 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { ReplicatedStorage, RunService, ServerScriptService } from "@rbxts/services";
 import { Character } from "ReplicatedStorage/Classes/Character";
-import { EWeapon } from "ReplicatedStorage/Enums/EWeapons";
-import { EMove } from "ReplicatedStorage/Enums/MoveSets/EMove";
-import { EMoveSet } from "ReplicatedStorage/Enums/MoveSets/EMoveSet";
-import { IAbility } from "ReplicatedStorage/Interfaces/IAbility";
+import { CAbility } from "ReplicatedStorage/Classes/Abstracts/CAbility";
 import { IAbilityInfo } from "ReplicatedStorage/Interfaces/IAbilityInfo";
-import { IMove } from "ReplicatedStorage/Interfaces/IMove";
-import { IMoveInfo } from "ReplicatedStorage/Interfaces/IMoveInfo";
-import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
+import { IStyleInfo } from "ReplicatedStorage/Interfaces/IStyleInfo";
 import { IReplicateInfo } from "ReplicatedStorage/Interfaces/IReplicateInfo";
+import { CStyle } from "ReplicatedStorage/Classes/Abstracts/CStyle";
+import { CReplicate } from "ReplicatedStorage/Classes/Abstracts/CReplicate";
 
 const Abilities = ReplicatedStorage.WaitForChild("Abilities").GetDescendants();
-const Moves = ReplicatedStorage.WaitForChild("Moves").GetDescendants();
+const Styles = ReplicatedStorage.WaitForChild("Styles").GetDescendants();
 
 const ReplicatesDictionary: { [key: string]: ModuleScript } = {};
 const AbilitiesDictionary: { [key: string]: ModuleScript } = {};
-const MovesDictionary: { [key: string]: ModuleScript } = {};
+const StylesDictionary: { [key: string]: ModuleScript } = {};
 const ReplicatesInfo = new Map<string, IReplicateInfo>();
 const AbilitiesInfo = new Map<string, IAbilityInfo>();
-const MovesInfo = new Map<string, IMoveInfo>();
+const StylesInfo = new Map<string, IStyleInfo>();
 
 if (RunService.IsClient()) {
 	const ReplicatesClient = ReplicatedStorage.WaitForChild("Classes").WaitForChild("Replicate").GetDescendants();
@@ -42,9 +39,9 @@ Abilities.forEach((ability) => {
 	AbilitiesDictionary[ability.Name] = ability;
 });
 
-Moves.forEach((move) => {
-	if (!move.IsA("ModuleScript")) return;
-	MovesDictionary[move.Name] = move;
+Styles.forEach((style) => {
+	if (!style.IsA("ModuleScript")) return;
+	StylesDictionary[style.Name] = style;
 });
 
 export class ModuleManager {
@@ -52,30 +49,34 @@ export class ModuleManager {
 		const ReplicateModule = ReplicatesDictionary[name];
 		if (!ReplicateModule) return undefined!;
 
-		return (require(ReplicateModule) as { [key: string]: new (character: Character) => IReplicateClass })[name];
+		return (require(ReplicateModule) as { [key: string]: new (character: Character) => CReplicate })[name];
 	}
-
-	public static SetReplicate = (name: string, module: ModuleScript) => (ReplicatesDictionary[name] = module);
 
 	public static SetReplicateInfo = (name: string, info: IReplicateInfo) => ReplicatesInfo.set(name, info);
 	public static GetReplicateInfo = (name: string) => ReplicatesInfo.get(name);
 
 	public static LoadAbility = (name: string) => require(AbilitiesDictionary[name]);
+	public static LoadReplicate(name: string) {
+		const ReplicateModule = ReplicatesDictionary[name];
+		if (!ReplicateModule) return undefined!;
+
+		require(ReplicateModule);
+	}
 
 	public static GetAbility(name: string) {
 		const AbilityModule = AbilitiesDictionary[name];
-		return (require(AbilityModule) as { [key: string]: new (character: Character) => IAbility })[name];
+		return (require(AbilityModule) as { [key: string]: new (character: Character) => CAbility })[name];
 	}
 
-	public static GetMove(name: string) {
-		const MoveModule = MovesDictionary[name];
-		if (!MoveModule) return undefined!;
-		return (require(MoveModule) as { [key: string]: new (character: Character) => IMove })[name];
+	public static GetStyle(name: string) {
+		const StyleModule = StylesDictionary[name];
+		if (!StyleModule) return undefined!;
+		return (require(StyleModule) as { [key: string]: new (character: Character) => CStyle })[name];
 	}
 
 	public static SetAbilityInfo = (name: string, info: IAbilityInfo) => AbilitiesInfo.set(name, info);
-	public static SetMoveInfo = (move: string, info: IMoveInfo) => MovesInfo.set(move, info);
+	public static SetStyleInfo = (name: string, info: IStyleInfo) => StylesInfo.set(name, info);
 
 	public static GetAbilityInfo = (name: string) => AbilitiesInfo.get(name);
-	public static GetMoveInfo = (name: string) => MovesInfo.get(name);
+	public static GetStyleInfo = (name: string) => StylesInfo.get(name);
 }

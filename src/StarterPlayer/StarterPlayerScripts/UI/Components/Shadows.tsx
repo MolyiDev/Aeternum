@@ -1,82 +1,104 @@
 /* eslint-disable prefer-const */
-import { Frame, Image, ImageButton, Text } from "@rbxts/better-react-components";
-import { BaseProps } from "@rbxts/better-react-components/out/helpers/BaseComponent";
-import { ImageComponentProps } from "@rbxts/better-react-components/out/helpers/ImageComponent";
-import { TextComponentProps } from "@rbxts/better-react-components/out/helpers/TextComponent";
 import React, { useEffect, useRef, useState } from "@rbxts/react";
+import { AnchorPoints } from "ReplicatedStorage/Enums/UI/EAnchorPoint";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
+import { useScale } from "./SliceScale";
 
-interface IImageButtonShadow extends BaseProps, ImageComponentProps<ImageButton> {
-	shadowTransparency?: number;
-	shadowAngle?: number;
-	shadowDistance?: number;
+interface IImageButtonShadow extends React.InstanceProps<ImageButton> {
+	AspectRatio?: number;
+	ShadowTransparency?: number;
+	ShadowAngle?: number;
+	ShadowDistance?: number;
 }
 
-interface ITextLabelShadow extends BaseProps, TextComponentProps<TextLabel> {
-	shadowTransparency?: number;
-	shadowAngle?: number;
-	shadowDistance?: number;
+interface IImageLabelShadow extends React.InstanceProps<ImageLabel> {
+	AspectRatio?: number;
+	ShadowTransparency?: number;
+	ShadowAngle?: number;
+	ShadowDistance?: number;
+}
+
+interface ITextLabelShadow extends Partial<TextLabel> {
+	MaxTextSize?: number;
+	ShadowTransparency?: number;
+	ShadowAngle?: number;
+	ShadowDistance?: number;
 }
 
 function TextLabelShadow(props: ITextLabelShadow) {
 	const parentRef = useRef<Frame>(undefined!);
 	const [shadowPosition, setShadowPosition] = useState<UDim2 | undefined>(undefined);
 
-	const shadowIndex = (props.zIndex ?? 1) - 1;
-	const shadowDistance = props.shadowDistance ?? 0;
+	const shadowIndex = (props.ZIndex ?? 1) - 1;
+	const shadowDistance = props.ShadowDistance ?? 0;
 
-	const radians = math.rad(props.shadowAngle ?? 0);
+	const radians = math.rad(props.ShadowAngle ?? 0);
 	const offsetX = shadowDistance * math.cos(radians);
 	const offsetY = shadowDistance * math.sin(radians);
+
+	const maxTextSize = useScale(props.MaxTextSize ?? 100);
+
+	useEffect(() => {
+		if (!parentRef.current) return;
+
+		const UpdateShadowPosition = () =>
+			setShadowPosition(
+				Tools.OffsetToScale(parentRef.current.AbsoluteSize, new UDim2(0.5, offsetX, 0.5, offsetY)),
+			);
+		const connection = parentRef.current.GetPropertyChangedSignal("AbsoluteSize").Connect(UpdateShadowPosition);
+		UpdateShadowPosition();
+
+		return () => connection.Disconnect();
+	}, [parentRef.current]);
 
 	useEffect(() => {
 		if (parentRef.current)
 			setShadowPosition(
 				Tools.OffsetToScale(parentRef.current.AbsoluteSize, new UDim2(0.5, offsetX, 0.5, offsetY)),
 			);
-	}, [parentRef.current, props.text]);
+	}, [props.Text]);
 
 	return (
-		<Frame
-			name={props.name}
+		<frame
 			ref={parentRef}
-			noBackground
-			anchorPoint={props.anchorPoint}
-			position={props.position}
-			size={props.size}
+			BackgroundTransparency={1}
+			AnchorPoint={props.AnchorPoint}
+			Position={props.Position}
+			Size={props.Size}
 		>
-			<Text
-				name={"Principal"}
-				noBackground
-				anchorPoint={"m"}
-				position={UDim2.fromScale(0.5, 0.5)}
-				size={UDim2.fromScale(1, 1)}
-				font={props.font}
-				text={props.text}
-				textColor={props.textColor}
-				textTransparency={props.textTransparency}
-				textSize={"AUTO"}
-				stroke={props.stroke}
-				textAlign={props.textAlign}
-				verticalTextAlign={props.verticalTextAlign}
-				zIndex={props.zIndex}
-			/>
-			<Text
-				name={"Shadow"}
-				noBackground
-				anchorPoint={"m"}
-				position={shadowPosition}
-				size={UDim2.fromScale(1, 1)}
-				font={props.font}
-				text={props.text}
-				textColor={Color3.fromRGB(0, 0, 0)}
-				textTransparency={props.shadowTransparency}
-				textSize={"AUTO"}
-				textAlign={props.textAlign}
-				verticalTextAlign={props.verticalTextAlign}
-				zIndex={shadowIndex}
-			/>
-		</Frame>
+			<textlabel
+				BackgroundTransparency={1}
+				AnchorPoint={AnchorPoints.Center}
+				Position={UDim2.fromScale(0.5, 0.5)}
+				Size={UDim2.fromScale(1, 1)}
+				FontFace={props.FontFace}
+				Text={props.Text}
+				TextColor3={props.TextColor3}
+				TextTransparency={props.TextTransparency}
+				TextScaled={true}
+				TextXAlignment={props.TextXAlignment}
+				TextYAlignment={props.TextYAlignment}
+				ZIndex={props.ZIndex}
+			>
+				<uitextsizeconstraint MaxTextSize={maxTextSize} />
+			</textlabel>
+			<textlabel
+				BackgroundTransparency={1}
+				AnchorPoint={AnchorPoints.Center}
+				Position={shadowPosition}
+				Size={UDim2.fromScale(1, 1)}
+				FontFace={props.FontFace}
+				Text={props.Text}
+				TextColor3={Color3.fromRGB(0, 0, 0)}
+				TextTransparency={props.ShadowTransparency}
+				TextScaled={true}
+				TextXAlignment={props.TextXAlignment}
+				TextYAlignment={props.TextYAlignment}
+				ZIndex={shadowIndex}
+			>
+				<uitextsizeconstraint MaxTextSize={maxTextSize} />
+			</textlabel>
+		</frame>
 	);
 }
 
@@ -84,45 +106,114 @@ function ImageButtonShadow(props: IImageButtonShadow) {
 	const parentRef = useRef<Frame>(undefined!);
 	const [shadowPosition, setShadowPosition] = useState<UDim2 | undefined>(undefined);
 
-	const shadowIndex = (props.zIndex ?? 1) - 1;
-	const shadowDistance = props.shadowDistance ?? 0;
+	const shadowIndex = ((props.ZIndex as number) ?? 1) - 1;
+	const shadowDistance = props.ShadowDistance ?? 0;
 
-	const radians = math.rad(props.shadowAngle ?? 0);
+	const radians = math.rad(props.ShadowAngle ?? 0);
 	const offsetX = shadowDistance * math.cos(radians);
 	const offsetY = shadowDistance * math.sin(radians);
 
 	useEffect(() => {
-		if (parentRef.current)
-			setShadowPosition(
-				Tools.OffsetToScale(parentRef.current.AbsoluteSize, new UDim2(0.5, offsetX, 0.5, offsetY)),
-			);
+		if (!parentRef.current) return;
+
+		const parent = parentRef.current;
+
+		const UpdateShadowPosition = () =>
+			setShadowPosition(Tools.OffsetToScale(parent.AbsoluteSize, new UDim2(0.5, offsetX, 0.5, offsetY)));
+		const connection = parent.GetPropertyChangedSignal("AbsoluteSize").Connect(UpdateShadowPosition);
+		UpdateShadowPosition();
+
+		return () => connection.Disconnect();
 	}, [parentRef.current]);
 
 	return (
-		<Frame ref={parentRef} noBackground anchorPoint={props.anchorPoint} position={props.position} size={props.size}>
-			<ImageButton
-				noBackground
-				anchorPoint={"m"}
-				autoButtonColor={false}
-				position={UDim2.fromScale(0.5, 0.5)}
-				size={UDim2.fromScale(1, 1)}
-				image={props.image}
-				imageColor={props.imageColor}
-				zIndex={props.zIndex}
-				event={props.imageEvent}
+		<frame
+			ref={parentRef}
+			BackgroundTransparency={1}
+			AnchorPoint={props.AnchorPoint}
+			Position={props.Position}
+			Size={props.Size}
+		>
+			{props.AspectRatio ? <uiaspectratioconstraint AspectRatio={props.AspectRatio} /> : undefined}
+			<imagebutton
+				BackgroundTransparency={1}
+				AnchorPoint={AnchorPoints.Center}
+				AutoButtonColor={false}
+				Position={UDim2.fromScale(0.5, 0.5)}
+				Size={UDim2.fromScale(1, 1)}
+				Image={props.Image}
+				ImageColor3={props.ImageColor3}
+				ZIndex={props.ZIndex}
+				Event={props.Event}
 			/>
-			<Image
-				noBackground
-				anchorPoint={"m"}
-				position={shadowPosition}
-				size={UDim2.fromScale(1, 1)}
-				image={props.image}
-				imageColor={Color3.fromRGB(0, 0, 0)}
-				imageTransparency={props.shadowTransparency}
-				zIndex={shadowIndex}
+			<imagelabel
+				BackgroundTransparency={1}
+				AnchorPoint={AnchorPoints.Center}
+				Position={shadowPosition}
+				Size={UDim2.fromScale(1, 1)}
+				Image={props.Image}
+				ImageColor3={Color3.fromRGB(0, 0, 0)}
+				ImageTransparency={props.ShadowTransparency}
+				ZIndex={shadowIndex}
 			/>
-		</Frame>
+		</frame>
 	);
 }
 
-export { ImageButtonShadow, TextLabelShadow };
+function ImageLabelShadow(props: IImageLabelShadow) {
+	const parentRef = useRef<Frame>(undefined!);
+	const [shadowPosition, setShadowPosition] = useState<UDim2 | undefined>(undefined);
+
+	const shadowIndex = ((props.ZIndex as number) ?? 1) - 1;
+	const shadowDistance = props.ShadowDistance ?? 0;
+
+	const radians = math.rad(props.ShadowAngle ?? 0);
+	const offsetX = shadowDistance * math.cos(radians);
+	const offsetY = shadowDistance * math.sin(radians);
+
+	useEffect(() => {
+		if (!parentRef.current) return;
+
+		const parent = parentRef.current;
+
+		const UpdateShadowPosition = () =>
+			setShadowPosition(Tools.OffsetToScale(parent.AbsoluteSize, new UDim2(0.5, offsetX, 0.5, offsetY)));
+		const connection = parent.GetPropertyChangedSignal("AbsoluteSize").Connect(UpdateShadowPosition);
+		UpdateShadowPosition();
+
+		return () => connection.Disconnect();
+	}, [parentRef.current]);
+
+	return (
+		<frame
+			ref={parentRef}
+			BackgroundTransparency={1}
+			AnchorPoint={props.AnchorPoint}
+			Position={props.Position}
+			Size={props.Size}
+		>
+			{props.AspectRatio ? <uiaspectratioconstraint AspectRatio={props.AspectRatio} /> : undefined}
+			<imagelabel
+				BackgroundTransparency={1}
+				AnchorPoint={AnchorPoints.Center}
+				Position={UDim2.fromScale(0.5, 0.5)}
+				Size={UDim2.fromScale(1, 1)}
+				Image={props.Image}
+				ImageColor3={props.ImageColor3}
+				ZIndex={props.ZIndex}
+			/>
+			<imagelabel
+				BackgroundTransparency={1}
+				AnchorPoint={AnchorPoints.Center}
+				Position={shadowPosition}
+				Size={UDim2.fromScale(1, 1)}
+				Image={props.Image}
+				ImageColor3={Color3.fromRGB(0, 0, 0)}
+				ImageTransparency={props.ShadowTransparency}
+				ZIndex={shadowIndex}
+			/>
+		</frame>
+	);
+}
+
+export { ImageButtonShadow, ImageLabelShadow, TextLabelShadow };

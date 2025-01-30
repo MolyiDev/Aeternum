@@ -1,24 +1,37 @@
 import React, { forwardRef } from "@rbxts/react";
 import { SettingsToggle } from "./Components/SettingsToggle";
-import { SettingsPanel } from "./Components/SettingsPanel";
+import { UIPanel } from "./Components/SettingsPanel";
 import { Players } from "@rbxts/services";
 import { SettingsManager } from "ReplicatedStorage/Managers/SettingsManager";
 import { ESettingsGeneral } from "ReplicatedStorage/Enums/Settings/ESettingsGeneral";
+import { SettingsDecision } from "./Components/SettingsDecision";
+import { EDecision } from "../../../../ReplicatedStorage/Enums/UI/EDecision";
 
 const Player = Players.LocalPlayer;
 
 export const GeneralSettings = forwardRef<CanvasGroup>((props, ref) => {
 	return (
-		<SettingsPanel ref={ref} name="General" flexAlign={false}>
+		<UIPanel ref={ref} Key="General" VerticalFlex={false}>
 			<SettingsToggle
-				title="FPS/MS"
-				explanation="Toggle visualizer for fps and ms"
-				initialValue={SettingsManager.GetSetting(Player, ESettingsGeneral.FPSMS) as boolean}
-				layoutOrder={0}
+				Title="FPS/MS"
+				Explanation="Toggle visualizer for FPS and MS"
+				InitialValue={false}
+				LayoutOrder={0}
 				ToggleChanged={(activated: boolean) =>
 					SettingsManager.SetSetting(Player, ESettingsGeneral.FPSMS, activated)
 				}
 			/>
-		</SettingsPanel>
+			<SettingsDecision
+				Title="Locked Camera"
+				Explanation="The direction where it will go the camera when it's locked"
+				InitialValue={EDecision.Two}
+				LayoutOrder={1}
+				OptionOne="Left"
+				OptionTwo="Right"
+				DecisionChanged={(decision: number) =>
+					SettingsManager.SetSetting(Player, ESettingsGeneral.LockedCamera, decision)
+				}
+			/>
+		</UIPanel>
 	);
 });

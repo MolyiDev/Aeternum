@@ -17,7 +17,7 @@ export class Attributes {
 		this.AttributeChanged = Signal.wrap(model.AttributeChanged);
 	}
 
-	public IsStunned() {
+	public IsStunned(): boolean {
 		return (
 			(this.Model.GetAttribute(EAttribute.IsStunnedFull) as boolean) ||
 			(this.Model.GetAttribute(EAttribute.IsStunnedPartial) as boolean) ||
@@ -26,45 +26,48 @@ export class Attributes {
 	}
 
 	public IsStunnedFull = () => this.Model.GetAttribute(EAttribute.IsStunnedFull) as boolean;
-
 	public SetStunnedFull = (bool: boolean) => this.Model.SetAttribute(EAttribute.IsStunnedFull, bool);
 
 	public IsStunnedPartial = () => this.Model.GetAttribute(EAttribute.IsStunnedPartial) as boolean;
-
 	public SetStunnedPartial = (bool: boolean) => this.Model.SetAttribute(EAttribute.IsStunnedPartial, bool);
 
 	public IsStunnedSemiPartial = () => this.Model.GetAttribute(EAttribute.IsStunnedSemiPartial) as boolean;
-
 	public SetStunnedSemiPartial = (bool: boolean) => this.Model.SetAttribute(EAttribute.IsStunnedSemiPartial, bool);
+
+	public Attacker = () => this.Model.GetAttribute(EAttribute.Attacker) as string | undefined;
+	public SetAttacker = (attackerId: string | undefined) => this.Model.SetAttribute(EAttribute.Attacker, attackerId);
 
 	// Is
 
 	public IsDashing = () => this.Model.GetAttribute(EAttribute.IsDashing) as boolean;
-
 	public SetIsDashing = (bool: boolean) => this.Model.SetAttribute(EAttribute.IsDashing, bool);
 
 	public IsBlocking = () => this.Model.GetAttribute(EAttribute.IsBlocking) as boolean;
-
 	public SetIsBlocking = (bool: boolean) => this.Model.SetAttribute(EAttribute.IsBlocking, bool);
 
 	public IsRagdoll = () => this.Model.GetAttribute(EAttribute.IsRagdoll) as boolean;
-
 	public SetIsRagdoll = (bool: boolean) => this.Model.SetAttribute(EAttribute.IsRagdoll, bool);
+
+	public IsDodging = () => this.Model.GetAttribute(EAttribute.IsDodging) as boolean;
+	public SetIsDodging = (bool: boolean) => this.Model.SetAttribute(EAttribute.IsDodging, bool);
 
 	// Using
 
 	public UsingAbility = () => this.Model.GetAttribute(EAttribute.UsingAbility) as string | undefined;
 	public SetUsingAbility = (ability: string | undefined) => this.Model.SetAttribute(EAttribute.UsingAbility, ability);
 
+	public Receive = () => this.Model.GetAttribute(EAttribute.Receive) as string | undefined;
+	public SetReceive = (receive: string | undefined) => this.Model.SetAttribute(EAttribute.Receive, receive);
+
 	public UsingAbilityAnim = () => this.Model.GetAttribute(EAttribute.UsingAbilityAnim) as string | undefined;
 	public SetUsingAbilityAnim = (ability: string | undefined) =>
 		this.Model.SetAttribute(EAttribute.UsingAbilityAnim, ability);
 
-	public UsingMove = () => this.Model.GetAttribute(EAttribute.UsingMove) as string | undefined;
-	public SetUsingMove = (move: string | undefined) => this.Model.SetAttribute(EAttribute.UsingMove, move);
+	public UsingStyle = () => this.Model.GetAttribute(EAttribute.UsingStyle) as string | undefined;
+	public SetUsingStyle = (style: string | undefined) => this.Model.SetAttribute(EAttribute.UsingStyle, style);
 
-	public UsingMoveAnim = () => this.Model.GetAttribute(EAttribute.UsingMoveAnim) as string | undefined;
-	public SetUsingMoveAnim = (move: string | undefined) => this.Model.SetAttribute(EAttribute.UsingMoveAnim, move);
+	public UsingStyleAnim = () => this.Model.GetAttribute(EAttribute.UsingStyleAnim) as string | undefined;
+	public SetUsingStyleAnim = (style: string | undefined) => this.Model.SetAttribute(EAttribute.UsingStyleAnim, style);
 
 	// IsCamera
 
@@ -81,14 +84,13 @@ export class Attributes {
 	public TickAnim = (anim: string) => (this.Model.GetAttribute(anim) as number) ?? 0;
 	public SetTickAnim = (anim: string, tick: number | undefined) => this.Model.SetAttribute(anim, tick);
 
-	public TickParry = () => this.Model.GetAttribute(EAttribute.Tick_Parry) as number;
-
-	public SetTickParry = (tick: number) => this.Model.SetAttribute(EAttribute.Tick_Parry, tick);
+	public TickBlock = () => this.Model.GetAttribute(EAttribute.Tick_Block) as number;
+	public SetTickBlock = (tick: number) => this.Model.SetAttribute(EAttribute.Tick_Block, tick);
 
 	// Can
 
-	public CanLandStun = () => this.Model.GetAttribute(EAttribute.CanLandStun);
-	public SetCanLandStun = (bool: boolean) => this.Model.SetAttribute(EAttribute.CanLandStun, bool);
+	public IgnoreLandStun = () => this.Model.GetAttribute(EAttribute.IgnoreLandStun);
+	public SetIgnoreLandStun = (bool: boolean) => this.Model.SetAttribute(EAttribute.IgnoreLandStun, bool);
 
 	// Other
 
@@ -106,6 +108,23 @@ export class Attributes {
 		}
 
 		if (sendServer) SelfStun.FireServer(time, stunType);
+		else {
+			task.delay(time, () => {
+				if (!this.Model) return;
+
+				switch (stunType) {
+					case EStunType.Full:
+						this.SetStunnedFull(false);
+						break;
+					case EStunType.Partial:
+						this.SetStunnedPartial(false);
+						break;
+					case EStunType.SemiPartial:
+						this.SetStunnedSemiPartial(false);
+						break;
+				}
+			});
+		}
 	}
 
 	// Destroy

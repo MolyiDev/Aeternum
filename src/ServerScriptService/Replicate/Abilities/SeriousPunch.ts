@@ -1,14 +1,17 @@
 // Imports
 import { SeriousPunchInfo } from "ReplicatedStorage/Abilities/Hands/SeriousPunch";
 import { ReplicateInfo } from "ReplicatedStorage/Attributes/ReplicateInfo";
+import { CReplicate } from "ReplicatedStorage/Classes/Abstracts/CReplicate";
 import { Character } from "ReplicatedStorage/Classes/Character";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
-import { EStopGlobal } from "ReplicatedStorage/Enums/Replicate/EStopGlobal";
-import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
+import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
+import { EHitResult } from "ReplicatedStorage/Enums/EHitResult";
+import { EStunType } from "ReplicatedStorage/Enums/EStunType";
+import { EGlobal } from "ReplicatedStorage/Enums/Globals/EGlobal";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
 import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
 import { DamageManager } from "ServerScriptService/Managers/DamageManager";
-import { HitboxManager } from "ReplicatedStorage/Managers/HitboxManager";
+import { HitboxManager } from "ServerScriptService/Managers/HitboxManager";
 import { StunManager } from "ServerScriptService/Managers/StunManager";
 
 // Variables
@@ -16,33 +19,32 @@ const Ability = EAbility.SeriousPunch;
 const AbilityInfo = ModuleManager.GetAbilityInfo(Ability)!;
 
 @ReplicateInfo(SeriousPunchInfo)
-export class SeriousPunch implements IReplicateClass {
-	public Character: Character;
-	public OverlapParams: OverlapParams;
-	public PlayersDamaged: Character[];
-	public MarkerDamage: RBXScriptConnection = undefined!;
+export class SeriousPunch extends CReplicate {
+	public PlayersDamaged: Character[] = [];
+	public MarkDamage: RBXScriptConnection = undefined!;
+	public Animation: AnimationTrack = this.Animations.GetAnimation(EAnimations.SeriousPunch);
 
-	constructor(character: Character) {
-		this.Character = character;
+	public Fired() {
+		if (this.Attributes.IsStunned() || this.Attributes.UsingAbility() || !this.States.IsGrounded()) return;
+		this.SetUsingAbility(Ability);
 
-		const overlapParams = new OverlapParams();
-		overlapParams.FilterDescendantsInstances = [character.Model];
-		overlapParams.FilterType = Enum.RaycastFilterType.Exclude;
+		StunManager.Stun(this.Character, 1.45, EStunType.Partial);
+		this.Animation.Play();
+	}
 
-		this.OverlapParams = overlapParams;
-		this.PlayersDamaged = [];
+	public Destroy() {
+		this.Butler.Remove(this.MarkDamage);
+		this.PlayersDamaged.clear();
+
+		this.PlayersDamaged = undefined!;
+		this.MarkDamage = undefined!;
 	}
 
 	public AnimPlayOnce(animTrack: AnimationTrack) {
-		const Character = this.Character;
-		const Attributes = Character.Attributes;
-		const Butler = Character.Butler;
-		const HumanoidRootPart = Character.HumanoidRootPart;
-
-		this.MarkerDamage = Butler.Connect(animTrack.GetMarkerReachedSignal("Damage"), () => {
-			if (!Attributes.UsingAbility()) {
-				if (!Attributes.IsStunnedFull()) StunManager.UnStun(Character);
-				animTrack.Stop(EStopGlobal);
+		this.MarkDamage = this.Butler.Connect(animTrack.GetMarkerReachedSignal("Damage"), () => {
+			if (!this.Attributes.UsingAbility()) {
+				if (!this.Attributes.IsStunnedFull()) StunManager.UnStun(this.Character);
+				animTrack.Stop(EGlobal.Feint);
 				return;
 			}
 
@@ -51,67 +53,55 @@ export class SeriousPunch implements IReplicateClass {
 			HitboxManager.CreateMultiple(
 				new Vector3(10, 5, 10),
 				new Vector3(30, 15, 30),
-				HumanoidRootPart.CFrame.mul(new CFrame(0, 0, -2)),
+				this.HumanoidRootPart.CFrame.mul(new CFrame(0, 0, -2)),
 				4,
 				0.065,
 				0.5,
 				true,
-				this.OverlapParams,
+				this.OverlapParamsDefault,
 				(part, box) => this.Punch(part, box),
 			);
 		});
 	}
 
 	public AnimStop(animTrack: AnimationTrack) {
-		const Attributes = this.Character.Attributes;
-
-		const Cooldown = Attributes.UsingAbility() === Ability ? tick() : tick() - AbilityInfo.Cooldown / 2;
-		Attributes.SetTickAnim(Ability, Cooldown);
+		const Cooldown = this.Attributes.UsingAbility() === Ability ? tick() : tick() - AbilityInfo.Cooldown / 2;
+		this.Attributes.SetTickAnim(Ability, Cooldown);
+		this.SetUsingAbility(undefined);
 	}
 
 	public Punch(part: BasePart, box: number) {
-		const HitCharacter = CharacterManager.GetCharacter(part.Parent);
+		const HitCharacter = CharacterManager.GetCharacterByModel(part.Parent);
 		if (!HitCharacter || this.PlayersDamaged.includes(HitCharacter)) return;
 		this.PlayersDamaged.push(HitCharacter);
-		const Attributes = HitCharacter.Attributes;
 
-		if (Attributes.IsDashing() && AbilityInfo.Dasheable) return;
+		const [HitResult, Damage, Velocity] = DamageManager.EvaluateHit(
+			HitCharacter,
+			AbilityInfo,
+			AbilityInfo.Damage[box],
+			275 - box * 10,
+		);
 
-		let Velocity = 100 - box * 20;
-
-		let Damage = AbilityInfo.Damage[box];
-
-		if (Attributes.IsBlocking()) {
-			if (AbilityInfo.Parryable) {
-				const TickParry = tick() - Attributes.TickParry();
-				if (TickParry <= AbilityInfo.ParryTime) {
-					Attributes.SetTickParry(tick());
-					StunManager.Stun(this.Character, AbilityInfo.ParryStunTime);
-					return;
-				}
-			}
-
-			if (AbilityInfo.Blockeable) {
-				Damage /= AbilityInfo.BlockDamageReduce;
-				Velocity /= AbilityInfo.BlockDamageReduce;
-			}
+		switch (HitResult) {
+			case EHitResult.None:
+				DamageManager.Damage(HitCharacter, Damage);
+				DamageManager.KnockbackRagdoll(
+					HitCharacter,
+					this.HumanoidRootPart.CFrame.LookVector.add(this.HumanoidRootPart.CFrame.UpVector).mul(Velocity),
+					1,
+					4,
+				);
+				break;
+			case EHitResult.PerfectBlocked:
+				DamageManager.Knockback(HitCharacter, this.HumanoidRootPart.CFrame.LookVector.mul(Velocity), 0.5);
+				break;
+			case EHitResult.Blocked:
+				DamageManager.Damage(HitCharacter, Damage);
+				DamageManager.Knockback(HitCharacter, this.HumanoidRootPart.CFrame.LookVector.mul(Velocity), 0.5);
+				break;
+			case EHitResult.Dashed:
+			case EHitResult.Dodged:
+				return;
 		}
-
-		DamageManager.Damage(HitCharacter, Damage);
-
-		const HumanoidRootPart = this.Character.HumanoidRootPart;
-
-		if (Attributes.IsBlocking())
-			DamageManager.Knockback(HitCharacter, HumanoidRootPart.CFrame.LookVector.mul(Velocity), 0.5);
-		else DamageManager.KnockbackRagdoll(HitCharacter, HumanoidRootPart.CFrame.LookVector.mul(Velocity), 1, 4);
-	}
-
-	public Destroy() {
-		this.Character.Butler.Remove(this.MarkerDamage);
-
-		this.Character = undefined!;
-		this.OverlapParams = undefined!;
-		this.PlayersDamaged.clear();
-		this.PlayersDamaged = undefined!;
 	}
 }

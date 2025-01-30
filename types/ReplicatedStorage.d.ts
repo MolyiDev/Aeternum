@@ -20,13 +20,6 @@ interface ReplicatedStorage extends Instance {
 	Interfaces: Folder & {
 		IPlayerSavedData: ModuleScript;
 	};
-	Animations: Folder & {
-		Crouch: Folder & {
-			CrouchStart: Animation;
-			CrouchIdle: Animation;
-			CrouchMovement: Animation;
-		};
-	};
 	Managers: Folder & {
 		SettingsManager: ModuleScript;
 		MusicManager: ModuleScript;

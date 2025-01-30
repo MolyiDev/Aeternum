@@ -1,4 +1,4 @@
 export interface ISettingsDefault {
-	title: string;
-	explanation: string;
+	Title: string;
+	Explanation: string;
 }

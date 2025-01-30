@@ -1,6 +1,7 @@
 // Imports
 import { RunService } from "@rbxts/services";
 import { StunManager } from "ServerScriptService/Managers/StunManager";
+import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 import { Character } from "ReplicatedStorage/Classes/Character";
 
 // Variables
@@ -30,7 +31,7 @@ export class RagdollManager {
 
 	public static UnRagdollCharacter(character: Character) {
 		if (!this.ActiveRagdolls.has(character)) return;
-		if (!character) {
+		if (!character || character.IsDestroyed) {
 			this.ActiveRagdolls.delete(character);
 			return;
 		}
@@ -42,6 +43,7 @@ export class RagdollManager {
 		Attributes.SetAutoRotate(true);
 		Humanoid.PlatformStand = false;
 		Humanoid.ChangeState(Enum.HumanoidStateType.GettingUp);
+		character.Animations.GetAnimation(EAnimations.Ragdoll).Stop();
 
 		this.ActiveRagdolls.delete(character);
 
@@ -53,12 +55,15 @@ export class RagdollManager {
 	}
 
 	public static RagdollCharacter(character: Character, duration: number) {
+		if (!character || character.IsDestroyed) return;
 		StunManager.Stun(character, duration);
 
 		if (this.ActiveRagdolls.has(character)) {
 			this.ActiveRagdolls.set(character, duration);
 			return;
 		}
+
+		character.Animations.GetAnimation(EAnimations.Ragdoll).Play();
 
 		const Attributes = character.Attributes;
 		const Humanoid = character.Humanoid;

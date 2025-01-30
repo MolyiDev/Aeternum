@@ -1,4 +1,5 @@
 export enum ESettingsControls {
+	DoubleTapThreshold = "Settings_General_DoubleTapThreshold",
 	MouseMovement = "Settings_Controls_MouseMovement",
 	Forward = "Settings_Controls_Forward",
 	Back = "Settings_Controls_Back",

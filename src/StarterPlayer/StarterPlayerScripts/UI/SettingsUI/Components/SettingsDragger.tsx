@@ -1,17 +1,18 @@
-import { CanvasGroup, Frame, TextBox } from "@rbxts/better-react-components";
-import { createColorSequence, GradientElement } from "@rbxts/better-react-components/out/helpers/Gradient";
 import React, { useEffect, useRef, useState } from "@rbxts/react";
 import { TextLabelShadow } from "../../Components/Shadows";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
 import { ISettingsDragger } from "./Interfaces/ISettingsDragger";
+import { AnchorPoints } from "ReplicatedStorage/Enums/UI/EAnchorPoint";
+import { useScale } from "../../Components/SliceScale";
 
 const TWINFO = new TweenInfo(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut);
-const HOVER_COLOR = Color3.fromRGB(66, 66, 66);
-const DEFAULT_COLOR = Color3.fromRGB(77, 77, 77);
+const HOVER_COLOR = Color3.fromRGB(45, 45, 45);
+const DEFAULT_COLOR = Color3.fromRGB(60, 60, 60);
 
 export function SettingsDragger(props: ISettingsDragger) {
+	let Dragging = false;
 	let isChangingText = false;
-	let currentValue = props.initialValue;
+	let currentValue = props.InitialValue;
 
 	const textBoxRef = useRef<TextBox>(undefined!);
 	const handleStrokeRef = useRef<UIStroke>(undefined!);
@@ -19,12 +20,15 @@ export function SettingsDragger(props: ISettingsDragger) {
 	const outsideBarRef = useRef<Frame>(undefined!);
 	const frameBarRef = useRef<Frame>(undefined!);
 	const handleRef = useRef<Frame>(undefined!);
-	const [frameBoundUI, setFrameBoundUI] = useState<Frame | undefined>(undefined);
+	const [frameBoundUI, setframeBoundUI] = useState<Frame | undefined>(undefined);
+
+	const sliceScale = useScale(2);
+	const borderScale = useScale(2);
 
 	function ChangeText(number: number) {
 		if (currentValue === number) return;
 		currentValue = number;
-		const initialScaleX = math.clamp((number - props.minDrag) / (props.maxDrag - props.minDrag), 0, 1);
+		const initialScaleX = math.clamp((number - props.MinDrag) / (props.MaxDrag - props.MinDrag), 0, 1);
 		handleRef.current.Position = UDim2.fromScale(initialScaleX, 0.5);
 		props.ValueChanged(number);
 	}
@@ -38,41 +42,55 @@ export function SettingsDragger(props: ISettingsDragger) {
 		let scaleX = math.clamp((inputPosition.X - boxPosition) / boxSize, 0, 1);
 
 		const number = math.floor(
-			math.clamp(scaleX * (props.maxDrag - props.minDrag) + props.minDrag, props.minDrag, props.maxDrag),
+			math.clamp(scaleX * (props.MaxDrag - props.MinDrag) + props.MinDrag, props.MinDrag, props.MaxDrag),
 		);
 
-		const numberMultipler = math.round(number / props.dragAmount) * props.dragAmount;
+		const stringMatch = tostring(tostring(props.DragAmount).match("%.(%d+)")?.[1]);
+		const decimalPlaces = stringMatch ? math.min(stringMatch.size(), 2) : 2;
+
+		let numberMultipler = math.clamp(
+			math.floor((scaleX * (props.MaxDrag - props.MinDrag) + props.MinDrag) * (1 / props.DragAmount)) *
+				props.DragAmount,
+			props.MinDrag,
+			props.MaxDrag,
+		);
+
+		// Formatear el número con hasta 2 decimales
+		numberMultipler = tonumber(string.format(`%.${decimalPlaces}f`, numberMultipler)) ?? numberMultipler;
+
 		if (
 			currentValue === numberMultipler ||
-			math.abs(currentValue - (number / props.dragAmount) * props.dragAmount) < props.dragAmount * 0.95
+			math.abs(currentValue - (number / props.DragAmount) * props.DragAmount) < props.DragAmount * 0.95
 		)
 			return;
-		scaleX = (numberMultipler - props.minDrag) / (props.maxDrag - props.minDrag);
+		scaleX = (numberMultipler - props.MinDrag) / (props.MaxDrag - props.MinDrag);
 		handleRef.current.Position = UDim2.fromScale(scaleX, 0.5);
 		currentValue = numberMultipler;
 
-		textBoxRef.current.Text = `${numberMultipler}${props.textModifier}`;
+		textBoxRef.current.Text = `${numberMultipler}${props.TextModifier}`;
 		props.ValueChanged(numberMultipler);
 	}
 
 	useEffect(() => {
-		if (frameBarRef.current) setFrameBoundUI(frameBarRef.current);
+		if (frameBarRef.current) setframeBoundUI(frameBarRef.current);
 		if (handleRef.current) {
-			const initialScaleX = math.clamp((currentValue - props.minDrag) / (props.maxDrag - props.minDrag), 0, 1);
+			const initialScaleX = math.clamp((currentValue - props.MinDrag) / (props.MaxDrag - props.MinDrag), 0, 1);
 			handleRef.current.Position = UDim2.fromScale(initialScaleX, 0.5);
 		}
 		const textBox = textBoxRef.current;
 		if (textBox) {
-			const maxDigits = tostring(props.maxDrag).size();
+			const maxDigits = props.TextMaxDigits ?? tostring(props.MaxDrag).size();
 
 			const connection = textBox.GetPropertyChangedSignal("Text").Connect(() => {
 				if (isChangingText) {
-					const stringNumber = textBox.Text.gsub("%D+", "")[0];
+					const stringNumber = textBox.Text.gsub("[^%d.]", "")[0];
 
 					const limitedNumber = stringNumber.sub(0, maxDigits);
 					const number = tonumber(limitedNumber);
 
-					if (number) textBox.Text = tostring(math.clamp(number, 0, props.maxDrag));
+					print(number, limitedNumber);
+
+					if (number) textBox.Text = tostring(math.clamp(number, 0, props.MaxDrag));
 					else textBox.Text = limitedNumber;
 				}
 			});
@@ -82,44 +100,46 @@ export function SettingsDragger(props: ISettingsDragger) {
 	}, [insideBarRef.current, frameBarRef.current, textBoxRef.current, handleRef.current]);
 
 	return (
-		<Frame
-			anchorPoint={"m"}
-			backgroundTransparency={0.25}
-			size={UDim2.fromScale(0.96, 0.175)}
-			cornerRadius={0.1}
-			layoutOrder={props.layoutOrder}
+		<imagelabel
+			AnchorPoint={AnchorPoints.Center}
+			BackgroundTransparency={1}
+			Size={UDim2.fromScale(0.96, 0.175)}
+			LayoutOrder={props.LayoutOrder}
+			Image={"rbxassetid://71973861757110"}
+			ImageColor3={Color3.fromRGB(47, 47, 47)}
+			ImageTransparency={0.2}
+			ResampleMode={"Pixelated"}
+			ScaleType={"Slice"}
+			SliceCenter={new Rect(new Vector2(10, 10), new Vector2(38, 38))}
+			SliceScale={sliceScale}
 		>
-			<GradientElement
-				color={createColorSequence([
-					new ColorSequenceKeypoint(0, Color3.fromRGB(34, 34, 34)),
-					new ColorSequenceKeypoint(1, Color3.fromRGB(53, 53, 53)),
-				])}
-			/>
+			<uigradient Color={new ColorSequence(Color3.fromRGB(34, 34, 34), Color3.fromRGB(53, 53, 53))} />
 
-			<CanvasGroup
-				name={"Drag"}
-				noBackground
-				anchorPoint={"mr"}
-				position={UDim2.fromScale(1, 0.5)}
-				size={UDim2.fromScale(0.52, 1)}
+			<canvasgroup
+				key={"Drag"}
+				BackgroundTransparency={1}
+				AnchorPoint={AnchorPoints.CenterRight}
+				Position={UDim2.fromScale(1, 0.5)}
+				Size={UDim2.fromScale(0.46, 1)}
 			>
-				<Frame
+				<uiaspectratioconstraint AspectRatio={3.626} />
+				<frame
 					ref={outsideBarRef}
-					name={"OutsideBar"}
-					anchorPoint={"mr"}
-					backgroundTransparency={0.35}
-					background={Color3.fromRGB(65, 65, 65)}
-					position={UDim2.fromScale(0.96, 0.5)}
-					size={UDim2.fromScale(0.72, 0.3)}
-					cornerRadius={0.25}
+					key={"OutsideBar"}
+					AnchorPoint={AnchorPoints.CenterRight}
+					BackgroundTransparency={0.2}
+					BackgroundColor3={Color3.fromRGB(60, 60, 60)}
+					Position={UDim2.fromScale(0.96, 0.5)}
+					Size={UDim2.fromScale(0.72, 0.3)}
 				>
-					<Frame
+					<uicorner CornerRadius={new UDim(0.25)} />
+					<frame
 						ref={frameBarRef}
-						anchorPoint={"m"}
-						name={"FrameBar"}
-						noBackground
-						position={UDim2.fromScale(0.5, 0.5)}
-						size={UDim2.fromScale(1, 0.9)}
+						key={"frameBar"}
+						AnchorPoint={AnchorPoints.Center}
+						BackgroundTransparency={1}
+						Position={UDim2.fromScale(0.5, 0.5)}
+						Size={UDim2.fromScale(1, 0.9)}
 					>
 						<uidragdetector
 							BoundingUI={frameBoundUI}
@@ -127,13 +147,15 @@ export function SettingsDragger(props: ISettingsDragger) {
 							ResponseStyle={"Scale"}
 							Event={{
 								DragStart: (dragger, inputPosition) => {
+									Dragging = true;
 									Tools.TweenPlay(handleStrokeRef.current, TWINFO, {
-										Thickness: 1.5,
+										Thickness: borderScale,
 									});
 									ChangePosition(inputPosition);
 								},
 
 								DragEnd: () => {
+									Dragging = false;
 									Tools.TweenPlay(handleStrokeRef.current, TWINFO, {
 										Thickness: 0,
 									});
@@ -142,62 +164,62 @@ export function SettingsDragger(props: ISettingsDragger) {
 								DragContinue: (dragger, inputPosition) => ChangePosition(inputPosition),
 							}}
 						/>
-					</Frame>
-					<Frame
+					</frame>
+					<frame
 						ref={insideBarRef}
-						name={"InsideBar"}
-						anchorPoint={"m"}
-						background={Color3.fromRGB(255, 255, 255)}
-						position={UDim2.fromScale(0.5, 0.5)}
-						size={UDim2.fromScale(0.91, 0.35)}
-						cornerRadius={0.5}
+						key={"InsideBar"}
+						AnchorPoint={AnchorPoints.Center}
+						BackgroundColor3={Color3.fromRGB(255, 255, 255)}
+						Position={UDim2.fromScale(0.5, 0.5)}
+						Size={UDim2.fromScale(0.91, 0.35)}
 					>
-						<Frame
+						<uicorner CornerRadius={new UDim(0.5)} />
+						<frame
 							ref={handleRef}
-							name={"Handle"}
-							anchorPoint={"m"}
-							background={Color3.fromRGB(152, 152, 152)}
-							position={UDim2.fromScale(0, 0.5)}
-							size={UDim2.fromScale(0.067, 1.866)}
-							cornerRadius={1}
-							stroke={{
-								ref: handleStrokeRef,
-								Color: Color3.fromRGB(152, 152, 152),
-								Thickness: 0,
-							}}
-						/>
-					</Frame>
-				</Frame>
-				<Frame
-					name={"VolumeBox"}
-					anchorPoint={"ml"}
-					backgroundTransparency={0.35}
-					background={DEFAULT_COLOR}
-					position={UDim2.fromScale(0, 0.5)}
-					size={UDim2.fromScale(0.215, 0.415)}
-					cornerRadius={0.25}
+							key={"Handle"}
+							AnchorPoint={AnchorPoints.Center}
+							BackgroundColor3={Color3.fromRGB(100, 100, 100)}
+							Position={UDim2.fromScale(0, 0.5)}
+							Size={UDim2.fromScale(0.067, 1.866)}
+						>
+							<uicorner CornerRadius={new UDim(1)} />
+							<uistroke
+								ref={handleStrokeRef}
+								Color={Color3.fromRGB(152, 152, 152)}
+								Thickness={Dragging ? borderScale : 0}
+							/>
+						</frame>
+					</frame>
+				</frame>
+				<frame
+					key={"VolumeBox"}
+					AnchorPoint={AnchorPoints.CenterLeft}
+					BackgroundTransparency={0.2}
+					BackgroundColor3={DEFAULT_COLOR}
+					Position={UDim2.fromScale(0, 0.5)}
+					Size={UDim2.fromScale(0.215, 0.415)}
 				>
-					<TextBox
+					<uicorner CornerRadius={new UDim(0.25)} />
+					<textbox
 						ref={textBoxRef}
-						noBackground
-						anchorPoint={"m"}
-						position={UDim2.fromScale(0.5, 0.5)}
-						size={UDim2.fromScale(0.9, 0.9)}
-						font={Font.fromName("TitilliumWeb", Enum.FontWeight.Bold)}
-						text={`${currentValue}${props.textModifier}`}
-						textColor={Color3.fromRGB(255, 255, 255)}
-						textSize={"AUTO"}
-						verticalTextAlign={"Top"}
-						stroke={{ Thickness: 1 }}
-						event={{
+						BackgroundTransparency={1}
+						AnchorPoint={AnchorPoints.Center}
+						Position={UDim2.fromScale(0.5, 0.5)}
+						Size={UDim2.fromScale(0.9, 0.9)}
+						FontFace={Font.fromName("TitilliumWeb", Enum.FontWeight.Bold)}
+						Text={`${currentValue}${props.TextModifier}`}
+						TextColor3={Color3.fromRGB(255, 255, 255)}
+						TextScaled={true}
+						TextYAlignment={"Center"}
+						Event={{
 							FocusLost: (textBox) => {
 								isChangingText = false;
 								const number = math.clamp(
-									tonumber(textBox.Text.gsub("%D+", "")[0]) ?? currentValue,
-									props.minDrag,
-									props.maxDrag,
+									tonumber(textBox.Text.gsub("[^%d.]", "")[0]) ?? currentValue,
+									props.MinDrag,
+									props.MaxDrag,
 								);
-								textBox.Text = `${number}${props.textModifier}`;
+								textBox.Text = `${number}${props.TextModifier}`;
 								ChangeText(number);
 							},
 							Focused: (textBox) => (isChangingText = true),
@@ -207,46 +229,44 @@ export function SettingsDragger(props: ISettingsDragger) {
 								Tools.TweenPlay(textBox.Parent!, TWINFO, { BackgroundColor3: DEFAULT_COLOR }),
 						}}
 					/>
-				</Frame>
-			</CanvasGroup>
+				</frame>
+			</canvasgroup>
 
-			<CanvasGroup
-				name={"Text"}
-				noBackground
-				anchorPoint={"ml"}
-				position={UDim2.fromScale(0.02, 0.5)}
-				size={UDim2.fromScale(0.45, 1)}
+			<canvasgroup
+				key={"Text"}
+				BackgroundTransparency={1}
+				AnchorPoint={AnchorPoints.CenterLeft}
+				Position={UDim2.fromScale(0.024, 0.5)}
+				Size={UDim2.fromScale(0.485, 0.95)}
 			>
 				<TextLabelShadow
-					name={"Title"}
-					anchorPoint={"t"}
-					position={UDim2.fromScale(0.5, 0.1)}
-					size={UDim2.fromScale(1, 0.5)}
-					font={Font.fromName("TitilliumWeb", Enum.FontWeight.Bold)}
-					text={props.title}
-					textColor={Color3.fromRGB(255, 255, 255)}
-					textSize={"AUTO"}
-					textAlign={Enum.TextXAlignment.Left}
-					shadowAngle={45}
-					shadowTransparency={0.55}
-					shadowDistance={5}
+					AnchorPoint={AnchorPoints.Top}
+					Position={UDim2.fromScale(0.5, 0.1)}
+					Size={UDim2.fromScale(1, 0.5)}
+					FontFace={Font.fromName("TitilliumWeb", Enum.FontWeight.Bold)}
+					Text={props.Title}
+					TextColor3={Color3.fromRGB(255, 255, 255)}
+					TextScaled={true}
+					TextXAlignment={Enum.TextXAlignment.Left}
+					ShadowAngle={45}
+					ShadowTransparency={0.55}
+					ShadowDistance={5}
 				/>
 				<TextLabelShadow
-					name={"Explanation"}
-					anchorPoint={"b"}
-					position={UDim2.fromScale(0.5, 0.86)}
-					size={UDim2.fromScale(1, 0.3)}
-					font={Font.fromName("TitilliumWeb", Enum.FontWeight.Bold)}
-					text={props.explanation}
-					textColor={Color3.fromRGB(255, 255, 255)}
-					textTransparency={0.2}
-					textSize={"AUTO"}
-					textAlign={Enum.TextXAlignment.Left}
-					shadowAngle={45}
-					shadowTransparency={0.55}
-					shadowDistance={5}
+					AnchorPoint={AnchorPoints.Bottom}
+					Position={UDim2.fromScale(0.5, 0.86)}
+					Size={UDim2.fromScale(1, 0.3)}
+					FontFace={Font.fromName("TitilliumWeb", Enum.FontWeight.Bold)}
+					Text={props.Explanation}
+					TextColor3={Color3.fromRGB(255, 255, 255)}
+					TextTransparency={0.2}
+					TextScaled={true}
+					TextXAlignment={Enum.TextXAlignment.Left}
+					ShadowAngle={45}
+					ShadowTransparency={0.55}
+					ShadowDistance={5}
 				/>
-			</CanvasGroup>
-		</Frame>
+			</canvasgroup>
+		</imagelabel>
 	);
 }

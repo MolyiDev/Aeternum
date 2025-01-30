@@ -1,10 +1,6 @@
 // Imports
-import { Players, ReplicatedStorage, RunService, Workspace } from "@rbxts/services";
+import { Players, RunService, Workspace } from "@rbxts/services";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
-import { EAttribute } from "ReplicatedStorage/Enums/EAttribute";
-
-// Events
-const UpdateHead = ReplicatedStorage.WaitForChild("Events").WaitForChild("UpdateHead") as UnreliableRemoteEvent;
 
 // Variables
 const headHorFactor = 1;
@@ -15,47 +11,49 @@ const bodyVerFactor = 0.4;
 const Player = Players.LocalPlayer;
 const Camera = Workspace.CurrentCamera as Camera;
 const Character = CharacterManager.WaitCharacter(Player.Character ?? Player.CharacterAdded.Wait()[0]);
-const Attributes = Character.Attributes;
 const Humanoid = Character.Humanoid;
 const Butler = Character.Butler;
 const Model = Character.Model;
 
 const Head = Model.WaitForChild("Head") as BasePart;
 const Torso = Model.WaitForChild("UpperTorso") as BasePart;
-const Neck = Head.WaitForChild("Neck") as Motor6D;
-const Waist = Torso.WaitForChild("Waist") as Motor6D;
+const Neck = Head.WaitForChild("Neck") as AnimationConstraint;
+const Waist = Torso.WaitForChild("Waist") as AnimationConstraint;
 
-const NeckC0 = Neck.C0;
-const WaistC0 = Waist.C0;
+const NeckJointCFrame = Neck.Attachment0!.CFrame;
+const WaistJointCFrame = Waist.Attachment0!.CFrame;
 
-Neck.MaxVelocity = 1 / 3;
+const ROTATE_SPEED = 8.5;
 
-function HeadMovement() {
+function HeadMovement(dt: number) {
 	if (!Torso || !Head || !Neck || !Waist || Camera.CameraSubject !== Humanoid) return;
-	if (Attributes.IsCameraLocked()) return;
+
 	const camCF = Camera.CFrame;
 	const headCF = Head.CFrame;
+	const torsoCF = Torso.CFrame;
 
-	const torsoLV = Torso.CFrame.LookVector;
+	// Diferencias de orientación
+	const camLook = camCF.LookVector;
+	const torsoLook = torsoCF.LookVector;
 
-	const dist = headCF.Position.sub(camCF.Position).Magnitude;
-	const diff = headCF.Position.Y - camCF.Position.Y;
+	// Calcular ángulos relativos
+	const horizontalAngle = math.atan2(camLook.X, camLook.Z) - math.atan2(torsoLook.X, torsoLook.Z);
+	const verticalAngle = math.asin(camLook.Y);
 
-	const asinDiffDist = math.asin(diff / dist);
-	const whateverThisDoes = headCF.Position.sub(camCF.Position).Unit.Cross(torsoLV).Y;
-
-	const newNeckC0 = NeckC0.mul(CFrame.Angles(asinDiffDist * headVerFactor, -1 * whateverThisDoes * headHorFactor, 0));
-	const newWaistC0 = WaistC0.mul(
-		CFrame.Angles(asinDiffDist * bodyVerFactor, -1 * whateverThisDoes * bodyHorFactor, 0),
+	// Aplicar interpolación
+	const NewNeckRotation = Neck.Attachment0!.CFrame.Lerp(
+		NeckJointCFrame.mul(CFrame.Angles(verticalAngle, horizontalAngle, 0)),
+		math.min(dt * ROTATE_SPEED, 1),
 	);
 
-	UpdateHead.FireServer(newNeckC0, newWaistC0);
+	const NewWaistRotation = Waist.Attachment0!.CFrame.Lerp(
+		WaistJointCFrame.mul(CFrame.Angles(verticalAngle, horizontalAngle, 0)),
+		math.min(dt * ROTATE_SPEED, 1),
+	);
+
+	// Aplicar nuevas rotaciones
+	if (NewNeckRotation !== Neck.Attachment0!.CFrame) Neck.Attachment0!.CFrame = NewNeckRotation;
+	if (NewWaistRotation !== Waist.Attachment0!.CFrame) Waist.Attachment0!.CFrame = NewWaistRotation;
 }
 
-function AttributeChanged(attribute: string) {
-	if (attribute !== EAttribute.IsCameraLocked || !Attributes.IsCameraLocked()) return;
-	UpdateHead.FireServer(NeckC0, WaistC0);
-}
-
-Butler.Connect(RunService.RenderStepped, () => HeadMovement());
-Butler.Connect(Attributes.AttributeChanged, (attribute) => AttributeChanged(attribute));
+Butler.Connect(RunService.RenderStepped, (dt) => HeadMovement(dt));

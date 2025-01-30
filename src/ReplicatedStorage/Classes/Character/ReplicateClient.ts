@@ -3,18 +3,19 @@ import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 import { Character } from ".";
 import { EWeapon } from "ReplicatedStorage/Enums/EWeapons";
 import { EAbility } from "ReplicatedStorage/Enums/Abilities/EAbility";
-import { IReplicateClass } from "ReplicatedStorage/Interfaces/IReplicateClass";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
 import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
-import { Players } from "@rbxts/services";
-import { EMoveSet } from "ReplicatedStorage/Enums/MoveSets/EMoveSet";
-import { EMove } from "ReplicatedStorage/Enums/MoveSets/EMove";
+import { Players, SoundService } from "@rbxts/services";
+import { EStyle } from "ReplicatedStorage/Enums/Style/EStyle";
+import { EStyleType } from "ReplicatedStorage/Enums/Style/EStyleType";
 import Object from "@rbxts/object-utils";
+import { CReplicate } from "../Abstracts/CReplicate";
+
+const EffectsGroup = SoundService.WaitForChild("Effects") as SoundGroup;
 
 export class ReplicateClient {
 	public Character: Character;
-	public ReplicateModules: Map<EAnimations | string, IReplicateClass>;
-	public DestroyModules: Set<IReplicateClass>;
+	public ReplicateModules: Map<EAnimations | string, CReplicate>;
 	public ReplicatesPlayed: Set<EAnimations | string>;
 	public SelfReplicatesPlayed: Set<EAnimations | string>;
 
@@ -22,113 +23,198 @@ export class ReplicateClient {
 		this.Character = character;
 		const Butler = character.Butler;
 		const Abilities = character.Abilities;
-		const Moves = character.Moves;
+		const Styles = character.Styles;
 		const Animator = character.Humanoid.Animator;
 
 		this.ReplicateModules = new Map();
-		this.DestroyModules = new Set();
 		this.ReplicatesPlayed = new Set();
 		this.SelfReplicatesPlayed = new Set();
 
-		Butler.Connect(Abilities.AbilityAdded, (abilityPlace, weapon, ability) =>
-			this.AbilityAdded(abilityPlace, weapon, ability),
-		);
+		if (character.Player && character.Player === Players.LocalPlayer) {
+			Butler.Connect(Abilities.AbilityAdded, (abilityPlace, weapon, ability) =>
+				this.SelfAbilityAdded(abilityPlace, weapon, ability),
+			);
 
-		Butler.Connect(Abilities.AbilityRemoved, (abilityPlace, weapon, ability) =>
-			this.AbilityRemoved(abilityPlace, weapon, ability),
-		);
+			Butler.Connect(Abilities.AbilityRemoved, (abilityPlace, weapon, ability) =>
+				this.SelfAbilityRemoved(abilityPlace, weapon, ability),
+			);
 
-		Butler.Connect(Moves.MoveSetChanged, (oldSet, newSet) => task.spawn(() => this.MoveSetChanged(oldSet, newSet)));
+			Butler.Connect(Styles.StylesChanged, (oldSet, newSet) =>
+				task.spawn(() => this.SelfStyleChanged(oldSet, newSet)),
+			);
 
-		if (character.Player && character.Player === Players.LocalPlayer)
 			Butler.Connect(Animator.AnimationPlayed, (animTrack) => this.SelfAnimationPlayed(animTrack));
+		} else {
+			Butler.Connect(Abilities.AbilityAdded, (abilityPlace, weapon, ability) =>
+				this.AbilityAdded(abilityPlace, weapon, ability),
+			);
+
+			Butler.Connect(Abilities.AbilityRemoved, (abilityPlace, weapon, ability) =>
+				this.AbilityRemoved(abilityPlace, weapon, ability),
+			);
+
+			Butler.Connect(Styles.StylesChanged, (oldSet, newSet) =>
+				task.spawn(() => this.StyleChanged(oldSet, newSet)),
+			);
+		}
 
 		Butler.Connect(Animator.AnimationPlayed, (animTrack) => this.AnimationPlayed(animTrack));
 
 		task.spawn(() => this.InitializeDefaultModules());
-		task.spawn(() => {
-			const NewSet = this.Character.Moves.MoveSet;
-			if (!NewSet) return;
-			this.MoveSetChanged(undefined!, NewSet);
-		});
 	}
 
 	public InitializeDefaultModules() {
-		const ClassDash = new (ModuleManager.GetReplicate("Dash"))(this.Character);
-		const ClassFootsteps = new (ModuleManager.GetReplicate("Footsteps"))(this.Character);
+		ModuleManager.LoadReplicate("ReceiveAttack");
+		ModuleManager.LoadReplicate(EAnimations.Default_Hands_ReceiveAttackCombo);
+		ModuleManager.LoadReplicate(EAnimations.ElectricKickReceive);
 
-		this.DestroyModules.add(ClassDash);
-		this.DestroyModules.add(ClassFootsteps);
+		const ClassRagdoll = new (ModuleManager.GetReplicate("Ragdoll"))(this.Character);
+		this.ReplicateModules.set(EAnimations.Ragdoll, ClassRagdoll);
 
-		this.ReplicateModules.set(EAnimations.DashForward, ClassDash);
-		this.ReplicateModules.set(EAnimations.DashBack, ClassDash);
-		this.ReplicateModules.set(EAnimations.DashLeft, ClassDash);
-		this.ReplicateModules.set(EAnimations.DashRight, ClassDash);
+		if (this.Character.Player && this.Character.Player === Players.LocalPlayer) {
+			this.Character.Abilities.AbilitiesFolder.GetAttributes().forEach((attributeValue, ability) => {
+				this.SelfAbilityAdded(
+					undefined as unknown as number,
+					undefined as unknown as EWeapon,
+					ability as EAbility,
+				);
+			});
 
-		this.ReplicateModules.set(EAnimations.WalkForward, ClassFootsteps);
-		this.ReplicateModules.set(EAnimations.WalkForwardLeft, ClassFootsteps);
-		this.ReplicateModules.set(EAnimations.WalkForwardRight, ClassFootsteps);
-		this.ReplicateModules.set(EAnimations.WalkBack, ClassFootsteps);
-		this.ReplicateModules.set(EAnimations.WalkBackLeft, ClassFootsteps);
-		this.ReplicateModules.set(EAnimations.WalkBackRight, ClassFootsteps);
-		this.ReplicateModules.set(EAnimations.WalkLeft, ClassFootsteps);
-		this.ReplicateModules.set(EAnimations.WalkRight, ClassFootsteps);
-		this.ReplicateModules.set(EAnimations.Run, ClassFootsteps);
+			const NewSet = this.Character.Styles.Style;
+			if (NewSet) this.SelfStyleChanged(undefined!, NewSet);
+		} else {
+			this.Character.Abilities.AbilitiesFolder.GetAttributes().forEach((attributeValue, ability) => {
+				this.AbilityAdded(undefined as unknown as number, undefined as unknown as EWeapon, ability as EAbility);
+			});
 
-		this.Character.Abilities.AbilitiesFolder.GetAttributes().forEach((attributeValue, ability) => {
-			this.AbilityAdded(undefined as unknown as number, undefined as unknown as EWeapon, ability as EAbility);
-		});
+			const NewSet = this.Character.Styles.Style;
+			if (NewSet) this.StyleChanged(undefined!, NewSet);
+		}
 	}
 
 	public AbilityAdded(abilityPlace: number, weapon: EWeapon, ability: EAbility) {
+		if (this.ReplicateModules.has(ability)) return;
 		const classByName = new (ModuleManager.GetReplicate(ability))(this.Character);
 		this.ReplicateModules.set(ability, classByName);
-		if ("Destroy" in classByName) this.DestroyModules.add(classByName);
 	}
 
 	public AbilityRemoved(abilityPlace: number, weapon: EWeapon, ability: EAbility) {
 		const ReplicateClass = this.ReplicateModules.get(ability);
 		if (!ReplicateClass) return;
-		if (this.DestroyModules.delete(ReplicateClass)) ReplicateClass.Destroy!();
+		ReplicateClass.Destroy();
 
 		this.ReplicateModules.delete(ability);
 	}
 
-	public MoveSetChanged(oldSet: string, newSet: string) {
-		if (oldSet) {
-			for (const weapon of Object.values(EWeapon)) {
-				for (const move of Object.values(EMove)) {
-					let Name = `${oldSet}_${weapon}_${move}`;
-					let ReplicateClass = this.ReplicateModules.get(Name);
+	public SelfAbilityAdded(abilityPlace: number, weapon: EWeapon, ability: EAbility) {
+		if (this.ReplicateModules.has(ability)) return;
+		const classByName = new (ModuleManager.GetReplicate(ability))(this.Character);
+		classByName.SelfConstruct?.();
+		this.ReplicateModules.set(ability, classByName);
+	}
 
-					if (!ReplicateClass) {
-						if (newSet === EMoveSet.Default) continue;
-						Name = `${EMoveSet.Default}_${weapon}_${move}`;
-						ReplicateClass = this.ReplicateModules.get(Name);
-						if (!ReplicateClass) continue;
+	public SelfAbilityRemoved(abilityPlace: number, weapon: EWeapon, ability: EAbility) {
+		const ReplicateClass = this.ReplicateModules.get(ability);
+		if (!ReplicateClass) return;
+		ReplicateClass.SelfDestroy!();
+		ReplicateClass.Destroy!();
+
+		this.ReplicateModules.delete(ability);
+	}
+
+	public StyleChanged(oldStyle: string, newStyle: string) {
+		if (oldStyle) {
+			for (const weapon of Object.values(EWeapon)) {
+				for (const styleType of Object.values(EStyleType)) {
+					let Name = `${oldStyle}_${weapon}_${styleType}`;
+					let StyleInfo = ModuleManager.GetStyleInfo(Name);
+
+					if (!StyleInfo) {
+						if (oldStyle === EStyle.Default) continue;
+						Name = `${EStyle.Default}_${weapon}_${styleType}`;
+						StyleInfo = ModuleManager.GetStyleInfo(Name);
+						if (!StyleInfo) continue;
 					}
 
-					if (this.DestroyModules.delete(ReplicateClass)) ReplicateClass.Destroy!();
-					this.ReplicateModules.delete(Name);
+					const ReplicateName = StyleInfo.ReplicateClass ?? Name;
+					const ReplicateClass = this.ReplicateModules.get(ReplicateName);
+
+					if (!ReplicateClass) continue;
+
+					ReplicateClass.Destroy!();
+					this.ReplicateModules.delete(ReplicateName);
 				}
 			}
 		}
 
 		for (const weapon of Object.values(EWeapon)) {
-			for (const move of Object.values(EMove)) {
-				let Name = `${newSet}_${weapon}_${move}`;
-				let classByName = ModuleManager.GetReplicate(Name);
+			for (const styleType of Object.values(EStyleType)) {
+				let Name = `${newStyle}_${weapon}_${styleType}`;
+				let StyleInfo = ModuleManager.GetStyleInfo(Name);
 
-				if (!classByName) {
-					if (newSet === EMoveSet.Default) continue;
-					Name = `${EMoveSet.Default}_${weapon}_${move}`;
-					classByName = ModuleManager.GetReplicate(Name);
-					if (!classByName) continue;
+				if (!StyleInfo) {
+					if (newStyle === EStyle.Default) continue;
+					Name = `${EStyle.Default}_${weapon}_${styleType}`;
+					StyleInfo = ModuleManager.GetStyleInfo(Name);
+					if (!StyleInfo) continue;
 				}
 
+				const ReplicateName = StyleInfo.ReplicateClass ?? Name;
+				const classByName = ModuleManager.GetReplicate(ReplicateName);
+
+				if (!classByName) continue;
+
 				const classNew = new classByName(this.Character);
-				this.ReplicateModules.set(Name, classNew);
-				if ("Destroy" in classByName) this.DestroyModules.add(classNew);
+				this.ReplicateModules.set(ReplicateName, classNew);
+			}
+		}
+	}
+
+	public SelfStyleChanged(oldStyle: string, newStyle: string) {
+		if (oldStyle) {
+			for (const weapon of Object.values(EWeapon)) {
+				for (const styleType of Object.values(EStyleType)) {
+					let Name = `${oldStyle}_${weapon}_${styleType}`;
+					let StyleInfo = ModuleManager.GetStyleInfo(Name);
+
+					if (!StyleInfo) {
+						if (oldStyle === EStyle.Default) continue;
+						Name = `${EStyle.Default}_${weapon}_${styleType}`;
+						StyleInfo = ModuleManager.GetStyleInfo(Name);
+						if (!StyleInfo) continue;
+					}
+
+					const ReplicateName = StyleInfo.ReplicateClass ?? Name;
+					const ReplicateClass = this.ReplicateModules.get(ReplicateName);
+
+					if (!ReplicateClass) continue;
+
+					ReplicateClass.SelfDestroy()!;
+					this.ReplicateModules.delete(ReplicateName);
+				}
+			}
+		}
+
+		for (const weapon of Object.values(EWeapon)) {
+			for (const styleType of Object.values(EStyleType)) {
+				let Name = `${newStyle}_${weapon}_${styleType}`;
+				let StyleInfo = ModuleManager.GetStyleInfo(Name);
+
+				if (!StyleInfo) {
+					if (newStyle === EStyle.Default) continue;
+					Name = `${EStyle.Default}_${weapon}_${styleType}`;
+					StyleInfo = ModuleManager.GetStyleInfo(Name);
+					if (!StyleInfo) continue;
+				}
+
+				const ReplicateName = StyleInfo.ReplicateClass ?? Name;
+				const classByName = ModuleManager.GetReplicate(ReplicateName);
+
+				if (!classByName) continue;
+
+				const classNew = new classByName(this.Character);
+				classNew.SelfConstruct?.();
+				this.ReplicateModules.set(ReplicateName, classNew);
 			}
 		}
 	}
@@ -147,16 +233,24 @@ export class ReplicateClient {
 		const AnimName = Tools.IdToName(animTrack.Animation!.AnimationId);
 		const ReplicateInfo = ModuleManager.GetReplicateInfo(AnimName);
 		if (!ReplicateInfo) return;
-		const ReplicateName = ReplicateInfo.Class ?? AnimName;
+
+		const Character = this.Character;
+		const Attributes = Character.Attributes;
+		const ReplicateName = ReplicateInfo.ReplicateClass ?? AnimName;
+
+		if (ReplicateInfo.Receive) {
+			if (Attributes.Receive() !== ReplicateName) return;
+			if (!this.ReplicateModules.has(ReplicateName))
+				this.ReplicateModules.set(ReplicateName, new (ModuleManager.GetReplicate(ReplicateName))(Character));
+		}
+
 		const ReplicateClass = this.ReplicateModules.get(ReplicateName);
 		if (!ReplicateClass) return;
 
-		const Character = this.Character;
 		const Butler = Character.Butler;
 		const Abilities = Character.Abilities;
-		const Attributes = Character.Attributes;
 
-		if (!ReplicateInfo.CanUseStunned && Attributes.IsStunnedFull()) return;
+		if (!ReplicateInfo.ReplicateStunned && Attributes.IsStunnedFull()) return;
 
 		if (ReplicateInfo.Cooldown > 0) {
 			const time = tick() - Attributes.TickAnim(ReplicateName);
@@ -164,11 +258,22 @@ export class ReplicateClient {
 		}
 
 		if (
-			(ReplicateInfo.Ability && !Abilities.Has(ReplicateName)) ||
-			(Attributes.UsingAbility() && Attributes.UsingAbility() !== ReplicateName) ||
-			Attributes.UsingMove()
+			ReplicateInfo.AbilityClass &&
+			(!Abilities.Has(ReplicateName) ||
+				(Attributes.UsingAbility() && Attributes.UsingAbility() !== ReplicateName) ||
+				Attributes.UsingStyle())
 		)
 			return;
+
+		if (ReplicateInfo.StyleClass) {
+			const Split = ReplicateInfo.StyleClass.split("_");
+			if (
+				this.Character.Styles.Style !== Split[0] ||
+				(Attributes.UsingStyle() && Attributes.UsingStyle() !== Split[2]) ||
+				Attributes.UsingAbility()
+			)
+				return;
+		}
 
 		if (!this.SelfReplicatesPlayed.has(AnimName)) {
 			this.SelfReplicatesPlayed.add(AnimName);
@@ -184,14 +289,30 @@ export class ReplicateClient {
 		const AnimName = Tools.IdToName(animTrack.Animation!.AnimationId);
 		const ReplicateInfo = ModuleManager.GetReplicateInfo(AnimName);
 		if (!ReplicateInfo) return;
-		const ReplicateName = ReplicateInfo.Class ?? AnimName;
-		const ReplicateClass = this.ReplicateModules.get(ReplicateName);
-		if (!ReplicateClass) return;
 
 		const Character = this.Character;
 		const Attributes = Character.Attributes;
+		const ReplicateName = ReplicateInfo.ReplicateClass ?? AnimName;
 
-		if (!ReplicateInfo.CanUseStunned && Attributes.IsStunnedFull()) {
+		if (ReplicateInfo.Receive) {
+			if (Attributes.Receive() !== ReplicateName) {
+				if (this.Character.Player) print(1);
+				animTrack.Stop();
+				return;
+			}
+			if (!this.ReplicateModules.has(ReplicateName))
+				this.ReplicateModules.set(ReplicateName, new (ModuleManager.GetReplicate(ReplicateName))(Character));
+		}
+
+		const ReplicateClass = this.ReplicateModules.get(ReplicateName);
+		if (!ReplicateClass) {
+			if (this.Character.Player) print(2);
+			animTrack.Stop();
+			return;
+		}
+
+		if (!ReplicateInfo.ReplicateStunned && Attributes.IsStunnedFull()) {
+			if (this.Character.Player) print(3);
 			animTrack.Stop();
 			return;
 		}
@@ -199,6 +320,7 @@ export class ReplicateClient {
 		if (ReplicateInfo.Cooldown > 0) {
 			const time = tick() - Attributes.TickAnim(ReplicateName);
 			if (time < ReplicateInfo.Cooldown) {
+				if (this.Character.Player) print(4);
 				animTrack.Stop();
 				return;
 			}
@@ -206,15 +328,16 @@ export class ReplicateClient {
 
 		const Butler = Character.Butler;
 		const Abilities = Character.Abilities;
-		const Moves = Character.Moves;
+		const Styles = Character.Styles;
 		const Weapons = Character.Weapons;
 
-		if (ReplicateInfo.Ability) {
+		if (ReplicateInfo.AbilityClass) {
 			if (
 				!Abilities.Has(ReplicateName) ||
 				(Attributes.UsingAbility() && Attributes.UsingAbility() !== ReplicateName) ||
-				Attributes.UsingMove()
+				Attributes.UsingStyle()
 			) {
+				if (this.Character.Player) print(5);
 				animTrack.Stop();
 				return;
 			}
@@ -222,6 +345,7 @@ export class ReplicateClient {
 			const Weapon = ModuleManager.GetAbilityInfo(ReplicateName)!.Weapon;
 
 			if (!Weapons.Has(Weapon) || !Weapons.IsEquipped(Weapon)) {
+				if (this.Character.Player) print(6);
 				animTrack.Stop();
 				return;
 			}
@@ -235,27 +359,29 @@ export class ReplicateClient {
 			}
 		}
 
-		if (ReplicateInfo.Move) {
-			const Split = AnimName.split("_");
+		if (ReplicateInfo.StyleClass) {
+			const Split = ReplicateInfo.StyleClass.split("_");
 			if (
-				Moves.MoveSet !== Split[0] ||
-				(Attributes.UsingMove() && Attributes.UsingMove() !== ReplicateName) ||
+				Styles.Style !== Split[0] ||
+				(Attributes.UsingStyle() && Attributes.UsingStyle() !== Split[2]) ||
 				Attributes.UsingAbility()
 			) {
+				if (this.Character.Player) print(7);
 				animTrack.Stop();
 				return;
 			}
 
 			if (!Weapons.Has(Split[1]) || !Weapons.IsEquipped(Split[1])) {
+				if (this.Character.Player) print(8);
 				animTrack.Stop();
 				return;
 			}
 
 			if (ReplicateInfo.CanFeint) {
-				Moves.MovesFeint.add(AnimName);
+				Styles.StylesFeint.add(AnimName);
 				if (ReplicateInfo.HasFeintStop && !this.ReplicatesPlayed.has(AnimName))
 					Butler.Connect(animTrack.GetMarkerReachedSignal("StopFeint"), () =>
-						Moves.MovesFeint.delete(AnimName),
+						Styles.StylesFeint.delete(AnimName),
 					);
 			}
 		}
@@ -275,6 +401,7 @@ export class ReplicateClient {
 					SoundClone.TimePosition = Start as number;
 					SoundClone.Volume = Volume as number;
 					SoundClone.PlaybackSpeed = Speed as number;
+					SoundClone.SoundGroup = EffectsGroup;
 					SoundClone.Destroy();
 				});
 			}
@@ -284,18 +411,24 @@ export class ReplicateClient {
 	}
 
 	public Destroy() {
-		this.ReplicateModules.clear();
-
-		this.DestroyModules.forEach((replicateClass) => {
-			replicateClass.Destroy!();
-			this.DestroyModules.delete(replicateClass);
-		});
+		if (this.Character.Player && this.Character.Player === Players.LocalPlayer) {
+			this.ReplicateModules.forEach((replicateClass, name) => {
+				replicateClass.SelfDestroy();
+				replicateClass.Destroy();
+				this.ReplicateModules.delete(name);
+			});
+		} else {
+			this.ReplicateModules.forEach((replicateClass, name) => {
+				replicateClass.SelfDestroy();
+				this.ReplicateModules.delete(name);
+			});
+		}
 
 		this.ReplicatesPlayed.clear();
 		this.SelfReplicatesPlayed.clear();
 
+		this.Character = undefined!;
 		this.ReplicateModules = undefined!;
-		this.DestroyModules = undefined!;
 		this.ReplicatesPlayed = undefined!;
 		this.SelfReplicatesPlayed = undefined!;
 	}

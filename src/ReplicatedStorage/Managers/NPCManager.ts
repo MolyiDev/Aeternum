@@ -1,7 +1,6 @@
 // Imports
 import Signal from "@rbxts/lemon-signal";
 import { ReplicatedStorage, RunService, ServerScriptService, Workspace } from "@rbxts/services";
-import { IModel } from "ReplicatedStorage/Interfaces/IModel";
 
 // Events
 const Events = ReplicatedStorage.WaitForChild("Events").WaitForChild("NPC");

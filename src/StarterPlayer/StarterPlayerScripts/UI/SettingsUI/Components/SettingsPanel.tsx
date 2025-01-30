@@ -1,45 +1,48 @@
-import { CanvasGroup, ListLayout, ScrollingFrame } from "@rbxts/better-react-components";
 import React from "@rbxts/react";
 import { forwardRef } from "@rbxts/react";
+import { AnchorPoints } from "ReplicatedStorage/Enums/UI/EAnchorPoint";
+import { useScale } from "../../Components/SliceScale";
 
 interface ISettingsPanel {
-	name: string;
-	flexAlign?: boolean;
+	Key?: string;
+	Opacity?: number;
+	VerticalFlex?: boolean;
 }
 
-export const SettingsPanel = forwardRef<CanvasGroup, ISettingsPanel>((props, ref) => {
+export const UIPanel = forwardRef<CanvasGroup, ISettingsPanel>((props, ref) => {
+	const scale = useScale(12);
+
 	return (
-		<CanvasGroup
-			name={props.name}
+		<canvasgroup
+			key={props.Key}
 			ref={ref}
-			noBackground
-			anchorPoint={"m"}
-			position={UDim2.fromScale(0.5, 0.5)}
-			size={UDim2.fromScale(0.6, 0.9)}
-			opacity={1}
-			interactable={false}
+			BackgroundTransparency={1}
+			AnchorPoint={AnchorPoints.Top}
+			Position={UDim2.fromScale(0.5, 0.02)}
+			Size={UDim2.fromScale(0.6, 0.94)}
+			GroupTransparency={props.Opacity ?? 1}
+			Interactable={false}
 		>
-			<ScrollingFrame
-				noBackground
-				automaticCanvasSize={"XY"}
-				anchorPoint={"t"}
-				position={UDim2.fromScale(0.5, 0)}
-				size={UDim2.fromScale(1, 0.875)}
-				canvasSize={UDim2.fromScale(0, 0)}
-				scrollbar={{
-					imageColor: Color3.fromRGB(167, 59, 73),
-					thickness: 8,
-				}}
-				scrollbarInsetV={"ScrollBar"}
+			<scrollingframe
+				BackgroundTransparency={1}
+				AutomaticCanvasSize={"XY"}
+				AnchorPoint={AnchorPoints.Top}
+				Position={UDim2.fromScale(0.5, 0)}
+				Size={UDim2.fromScale(0.985, 0.88)}
+				CanvasSize={UDim2.fromScale(0, 0)}
+				BorderSizePixel={0}
+				ScrollBarImageColor3={Color3.fromRGB(0, 0, 0)}
+				ScrollBarThickness={scale}
+				VerticalScrollBarInset={"ScrollBar"}
 			>
-				<ListLayout
-					padding={0.0125}
-					horizontalAlign={"Center"}
-					order={"LayoutOrder"}
-					flexAlignY={props.flexAlign ? "SpaceBetween" : "None"}
+				<uilistlayout
+					Padding={new UDim(0.013, 0)}
+					HorizontalAlignment={"Center"}
+					SortOrder={"LayoutOrder"}
+					VerticalFlex={props.VerticalFlex ? "SpaceBetween" : "None"}
 				/>
 				{props.children}
-			</ScrollingFrame>
-		</CanvasGroup>
+			</scrollingframe>
+		</canvasgroup>
 	);
 });

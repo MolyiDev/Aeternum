@@ -6,7 +6,7 @@ export enum ESettingsVisual {
 	DepthOfField = "Settings_Visual_DepthOfField",
 	SunRays = "Settings_Visual_SunRays",
 	Shadows = "Settings_Visual_Shadows",
-	VolumetricShadows = "Settings_Visual_VolumetricShadows",
+	Particles = "Settings_Visual_Particles",
 	Debris = "Settings_Visual_Debris",
 	SubDebris = "Settings_Visual_SubDebris",
 }

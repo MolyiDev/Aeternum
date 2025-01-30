@@ -1,23 +1,22 @@
 import React, { forwardRef } from "@rbxts/react";
 import { SettingsDragger } from "StarterPlayer/StarterPlayerScripts/UI/SettingsUI/Components/SettingsDragger";
 import { SettingsToggle } from "./Components/SettingsToggle";
-import { SettingsPanel } from "./Components/SettingsPanel";
+import { UIPanel } from "./Components/SettingsPanel";
 import { Lighting, Players, Workspace } from "@rbxts/services";
 import { SettingsManager } from "ReplicatedStorage/Managers/SettingsManager";
 import { ESettingsVisual } from "ReplicatedStorage/Enums/Settings/ESettingsVisual";
 import { WindManager } from "ReplicatedStorage/Managers/WindManager";
-import Collector from "ReplicatedStorage/Libraries/Collector";
 
 const Player = Players.LocalPlayer;
 
 export const VisualSettings = forwardRef<CanvasGroup>((props, ref) => {
 	return (
-		<SettingsPanel ref={ref} name="Visual" flexAlign={true}>
+		<UIPanel ref={ref} Key="Visual" VerticalFlex={true}>
 			<SettingsToggle
-				title="Wind"
-				explanation="Toggle wind"
-				initialValue={SettingsManager.GetSetting(Player, ESettingsVisual.Wind) as boolean}
-				layoutOrder={0}
+				Title="Wind"
+				Explanation="Toggle wind"
+				InitialValue={SettingsManager.GetSetting(Player, ESettingsVisual.Wind) as boolean}
+				LayoutOrder={0}
 				ToggleChanged={(activated: boolean) => {
 					SettingsManager.SetSetting(Player, ESettingsVisual.Wind, activated);
 					if (activated) WindManager.Init();
@@ -25,100 +24,104 @@ export const VisualSettings = forwardRef<CanvasGroup>((props, ref) => {
 				}}
 			/>
 			<SettingsToggle
-				title="Clouds"
-				explanation="Toggle clouds"
-				initialValue={SettingsManager.GetSetting(Player, ESettingsVisual.Clouds) as boolean}
-				layoutOrder={0}
+				Title="Clouds"
+				Explanation="Toggle clouds"
+				InitialValue={SettingsManager.GetSetting(Player, ESettingsVisual.Clouds) as boolean}
+				LayoutOrder={1}
 				ToggleChanged={(activated: boolean) => {
 					SettingsManager.SetSetting(Player, ESettingsVisual.Clouds, activated);
 					(Workspace.Terrain.FindFirstChild("Clouds") as Clouds).Enabled = activated;
 				}}
 			/>
 			<SettingsToggle
-				title="Bloom"
-				explanation="Toggle bloom"
-				initialValue={SettingsManager.GetSetting(Player, ESettingsVisual.Bloom) as boolean}
-				layoutOrder={1}
+				Title="Bloom"
+				Explanation="Toggle bloom"
+				InitialValue={SettingsManager.GetSetting(Player, ESettingsVisual.Bloom) as boolean}
+				LayoutOrder={2}
 				ToggleChanged={(activated: boolean) => {
 					SettingsManager.SetSetting(Player, ESettingsVisual.Bloom, activated);
 					Lighting.Bloom.Enabled = activated;
 				}}
 			/>
 			<SettingsToggle
-				title="Blur"
-				explanation="Toggle blur"
-				initialValue={SettingsManager.GetSetting(Player, ESettingsVisual.Blur) as boolean}
-				layoutOrder={2}
+				Title="Blur"
+				Explanation="Toggle blur"
+				InitialValue={SettingsManager.GetSetting(Player, ESettingsVisual.Blur) as boolean}
+				LayoutOrder={3}
 				ToggleChanged={(activated: boolean) => {
 					SettingsManager.SetSetting(Player, ESettingsVisual.Blur, activated);
 					Lighting.Blur.Enabled = activated;
 				}}
 			/>
 			<SettingsToggle
-				title="Depth of Field"
-				explanation="Toggle depth of field"
-				initialValue={SettingsManager.GetSetting(Player, ESettingsVisual.DepthOfField) as boolean}
-				layoutOrder={3}
+				Title="Depth of Field"
+				Explanation="Toggle depth of field"
+				InitialValue={SettingsManager.GetSetting(Player, ESettingsVisual.DepthOfField) as boolean}
+				LayoutOrder={4}
 				ToggleChanged={(activated: boolean) => {
 					SettingsManager.SetSetting(Player, ESettingsVisual.DepthOfField, activated);
 					Lighting.DepthOfField.Enabled = activated;
 				}}
 			/>
 			<SettingsToggle
-				title="Sun Rays"
-				explanation="Toggle sun rays"
-				initialValue={SettingsManager.GetSetting(Player, ESettingsVisual.SunRays) as boolean}
-				layoutOrder={4}
+				Title="Sun Rays"
+				Explanation="Toggle sun rays"
+				InitialValue={SettingsManager.GetSetting(Player, ESettingsVisual.SunRays) as boolean}
+				LayoutOrder={5}
 				ToggleChanged={(activated: boolean) => {
 					SettingsManager.SetSetting(Player, ESettingsVisual.SunRays, activated);
 					Lighting.SunRays.Enabled = activated;
 				}}
 			/>
 			<SettingsToggle
-				title="Shadows"
-				explanation="Toggle shadows"
-				initialValue={SettingsManager.GetSetting(Player, ESettingsVisual.Shadows) as boolean}
-				layoutOrder={5}
+				Title="Shadows"
+				Explanation="Toggle shadows"
+				InitialValue={SettingsManager.GetSetting(Player, ESettingsVisual.Shadows) as boolean}
+				LayoutOrder={6}
 				ToggleChanged={(activated: boolean) => {
 					SettingsManager.SetSetting(Player, ESettingsVisual.Shadows, activated);
 					Lighting.GlobalShadows = activated;
 				}}
 			/>
-			<SettingsToggle
-				title="Volumetric Shadows"
-				explanation="Toggle volumetric shadows"
-				initialValue={SettingsManager.GetSetting(Player, ESettingsVisual.VolumetricShadows) as boolean}
-				layoutOrder={6}
-				ToggleChanged={(activated: boolean) => {
-					SettingsManager.SetSetting(Player, ESettingsVisual.VolumetricShadows, activated);
-				}}
+			<SettingsDragger
+				Title="Particles"
+				Explanation="Amount of particles"
+				InitialValue={((SettingsManager.GetSetting(Player, ESettingsVisual.Particles) as number) ?? 1) * 100}
+				MinDrag={0}
+				MaxDrag={200}
+				DragAmount={10}
+				TextModifier="%"
+				LayoutOrder={8}
+				ValueChanged={(value: number) =>
+					SettingsManager.SetSetting(Player, ESettingsVisual.Particles, value / 100)
+				}
 			/>
 			<SettingsDragger
-				title="Debris"
-				explanation="Amount of debris (Rocks)"
-				initialValue={(SettingsManager.GetSetting(Player, ESettingsVisual.Debris) as number) * 100}
-				minDrag={25}
-				maxDrag={250}
-				dragAmount={25}
-				textModifier="%"
-				layoutOrder={8}
+				Title="Debris"
+				Explanation="Amount of debris (Rocks)"
+				InitialValue={((SettingsManager.GetSetting(Player, ESettingsVisual.Debris) as number) ?? 1) * 100}
+				MinDrag={25}
+				MaxDrag={200}
+				DragAmount={25}
+				TextModifier="%"
+				LayoutOrder={9}
 				ValueChanged={(value: number) =>
 					SettingsManager.SetSetting(Player, ESettingsVisual.Debris, value / 100)
 				}
 			/>
 			<SettingsDragger
-				title="Sub-Debris"
-				explanation="Amount of sub-debris (Rocks on top of rocks)"
-				initialValue={(SettingsManager.GetSetting(Player, ESettingsVisual.SubDebris) as number) * 100}
-				minDrag={0}
-				maxDrag={250}
-				dragAmount={25}
-				textModifier="%"
-				layoutOrder={9}
+				Title="Sub-Debris"
+				Explanation="Amount of sub-debris (Rocks on top of rocks)"
+				InitialValue={((SettingsManager.GetSetting(Player, ESettingsVisual.SubDebris) as number) ?? 1) * 100}
+				MinDrag={0}
+				MaxDrag={200}
+				DragAmount={25}
+				TextModifier="%"
+				LayoutOrder={10}
 				ValueChanged={(value: number) =>
 					SettingsManager.SetSetting(Player, ESettingsVisual.SubDebris, value / 100)
 				}
 			/>
-		</SettingsPanel>
+		</UIPanel>
 	);
 });

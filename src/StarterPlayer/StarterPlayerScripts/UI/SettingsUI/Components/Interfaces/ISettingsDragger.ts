@@ -1,11 +1,12 @@
 import { ISettingsDefault } from "./ISettingsDefault";
 
 export interface ISettingsDragger extends ISettingsDefault {
-	initialValue: number;
-	minDrag: number;
-	maxDrag: number;
-	dragAmount: number;
-	layoutOrder?: number;
-	textModifier: string;
+	InitialValue: number;
+	MinDrag: number;
+	MaxDrag: number;
+	TextMaxDigits?: number;
+	DragAmount: number;
+	LayoutOrder?: number;
+	TextModifier: string;
 	ValueChanged: (value: number) => void;
 }

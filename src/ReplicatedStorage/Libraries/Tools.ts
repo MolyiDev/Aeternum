@@ -1,9 +1,14 @@
 // Imports
-import { ReplicatedStorage, RunService, TweenService } from "@rbxts/services";
+import { Players, ReplicatedStorage, RunService, TweenService } from "@rbxts/services";
+import { ESettingsVisual } from "ReplicatedStorage/Enums/Settings/ESettingsVisual";
+import { SettingsManager } from "ReplicatedStorage/Managers/SettingsManager";
 
 // Variables
 const SoundsFolder = ReplicatedStorage.WaitForChild("Sounds");
 const AnimsFolder = ReplicatedStorage.WaitForChild("Animations");
+
+const GradientChanging = new Map<UIGradient, RBXScriptConnection>();
+const TransparencyChanging = new Map<Beam | Trail | UIGradient, RBXScriptConnection>();
 
 const SoundNameToSound = new Map<string, Sound>();
 const AnimIdToName = new Map<string, string>();
@@ -32,11 +37,16 @@ export class Tools {
 
 	public static SoundNameToSound = (name: string) => SoundNameToSound.get(name) as Sound;
 
-	public static Vector3(replicate: number) {
-		return new Vector3(replicate, replicate, replicate);
+	public static ProjectOnPlane(vector: Vector3, planeNormal: Vector3) {
+		const sqrMag = planeNormal.Dot(planeNormal);
+
+		if (sqrMag < 1e-5) return vector;
+		return vector.sub(planeNormal.mul(vector.Dot(planeNormal) / sqrMag));
 	}
 
-	private static TweenGradientInternal(gradient: UIGradient, tweenInfo: TweenInfo, finalGradient: ColorSequence) {
+	private static _TweenGradient(gradient: UIGradient, tweenInfo: TweenInfo, finalGradient: ColorSequence) {
+		let Connection = GradientChanging.get(gradient);
+		Connection?.Disconnect();
 		const time = tweenInfo.Time;
 		const easingStyle = tweenInfo.EasingStyle;
 		const easingDirection = tweenInfo.EasingDirection;
@@ -48,18 +58,17 @@ export class Tools {
 			return;
 		}
 
-		const startTime = tick();
 		let timeElapsed = 0;
 
-		while (timeElapsed < time) {
-			timeElapsed = tick() - startTime;
+		Connection = RunService.RenderStepped.Connect((dt) => {
+			timeElapsed += dt;
 			let alpha = timeElapsed / time;
 
 			alpha = TweenService.GetValue(alpha, easingStyle, easingDirection);
 
 			const newKeypoints = [];
 
-			for (let i = 0; i < startGradient.size(); i++) {
+			for (const i of $range(0, startGradient.size() - 1)) {
 				const startPoint = startGradient[i];
 				const endPoint = finalGradient.Keypoints[i];
 
@@ -70,36 +79,47 @@ export class Tools {
 			}
 
 			gradient.Color = new ColorSequence(newKeypoints);
-			RunService.RenderStepped.Wait();
-		}
 
-		gradient.Color = finalGradient;
+			if (timeElapsed >= time) {
+				gradient.Color = finalGradient;
+				Connection!.Disconnect();
+
+				GradientChanging.delete(gradient);
+			}
+		});
+
+		GradientChanging.set(gradient, Connection);
 	}
 
-	private static _TweenTransparency(beam: Beam, tweenInfo: TweenInfo, finalSequence: NumberSequence) {
+	private static _TweenTransparency(
+		instance: Beam | Trail | UIGradient,
+		tweenInfo: TweenInfo,
+		finalSequence: NumberSequence,
+	) {
+		let Connection = TransparencyChanging.get(instance);
+		Connection?.Disconnect();
 		const time = tweenInfo.Time;
 		const easingStyle = tweenInfo.EasingStyle;
 		const easingDirection = tweenInfo.EasingDirection;
 
-		const startSequence = beam.Transparency.Keypoints;
+		const startSequence = instance.Transparency.Keypoints;
 
 		if (startSequence.size() !== finalSequence.Keypoints.size()) {
-			beam.Transparency = finalSequence;
+			instance.Transparency = finalSequence;
 			return;
 		}
 
-		const startTime = tick();
 		let timeElapsed = 0;
 
-		while (timeElapsed < time) {
-			timeElapsed = tick() - startTime;
+		Connection = RunService.RenderStepped.Connect((dt) => {
+			timeElapsed += dt;
 			let alpha = timeElapsed / time;
 
 			alpha = TweenService.GetValue(alpha, easingStyle, easingDirection);
 
 			const newKeypoints = [];
 
-			for (let i = 0; i < startSequence.size(); i++) {
+			for (const i of $range(0, startSequence.size() - 1)) {
 				const startPoint = startSequence[i];
 				const endPoint = finalSequence.Keypoints[i];
 
@@ -109,12 +129,34 @@ export class Tools {
 				newKeypoints.push(new NumberSequenceKeypoint(newTime, newColor));
 			}
 
-			beam.Transparency = new NumberSequence(newKeypoints);
-			RunService.RenderStepped.Wait();
-		}
+			instance.Transparency = new NumberSequence(newKeypoints);
 
-		beam.Transparency = finalSequence;
+			if (timeElapsed >= time) {
+				Connection!.Disconnect();
+				TransparencyChanging.delete(instance);
+				instance.Transparency = finalSequence;
+			}
+		});
+
+		TransparencyChanging.set(instance, Connection);
 	}
+
+	private static _EmitParticles(particles: Array<Instance>) {
+		const Multiplier = SettingsManager.GetSetting(Players.LocalPlayer, ESettingsVisual.Particles) as number;
+
+		for (const ParticleEmitter of particles) {
+			if (!ParticleEmitter.IsA("ParticleEmitter")) continue;
+			const EmitDelay = ParticleEmitter.GetAttribute("EmitDelay") as number;
+
+			if (ParticleEmitter.GetAttribute("EmitDelay"))
+				task.delay(EmitDelay, () =>
+					ParticleEmitter.Emit((ParticleEmitter.GetAttribute("EmitCount") as number) * Multiplier),
+				);
+			else ParticleEmitter.Emit((ParticleEmitter.GetAttribute("EmitCount") as number) * Multiplier);
+		}
+	}
+
+	public static EmitParticles = (particles: Array<Instance>) => task.spawn(() => this._EmitParticles(particles));
 
 	public static VectorDistance(pointA: Vector3, pointB: Vector3): number {
 		return pointB.sub(pointA).Magnitude;
@@ -133,11 +175,15 @@ export class Tools {
 	}
 
 	public static TweenGradient(gradient: UIGradient, tweenInfo: TweenInfo, finalGradient: ColorSequence) {
-		task.spawn(() => Tools.TweenGradientInternal(gradient, tweenInfo, finalGradient));
+		task.spawn(() => Tools._TweenGradient(gradient, tweenInfo, finalGradient));
 	}
 
-	public static TweenTransparency(beam: Beam, tweenInfo: TweenInfo, finalSequence: NumberSequence) {
-		task.spawn(() => Tools._TweenTransparency(beam, tweenInfo, finalSequence));
+	public static TweenTransparency(
+		instance: Beam | Trail | UIGradient,
+		tweenInfo: TweenInfo,
+		finalSequence: NumberSequence,
+	) {
+		task.spawn(() => Tools._TweenTransparency(instance, tweenInfo, finalSequence));
 	}
 
 	public static DarkenColor(color: Color3, factor: number): Color3 {
@@ -146,19 +192,6 @@ export class Tools {
 
 	public static LightenColor(color: Color3, factor: number): Color3 {
 		return color.Lerp(new Color3(1, 1, 1), factor);
-	}
-
-	public static IsTouchingGround(Humanoid: Humanoid, PhysicsIncluded: boolean = false) {
-		const state = Humanoid.GetState();
-		if (
-			state === Enum.HumanoidStateType.Freefall ||
-			state === Enum.HumanoidStateType.Jumping ||
-			state === Enum.HumanoidStateType.FallingDown ||
-			state === Enum.HumanoidStateType.Flying
-		)
-			return false;
-		if (PhysicsIncluded && state === Enum.HumanoidStateType.Physics) return false;
-		return true;
 	}
 
 	public static OffsetToScale(parentSize: Vector2, size: UDim2): UDim2 {

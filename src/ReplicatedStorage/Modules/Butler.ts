@@ -63,7 +63,7 @@ export class Butler<U extends object | void = void> {
 		return this.Add(new Butler(), "Destroy");
 	}
 
-	public Remove(object: object): Butler {
+	public Remove(object: object | undefined): Butler {
 		this.CheckCleaning("Remove");
 
 		this._Remove(object);
@@ -71,7 +71,7 @@ export class Butler<U extends object | void = void> {
 		return this;
 	}
 
-	public RemoveNoClean(object: object): Butler {
+	public RemoveNoClean(object: object | undefined): Butler {
 		this.CheckCleaning("RemoveNoClean");
 
 		this._RemoveNoClean(object);
@@ -79,18 +79,19 @@ export class Butler<U extends object | void = void> {
 		return this;
 	}
 
-	public RemoveList<T extends defined>(...objects: Array<T>): Butler {
+	public RemoveList<T extends defined | undefined>(...objects: Array<T>): Butler {
 		this.CheckCleaning("RemoveList");
+		if (!objects) return this;
 
-		objects.forEach((obj) => this._Remove(obj));
+		for (const obj of objects) this._Remove(obj);
 
 		return this;
 	}
 
-	public RemoveListNoClean<T extends defined>(...objects: Array<T>): Butler {
+	public RemoveListNoClean<T extends defined | undefined>(...objects: Array<T>): Butler {
 		this.CheckCleaning("RemoveListNoClean");
 
-		objects.forEach((obj) => this._RemoveNoClean(obj));
+		for (const obj of objects) this._RemoveNoClean(obj);
 
 		return this;
 	}
@@ -117,7 +118,7 @@ export class Butler<U extends object | void = void> {
 		return this.Connect(instance.Destroying, () => this.Destroy);
 	}
 
-	private _Remove(object: object) {
+	private _Remove(object: object | undefined) {
 		if (!object) return;
 		const CleanMethod = this.Objects.get(object);
 
@@ -125,7 +126,10 @@ export class Butler<U extends object | void = void> {
 		this.Objects.delete(object);
 	}
 
-	private _RemoveNoClean = (object: object) => this.Objects.delete(object);
+	private _RemoveNoClean = (object: object | undefined) => {
+		if (!object) return;
+		this.Objects.delete(object);
+	};
 
 	private CleanObject<T>(object: T, cleanMethod: AnyPlus): void {
 		if (typeIs(cleanMethod, "boolean")) {

@@ -1,4 +1,4 @@
-import { RunService, TweenService, Workspace } from "@rbxts/services";
+import { Lighting, Players, RunService, TweenService, Workspace } from "@rbxts/services";
 import { ECameraFovs } from "ReplicatedStorage/Enums/ECameraFovs";
 import { EMovementJumps } from "ReplicatedStorage/Enums/Movement/EMovementJumps";
 import { EMovementSpeeds } from "ReplicatedStorage/Enums/Movement/EMovementSpeeds";
@@ -9,6 +9,7 @@ import { EDashDirection } from "ReplicatedStorage/Enums/Dash/EDashDirection";
 import { Tools } from "ReplicatedStorage/Libraries/Tools";
 import { Attributes } from "./Attributes";
 import { EStunType } from "ReplicatedStorage/Enums/EStunType";
+import { EBlur } from "ReplicatedStorage/Enums/EBlur";
 
 interface IDashInfo {
 	Direction: EDashDirection;
@@ -21,24 +22,29 @@ interface IDashInfo {
 }
 
 export class Tweens {
-	private Camera: Camera;
+	private Camera: Camera = undefined!;
+	private Blur: BlurEffect = undefined!;
 	private Humanoid: Humanoid;
 	private HumanoidRootPart: BasePart;
 	private Attributes: Attributes;
 
-	private TargetCameraFov = ECameraFovs.Default;
-	private TargetSpeed = EMovementSpeeds.Default;
-	private TargetJump = EMovementJumps.Default;
+	public TargetCameraFov = ECameraFovs.Default;
+	public TargetBlur = EBlur.Default;
+	public TargetSpeed = EMovementSpeeds.Default;
+	public TargetJump = EMovementJumps.Default;
 
 	private InitialCameraFov = ECameraFovs.Default;
+	private InitialBlur = EBlur.Default;
 	private InitialSpeed = EMovementSpeeds.Default;
 	private InitialJump = EMovementJumps.Default;
 
 	private InfoCamera = new TweenInfo(0);
+	private InfoBlur = new TweenInfo(0);
 	private InfoSpeed = new TweenInfo(0);
 	private InfoJump = new TweenInfo(0);
 
 	private TimeElapsedCamera = 0;
+	private TimeElapsedBlur = 0;
 	private TimeElapsedSpeed = 0;
 	private TimeElapsedJump = 0;
 
@@ -46,19 +52,23 @@ export class Tweens {
 
 	private BodyVelocity?: BodyVelocity;
 	private DashInfo?: IDashInfo;
-	private CameraShaker: CameraShaker;
+	private CameraShaker: CameraShaker = undefined!;
 
 	constructor(character: Character) {
-		this.Camera = Workspace.CurrentCamera!;
 		this.Humanoid = character.Humanoid;
 		this.HumanoidRootPart = character.HumanoidRootPart;
 		this.Attributes = character.Attributes;
 
-		this.CameraShaker = new CameraShaker(
-			Enum.RenderPriority.Camera.Value,
-			(shakeCFrame) => (this.Camera.CFrame = this.Camera.CFrame.mul(shakeCFrame)),
-		);
-		this.CameraShaker.Start();
+		if (character.Player && character.Player === Players.LocalPlayer) {
+			this.Camera = Workspace.CurrentCamera!;
+			this.Blur = Lighting.WaitForChild("Blur") as BlurEffect;
+
+			this.CameraShaker = new CameraShaker(
+				Enum.RenderPriority.Camera.Value,
+				(shakeCFrame) => (this.Camera.CFrame = this.Camera.CFrame.mul(shakeCFrame)),
+			);
+			this.CameraShaker.Start();
+		}
 	}
 
 	public Destroy() {
@@ -68,20 +78,31 @@ export class Tweens {
 		this.Humanoid = undefined!;
 
 		this.TargetCameraFov = undefined!;
+		this.TargetBlur = undefined!;
 		this.TargetSpeed = undefined!;
 		this.TargetJump = undefined!;
 
 		this.InitialCameraFov = undefined!;
+		this.InitialBlur = undefined!;
 		this.InitialSpeed = undefined!;
 		this.InitialJump = undefined!;
 
 		this.InfoCamera = undefined!;
+		this.InfoBlur = undefined!;
 		this.InfoSpeed = undefined!;
 		this.InfoJump = undefined!;
 
 		this.TimeElapsedCamera = undefined!;
+		this.TimeElapsedBlur = undefined!;
 		this.TimeElapsedSpeed = undefined!;
 		this.TimeElapsedJump = undefined!;
+
+		this.BodyVelocity?.Destroy();
+		this.CameraShaker?.Stop();
+
+		this.HeartbeatConnection = undefined!;
+		this.DashInfo = undefined!;
+		this.CameraShaker = undefined!;
 	}
 
 	public Pause() {
@@ -104,7 +125,17 @@ export class Tweens {
 		this.Resume();
 	}
 
+	public SetBlur(blur: number, time: number) {
+		if (this.TargetBlur === blur) return;
+		this.InitialBlur = this.Blur.Size;
+		this.TargetBlur = blur;
+		this.InfoBlur = new TweenInfo(time, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut);
+		this.TimeElapsedBlur = 0;
+		this.Resume();
+	}
+
 	public SetSpeed(speed: number, time: number) {
+		if (this.TargetSpeed === speed) return;
 		this.InitialSpeed = this.Humanoid.WalkSpeed;
 		this.TargetSpeed = speed;
 		this.InfoSpeed = new TweenInfo(time, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut);
@@ -113,6 +144,7 @@ export class Tweens {
 	}
 
 	public SetJump(jump: number, time: number) {
+		if (this.TargetJump === jump) return;
 		this.InitialJump = this.Humanoid.JumpPower;
 		this.TargetJump = jump;
 		this.InfoJump = new TweenInfo(time, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut);
@@ -127,7 +159,7 @@ export class Tweens {
 		}
 
 		dashInfo.CurrentTime = 0;
-		//if (dashInfo.Stun) this.Attributes.SelfStun(dashInfo.Time! / 1.05, EStunType.SemiPartial, false);
+		if (dashInfo.Stun) this.Attributes.SelfStun(dashInfo.Time!, EStunType.SemiPartial, false);
 		this.DashInfo = dashInfo as IDashInfo;
 
 		this.Resume();
@@ -137,6 +169,7 @@ export class Tweens {
 
 	private Heartbeat(dt: number) {
 		this.TimeElapsedCamera = math.min(this.TimeElapsedCamera + dt, this.InfoCamera.Time);
+		this.TimeElapsedBlur = math.min(this.TimeElapsedBlur + dt, this.InfoBlur.Time);
 		this.TimeElapsedSpeed = math.min(this.TimeElapsedSpeed + dt, this.InfoSpeed.Time);
 		this.TimeElapsedJump = math.min(this.TimeElapsedJump + dt, this.InfoJump.Time);
 
@@ -151,6 +184,16 @@ export class Tweens {
 				this.InitialCameraFov + (this.TargetCameraFov - this.InitialCameraFov) * easedAlphaCamera;
 		}
 
+		if (this.InfoBlur.Time > 0) {
+			const alphaBlur = this.TimeElapsedBlur / this.InfoBlur.Time;
+			const easedAlphaBlur = TweenService.GetValue(
+				alphaBlur,
+				this.InfoBlur.EasingStyle,
+				this.InfoBlur.EasingDirection,
+			);
+			this.Blur.Size = this.InitialBlur + (this.TargetBlur - this.InitialBlur) * easedAlphaBlur;
+		}
+
 		if (this.InfoSpeed.Time > 0) {
 			const alphaSpeed = this.TimeElapsedSpeed / this.InfoSpeed.Time;
 			const easedAlphaSpeed = TweenService.GetValue(
@@ -158,7 +201,8 @@ export class Tweens {
 				this.InfoSpeed.EasingStyle,
 				this.InfoSpeed.EasingDirection,
 			);
-			this.Humanoid.WalkSpeed = this.InitialSpeed + (this.TargetSpeed - this.InitialSpeed) * easedAlphaSpeed;
+			if (!this.Attributes.IsStunned())
+				this.Humanoid.WalkSpeed = this.InitialSpeed + (this.TargetSpeed - this.InitialSpeed) * easedAlphaSpeed;
 		}
 
 		if (this.InfoJump.Time > 0) {
@@ -168,7 +212,8 @@ export class Tweens {
 				this.InfoJump.EasingStyle,
 				this.InfoJump.EasingDirection,
 			);
-			this.Humanoid.JumpPower = this.InitialJump + (this.TargetJump - this.InitialJump) * easedAlphaJump;
+			if (!this.Attributes.IsStunned())
+				this.Humanoid.JumpPower = this.InitialJump + (this.TargetJump - this.InitialJump) * easedAlphaJump;
 		}
 
 		if (this.DashInfo) {
@@ -188,6 +233,7 @@ export class Tweens {
 
 		if (
 			this.TimeElapsedCamera === this.InfoCamera.Time &&
+			this.TimeElapsedBlur === this.InfoBlur.Time &&
 			this.TimeElapsedSpeed === this.InfoSpeed.Time &&
 			this.TimeElapsedJump === this.InfoJump.Time &&
 			!this.DashInfo &&
@@ -201,34 +247,42 @@ export class Tweens {
 	private GetMoveDirection(mode: EDashMode): Vector3 {
 		let moveVector = new Vector3(0, 0, 0);
 
-		if (mode === EDashMode.Camera) {
+		if (mode === EDashMode.Locked) {
 			switch (this.DashInfo!.Direction) {
 				case EDashDirection.Forward:
-					if (mode === EDashMode.Camera) moveVector = moveVector.add(this.Camera.CFrame.LookVector);
+					if (mode === EDashMode.Locked) moveVector = moveVector.add(this.HumanoidRootPart.CFrame.LookVector);
 					else moveVector = moveVector.add(this.HumanoidRootPart.CFrame.LookVector);
 					break;
 				case EDashDirection.ForwardRight:
-					if (mode === EDashMode.Camera)
-						moveVector = moveVector.add(this.Camera.CFrame.LookVector).add(this.Camera.CFrame.RightVector);
+					if (mode === EDashMode.Locked)
+						moveVector = moveVector
+							.add(this.HumanoidRootPart.CFrame.LookVector)
+							.add(this.Camera.CFrame.RightVector);
 					else moveVector = moveVector.add(this.HumanoidRootPart.CFrame.LookVector);
 					break;
 				case EDashDirection.ForwardLeft:
-					if (mode === EDashMode.Camera)
-						moveVector = moveVector.add(this.Camera.CFrame.LookVector).sub(this.Camera.CFrame.RightVector);
+					if (mode === EDashMode.Locked)
+						moveVector = moveVector
+							.add(this.HumanoidRootPart.CFrame.LookVector)
+							.sub(this.Camera.CFrame.RightVector);
 					else moveVector = moveVector.add(this.HumanoidRootPart.CFrame.LookVector);
 					break;
 				case EDashDirection.Back:
-					if (mode === EDashMode.Camera) moveVector = moveVector.sub(this.Camera.CFrame.LookVector);
+					if (mode === EDashMode.Locked) moveVector = moveVector.sub(this.HumanoidRootPart.CFrame.LookVector);
 					else moveVector = moveVector.add(this.HumanoidRootPart.CFrame.LookVector);
 					break;
 				case EDashDirection.BackRight:
-					if (mode === EDashMode.Camera)
-						moveVector = moveVector.sub(this.Camera.CFrame.LookVector).add(this.Camera.CFrame.RightVector);
+					if (mode === EDashMode.Locked)
+						moveVector = moveVector
+							.sub(this.HumanoidRootPart.CFrame.LookVector)
+							.add(this.Camera.CFrame.RightVector);
 					else moveVector = moveVector.add(this.HumanoidRootPart.CFrame.LookVector);
 					break;
 				case EDashDirection.BackLeft:
-					if (mode === EDashMode.Camera)
-						moveVector = moveVector.sub(this.Camera.CFrame.LookVector).sub(this.Camera.CFrame.RightVector);
+					if (mode === EDashMode.Locked)
+						moveVector = moveVector
+							.sub(this.HumanoidRootPart.CFrame.LookVector)
+							.sub(this.Camera.CFrame.RightVector);
 					else moveVector = moveVector.add(this.HumanoidRootPart.CFrame.LookVector);
 					break;
 				case EDashDirection.Right:

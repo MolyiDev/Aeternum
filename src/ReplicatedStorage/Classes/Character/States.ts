@@ -19,7 +19,6 @@ export class States {
 		[EMovementState.Running]: false,
 		[EMovementState.Sliding]: false,
 		[EMovementState.SlidingJump]: false,
-		[EMovementState.Crouching]: false,
 		[EMovementState.Attacking]: false,
 		[EMovementState.Guarding]: false,
 		[EMovementState.Blocking]: false,
@@ -86,4 +85,14 @@ export class States {
 	public GetState = (): EMovementState => this.State;
 
 	public IsMoving = (): boolean => this.Character.Humanoid.MoveDirection.Magnitude > 0;
+	public IsGrounded(): boolean {
+		const State = this.Character.Humanoid.GetState();
+		return !(
+			State === Enum.HumanoidStateType.Freefall ||
+			State === Enum.HumanoidStateType.Jumping ||
+			State === Enum.HumanoidStateType.FallingDown ||
+			State === Enum.HumanoidStateType.Flying ||
+			State === Enum.HumanoidStateType.Physics
+		);
+	}
 }
