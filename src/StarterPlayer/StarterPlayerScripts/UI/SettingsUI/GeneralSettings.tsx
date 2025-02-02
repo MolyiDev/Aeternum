@@ -8,13 +8,14 @@ import { SettingsDecision } from "./Components/SettingsDecision";
 import { EDecision } from "../../../../ReplicatedStorage/Enums/UI/EDecision";
 
 const Player = Players.LocalPlayer;
+SettingsManager.WaitForSettings(Player);
 
 export const GeneralSettings = forwardRef<CanvasGroup>((props, ref) => {
 	return (
 		<UIPanel ref={ref} Key="General" VerticalFlex={false}>
 			<SettingsToggle
 				Title="FPS/MS"
-				Explanation="Toggle visualizer for FPS and MS"
+				Explanation="Show or hide FPS and MS visualizer"
 				InitialValue={false}
 				LayoutOrder={0}
 				ToggleChanged={(activated: boolean) =>
@@ -23,7 +24,7 @@ export const GeneralSettings = forwardRef<CanvasGroup>((props, ref) => {
 			/>
 			<SettingsDecision
 				Title="Locked Camera"
-				Explanation="The direction where it will go the camera when it's locked"
+				Explanation="Select the camera's lock direction"
 				InitialValue={EDecision.Two}
 				LayoutOrder={1}
 				OptionOne="Left"

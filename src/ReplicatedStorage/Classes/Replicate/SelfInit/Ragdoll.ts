@@ -1,10 +1,9 @@
 // Imports
-import { Character } from "../Character";
 import { ReplicateInfo } from "ReplicatedStorage/Attributes/ReplicateInfo";
 import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 import { RockManager } from "ReplicatedStorage/Managers/RockManager";
 import { RunService, Workspace } from "@rbxts/services";
-import { CReplicate } from "../Abstracts/CReplicate";
+import { CReplicate } from "ReplicatedStorage/Classes/Abstracts/CReplicate";
 
 // Variables
 const CharactersFolder = Workspace.WaitForChild("Characters");
@@ -17,6 +16,7 @@ Overlap.FilterType = Enum.RaycastFilterType.Exclude;
 
 @ReplicateInfo({
 	[EAnimations.Ragdoll]: {
+		SelfInit: true,
 		ReplicateStunned: true,
 	},
 })

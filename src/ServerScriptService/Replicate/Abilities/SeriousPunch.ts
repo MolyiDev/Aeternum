@@ -57,7 +57,6 @@ export class SeriousPunch extends CReplicate {
 				4,
 				0.065,
 				0.5,
-				true,
 				this.OverlapParamsDefault,
 				(part, box) => this.Punch(part, box),
 			);

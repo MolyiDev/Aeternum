@@ -6,6 +6,20 @@ local EXPAND_BY_AMOUNT = 50
 local MovingParts = table.create(10_000)
 local MovingCFrames = table.create(10_000)
 
+local ScheduledUpdate = false
+local function UpdateMovement()
+	while true do
+		workspace:BulkMoveTo(MovingParts, MovingCFrames, Enum.BulkMoveMode.FireCFrameChanged)
+
+		table.clear(MovingParts)
+		table.clear(MovingCFrames)
+
+		ScheduledUpdate = false
+		coroutine.yield()
+	end
+end
+local UpdateMovementThread = coroutine.create(UpdateMovement)
+
 local Cache = {}
 Cache.__index = Cache
 
@@ -20,7 +34,6 @@ function Cache:_GetNew(Amount: number)
 	local TargetParts = table.create(Amount)
 	local TargetCFrames = table.create(Amount)
 	local AddedObjects = table.create(Amount)
-
 	for Index = InitialLength + 1, InitialLength + Amount do
 		local Object = Template:Clone()
 		local ObjectRoot: BasePart = if IsTemplateModel then (Object:: Model).PrimaryPart:: BasePart else Object:: BasePart
@@ -49,11 +62,15 @@ function Cache:GetPart(PartCFrame: CFrame?): BasePart
 	if PartCFrame then
 		table.insert(MovingParts, Part)
 		table.insert(MovingCFrames, PartCFrame)
+
+		if not ScheduledUpdate then
+			ScheduledUpdate = true
+			task.defer(UpdateMovementThread)
+		end
 	end
 
 	return Part
 end
-
 function Cache:ReturnPart(Part: BasePart)
 	if self._Objects[Part] then
 		return
@@ -64,12 +81,20 @@ function Cache:ReturnPart(Part: BasePart)
 	table.insert(self._FreeObjects, Part)
 	table.insert(MovingParts, Part)
 	table.insert(MovingCFrames, FAR_AWAY_CFRAME)
+
+	if not ScheduledUpdate then
+		ScheduledUpdate = true
+		task.defer(UpdateMovementThread)
+	end
+end
+
+function Cache:Update()
+	task.spawn(UpdateMovementThread)
 end
 
 function Cache:ExpandCache(Amount: number)
 	self:_GetNew(Amount)
 end
-
 function Cache:SetExpandAmount(Amount: number)
 	self._ExpandAmount = Amount
 end

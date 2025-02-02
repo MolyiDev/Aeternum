@@ -226,16 +226,17 @@ export class SettingsManager {
 			//this.CheckSetting(player, ECustomInputs.All, dataControls, this.EncodeControls(this.DefaultControls));
 
 			// Visual
-			this.CheckSetting(player, ESettingsVisual.Wind, dataVisual, true);
+			this.CheckSetting(player, ESettingsVisual.RenderDistance, dataVisual, 250);
+			this.CheckSetting(player, ESettingsVisual.Particles, dataVisual, 0.75);
+			this.CheckSetting(player, ESettingsVisual.Debris, dataVisual, 0.75);
+			this.CheckSetting(player, ESettingsVisual.SubDebris, dataVisual, 0.75);
+			this.CheckSetting(player, ESettingsVisual.Shadows, dataVisual, true);
 			this.CheckSetting(player, ESettingsVisual.Clouds, dataVisual, true);
 			this.CheckSetting(player, ESettingsVisual.Bloom, dataVisual, true);
 			this.CheckSetting(player, ESettingsVisual.Blur, dataVisual, true);
 			this.CheckSetting(player, ESettingsVisual.DepthOfField, dataVisual, true);
 			this.CheckSetting(player, ESettingsVisual.SunRays, dataVisual, true);
-			this.CheckSetting(player, ESettingsVisual.Shadows, dataVisual, true);
-			this.CheckSetting(player, ESettingsVisual.Particles, dataVisual, 0.75);
-			this.CheckSetting(player, ESettingsVisual.Debris, dataVisual, 0.75);
-			this.CheckSetting(player, ESettingsVisual.SubDebris, dataVisual, 0.75);
+			this.CheckSetting(player, ESettingsVisual.Wind, dataVisual, true);
 
 			// General
 			this.CheckSetting(player, ESettingsGeneral.FPSMS, dataGeneral, false);

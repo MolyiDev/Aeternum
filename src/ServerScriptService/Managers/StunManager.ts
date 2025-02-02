@@ -29,19 +29,6 @@ interface StunData {
 	StunType: EStunType;
 }
 
-// Constants
-const MAX_DURATION = 300;
-
-// Variables
-const AnimationsStop = new Map<string, number>([
-	[EAnimations.Default_Hands_BasicAttack1, 0.25],
-	[EAnimations.Default_Hands_BasicAttack2, 0.25],
-	[EAnimations.Default_Hands_BasicAttack3, 0.25],
-	[EAnimations.Default_Hands_BasicAttack4, 0.25],
-	[EAnimations.Default_Hands_BlockUpper, 0.25],
-	[EAnimations.Default_Hands_BlockBottom, 0.25],
-]);
-
 const Stunned = new Map<Character, StunData>();
 let IsChecking = false;
 
@@ -54,9 +41,9 @@ SelfStun.OnServerEvent.Connect((player: Player, ...args: Array<unknown>) => {
 	const Type = args[1];
 	if (Duration !== Duration || Type !== Type) return;
 	if (!typeIs(Duration, "number") || !typeIs(Type, "number")) return;
-	if (Duration < 0 || Duration > MAX_DURATION) return;
+	if (Duration < 0) return;
 	const Character = CharacterManager.GetCharacterByModel(player.Character);
-	if (!Character || Character.IsDestroyed) return;
+	if (!Character) return;
 	StunManager.Stun(Character, Duration, Type);
 });
 
@@ -89,6 +76,7 @@ export class StunManager {
 	}
 
 	public static Stun(character: Character, duration: number, stunType: number = EStunType.Full) {
+		if (character.IsDestroyed) return;
 		const Humanoid = character.Humanoid;
 		if (!Humanoid || Humanoid.Health <= 0) return;
 
@@ -98,23 +86,34 @@ export class StunManager {
 
 		if (stunData) {
 			stunData.Duration = duration;
-			if (stunType === EStunType.Partial) {
-				HaloManager.ChangeColor(Humanoid, Color3.fromRGB(20, 120, 150));
-				Attributes.SetStunnedPartial(true);
-			} else {
+
+			if (stunType === EStunType.Full) {
+				const Ability = Attributes.UsingAbilityAnim();
+				const Style = Attributes.UsingStyleAnim();
+				if (Ability || Style) {
+					for (const animation of character.Animations.Animator.GetPlayingAnimationTracks()) {
+						const AnimName = Tools.IdToName(animation.Animation!.AnimationId);
+						if (AnimName === Ability || AnimName === Style) animation.Stop(0.1);
+					}
+				}
+
 				HaloManager.ChangeColor(Humanoid, Color3.fromRGB(255, 0, 0));
 				Attributes.SetStunnedFull(true);
+			} else {
+				HaloManager.ChangeColor(Humanoid, Color3.fromRGB(20, 120, 150));
+				Attributes.SetStunnedPartial(true);
 			}
+
 			return;
 		}
 
-		if (stunType !== EStunType.Partial) {
-			const animator = Humanoid.FindFirstChild("Animator") as Animator;
-			if (animator) {
-				for (const animation of animator.GetPlayingAnimationTracks()) {
-					const stopNumber = AnimationsStop.get(Tools.IdToName(animation.Animation!.AnimationId));
-					if (!stopNumber) continue;
-					animation.Stop(stopNumber);
+		if (stunType === EStunType.Full) {
+			const Ability = Attributes.UsingAbilityAnim();
+			const Style = Attributes.UsingStyleAnim();
+			if (Ability || Style) {
+				for (const animation of character.Animations.Animator.GetPlayingAnimationTracks()) {
+					const AnimName = Tools.IdToName(animation.Animation!.AnimationId);
+					if (AnimName === Ability || AnimName === Style) animation.Stop(0.1);
 				}
 			}
 

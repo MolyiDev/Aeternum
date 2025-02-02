@@ -28,55 +28,46 @@ const IncludeStates = new Set<EMovementState>([
 
 const Default_Hands_WalkInfo = {
 	[EAnimations.Default_Hands_WalkFront]: {
-		Style: true,
 		ReplicateStunned: true,
 		CanOverride: true,
 		StyleClass: Style,
 	},
 	[EAnimations.Default_Hands_WalkFrontLeft]: {
-		Style: true,
 		ReplicateStunned: true,
 		CanOverride: true,
 		StyleClass: Style,
 	},
 	[EAnimations.Default_Hands_WalkFrontRight]: {
-		Style: true,
 		ReplicateStunned: true,
 		CanOverride: true,
 		StyleClass: Style,
 	},
 	[EAnimations.Default_Hands_WalkBack]: {
-		Style: true,
 		ReplicateStunned: true,
 		CanOverride: true,
 		StyleClass: Style,
 	},
 	[EAnimations.Default_Hands_WalkBackLeft]: {
-		Style: true,
 		ReplicateStunned: true,
 		CanOverride: true,
 		StyleClass: Style,
 	},
 	[EAnimations.Default_Hands_WalkBackRight]: {
-		Style: true,
 		ReplicateStunned: true,
 		CanOverride: true,
 		StyleClass: Style,
 	},
 	[EAnimations.Default_Hands_WalkLeft]: {
-		Style: true,
 		ReplicateStunned: true,
 		CanOverride: true,
 		StyleClass: Style,
 	},
 	[EAnimations.Default_Hands_WalkRight]: {
-		Style: true,
 		ReplicateStunned: true,
 		CanOverride: true,
 		StyleClass: Style,
 	},
 	[Style]: {
-		Style: true,
 		ReplicateStunned: true,
 		CanOverride: true,
 		StyleClass: Style,

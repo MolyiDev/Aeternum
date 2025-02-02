@@ -7,6 +7,7 @@ import { ReplicateInfo } from "ReplicatedStorage/Attributes/ReplicateInfo";
 import { GroundSmashInfo } from "ReplicatedStorage/Abilities/Hands/GroundSmash";
 import { CReplicate } from "ReplicatedStorage/Classes/Abstracts/CReplicate";
 import { EGlobal } from "ReplicatedStorage/Enums/Globals/EGlobal";
+import RockLibrary from "ReplicatedStorage/Libraries/RockLibrary";
 
 const MaxRocks = 16;
 const MaxSize = 1.3;
@@ -34,7 +35,7 @@ export class GroundSmash extends CReplicate {
 
 	public SelfConstruct(): void {
 		const VectorForce = new Instance("VectorForce", this.HumanoidRootPart);
-		const Attachment = this.HumanoidRootPart.FindFirstChild("RootAttachment")!.Clone() as Attachment;
+		const Attachment = this.HumanoidRootPart.RootAttachment.Clone();
 		Attachment.Parent = this.HumanoidRootPart;
 		VectorForce.Attachment0 = Attachment;
 		VectorForce.Enabled = false;
@@ -122,115 +123,45 @@ export class GroundSmash extends CReplicate {
 		switch (animName) {
 			case EAnimations.GroundSmash:
 				this.MarkSmash1 = this.Butler.Connect(animTrack.GetMarkerReachedSignal("Smash1"), () => {
+					if (!this.CanReplicate()) return;
 					const CF = this.HumanoidRootPart.CFrame;
 
 					if (!this.Attributes.UsingAbility()) {
 						animTrack.Stop(EGlobal.Feint);
-						RockManager.Crater(CF, 0, 0.55, 4, 8, 1, 0.15, true);
+						RockLibrary.Crater(CF, 4, 0.55, 8, 1, 3, 0, 0.25, 3, true, 1);
 						return;
 					}
 
-					const Directions = [
-						CF,
-						CF.mul(CFrame.Angles(0, math.rad(90), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(-90), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(180), 0)),
-					];
-
-					RockManager.Crater(CF, 0, 0.7, 5, 10, 1, 0.15, true);
-					Directions.forEach((direction) => {
-						RockManager.RandomTrail(
-							direction,
-							2,
-							8,
-							20,
-							2,
-							new Vector3(1.25, 1.25, 1.25),
-							4,
-							0.3,
-							0.25,
-							3,
-							false,
-							1,
-							2,
-							0.01,
-						);
-					});
-					RockManager.Explosion(CF.Position, 0.35, 1, 1, 20);
+					RockLibrary.Crater(CF, 5, 0.7, 10, 1, 4, 0, 0.25, 3, true, 1);
+					RockLibrary.RandomLine(CF, 360, 2, 4, 20, 0.3, 2, 32, 4, 0.35, 3, 0.01);
+					RockLibrary.Explosion(CF.Position, 0.35, 40, 20, 4);
 				});
 
 				this.MarkSmash2 = this.Butler.Connect(animTrack.GetMarkerReachedSignal("Smash2"), () => {
+					if (!this.CanReplicate()) return;
 					const CF = this.HumanoidRootPart.CFrame;
-					const Directions = [
-						CF,
-						CF.mul(CFrame.Angles(0, math.rad(140), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(-140), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(85), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(-85), 0)),
-					];
 
-					RockManager.Crater(CF, 0, 0.9, 6, 10, 1, 0.15, true);
-					RockManager.Crater(CF, 0, 0.8, 12, 18, 2, 0.25, true, 2);
-
-					Directions.forEach((direction) => {
-						RockManager.RandomTrail(
-							direction,
-							3,
-							10,
-							30,
-							2,
-							new Vector3(1.5, 1.5, 1.5),
-							4,
-							0.55,
-							0.3,
-							3.5,
-							false,
-							1.5,
-							2.5,
-							0.0125,
-						);
-					});
-					RockManager.Explosion(CF.Position, 0.4, 1.25, 2, 30);
+					RockLibrary.Crater(CF, 6, 0.9, 10, 1, 4, 0, 0.25, 3, true, 1);
+					RockLibrary.Crater(CF, 12, 0.8, 18, 2, 4, 0, 0.35, 3, true, 2);
+					RockLibrary.RandomLine(CF, 360, 3, 5, 30, 0.5, 2.25, 50, 4, 0.35, 3, 0.0125);
+					RockLibrary.Explosion(CF.Position, 0.4, 45, 30, 4);
 				});
 
 				this.MarkSmash3 = this.Butler.Connect(animTrack.GetMarkerReachedSignal("Smash3"), () => {
+					if (!this.CanReplicate()) return;
 					const CF = this.HumanoidRootPart.CFrame;
-					const Directions = [
-						CF,
-						CF.mul(CFrame.Angles(0, math.rad(55), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(-55), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(120), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(-120), 0)),
-						CF.mul(CFrame.Angles(0, math.rad(180), 0)),
-					];
 
-					RockManager.Crater(CF, 0, 1.1, 7, 12, 3, 0.15, true);
-					RockManager.Crater(CF, 0, 0.9, 14, 18, 2, 0.25, true, 2);
-					RockManager.Crater(CF, 0, 0.8, 21, 24, 1, 0.35, true, 3);
-
-					Directions.forEach((direction) => {
-						RockManager.RandomTrail(
-							direction,
-							3.5,
-							15,
-							35,
-							3,
-							new Vector3(2, 2, 2),
-							6,
-							0.7,
-							0.35,
-							4,
-							false,
-							2,
-							3,
-							0.015,
-						);
-					});
-					RockManager.Explosion(CF.Position, 0.5, 1.5, 3, 45);
+					RockLibrary.Crater(CF, 7, 1.1, 12, 3, 4, 0, 0.25, 3, true, 1);
+					RockLibrary.Crater(CF, 14, 0.9, 18, 2, 4, 0, 0.35, 3, true, 2);
+					RockLibrary.Crater(CF, 21, 0.8, 21, 1, 4, 0, 0.45, 3, true, 3);
+					RockLibrary.RandomLine(CF, 360, 3.5, 6, 35, 0.65, 2.5, 90, 4, 0.35, 3, 0.0145);
+					RockLibrary.Explosion(CF.Position, 0.5, 50, 45, 4);
 				});
 				break;
 			case EAnimations.GroundSmashLand:
 				this.MarkSmash = this.Butler.Connect(animTrack.GetMarkerReachedSignal("Smash"), () => {
+					if (!this.CanReplicate()) return;
+
 					if (!this.Attributes.UsingAbility()) {
 						animTrack.Stop(EGlobal.Feint);
 						return;

@@ -66,7 +66,6 @@ export class ElectricKick extends CReplicate {
 				new Vector3(7, 6, 16),
 				this.HumanoidRootPart.CFrame.mul(new CFrame(0, 0, -12)),
 				0.2,
-				false,
 				undefined,
 				this.OverlapParamsDefault,
 				(part: BasePart) => this.Punch(part),

@@ -79,4 +79,7 @@ export class ModuleManager {
 
 	public static GetAbilityInfo = (name: string) => AbilitiesInfo.get(name);
 	public static GetStyleInfo = (name: string) => StylesInfo.get(name);
+
+	public static IsAbility = (name: string) => AbilitiesDictionary[name] !== undefined;
+	public static IsStyle = (name: string) => StylesDictionary[name] !== undefined;
 }

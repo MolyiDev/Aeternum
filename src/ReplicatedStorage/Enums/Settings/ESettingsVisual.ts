@@ -1,4 +1,8 @@
 export enum ESettingsVisual {
+	RenderDistance = "Settings_Visual_RenderDistance",
+	Particles = "Settings_Visual_Particles",
+	Debris = "Settings_Visual_Debris",
+	SubDebris = "Settings_Visual_SubDebris",
 	Wind = "Settings_Visual_Wind",
 	Clouds = "Settings_Visual_Clouds",
 	Bloom = "Settings_Visual_Bloom",
@@ -6,7 +10,4 @@ export enum ESettingsVisual {
 	DepthOfField = "Settings_Visual_DepthOfField",
 	SunRays = "Settings_Visual_SunRays",
 	Shadows = "Settings_Visual_Shadows",
-	Particles = "Settings_Visual_Particles",
-	Debris = "Settings_Visual_Debris",
-	SubDebris = "Settings_Visual_SubDebris",
 }

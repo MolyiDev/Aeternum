@@ -14,6 +14,7 @@ import { ESettingsControls } from "ReplicatedStorage/Enums/Settings/ESettingsCon
 import { EMovementJumps } from "ReplicatedStorage/Enums/Movement/EMovementJumps";
 import { ECameraFovs } from "ReplicatedStorage/Enums/ECameraFovs";
 import { EStopType } from "ReplicatedStorage/Enums/Style/EStopType";
+import { RunService } from "@rbxts/services";
 
 const Style = `${EStyle.Default}_${EWeapon.Hands}_${EStyleType.Run}`;
 
@@ -34,37 +35,31 @@ const IncludeStates = new Set<EMovementState>([
 
 const Default_Hands_RunInfo = {
 	[EAnimations.Default_Hands_RunFront]: {
-		Style: true,
 		ReplicateStunned: true,
 		CanOverride: true,
 		StyleClass: Style,
 	},
 	[EAnimations.Default_Hands_RunFrontLeft]: {
-		Style: true,
 		ReplicateStunned: true,
 		CanOverride: true,
 		StyleClass: Style,
 	},
 	[EAnimations.Default_Hands_RunFrontRight]: {
-		Style: true,
 		ReplicateStunned: true,
 		CanOverride: true,
 		StyleClass: Style,
 	},
 	[EAnimations.Default_Hands_RunLeft]: {
-		Style: true,
 		ReplicateStunned: true,
 		CanOverride: true,
 		StyleClass: Style,
 	},
 	[EAnimations.Default_Hands_RunRight]: {
-		Style: true,
 		ReplicateStunned: true,
 		CanOverride: true,
 		StyleClass: Style,
 	},
 	[Style]: {
-		Style: true,
 		ReplicateStunned: true,
 		CanOverride: true,
 		StyleClass: Style,

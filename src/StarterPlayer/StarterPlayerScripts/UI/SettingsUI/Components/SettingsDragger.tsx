@@ -88,8 +88,6 @@ export function SettingsDragger(props: ISettingsDragger) {
 					const limitedNumber = stringNumber.sub(0, maxDigits);
 					const number = tonumber(limitedNumber);
 
-					print(number, limitedNumber);
-
 					if (number) textBox.Text = tostring(math.clamp(number, 0, props.MaxDrag));
 					else textBox.Text = limitedNumber;
 				}

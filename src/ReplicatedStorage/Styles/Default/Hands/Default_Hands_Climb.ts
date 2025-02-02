@@ -125,7 +125,7 @@ class Default_Hands_Climb extends CStyle {
 			EAnimations.Default_Hands_ClimbIdle,
 		);
 
-		const RootAttachment = this.HumanoidRootPart.FindFirstChild("RootAttachment") as Attachment;
+		const RootAttachment = this.HumanoidRootPart.RootAttachment;
 
 		const AlignOrientation = new Instance("AlignOrientation", this.HumanoidRootPart);
 		AlignOrientation.Enabled = false;

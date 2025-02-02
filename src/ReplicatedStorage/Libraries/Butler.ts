@@ -46,7 +46,16 @@ export class Butler<U extends object | void = void> {
 	public Once<T extends Callback>(signal: SignalLike<T>, callback: T) {
 		this.CheckCleaning("Connect");
 
-		return this.Add(signal.Once(callback), "Disconnect");
+		// eslint-disable-next-line prefer-const
+		let Connection: RBXScriptConnection;
+
+		const ExtendedCallback = ((...args: Parameters<T>) => {
+			this.Remove(Connection);
+			callback(args);
+		}) as T;
+
+		Connection = this.Add(signal.Once(ExtendedCallback), "Disconnect");
+		return Connection;
 	}
 
 	public BindToRenderStep(name: string, priority: number, callback: (deltaTime: number) => void) {

@@ -5,7 +5,7 @@ import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 
 const Default_Hands_ReceiveAttackComboInfo = {
 	[EAnimations.Default_Hands_ReceiveAttackCombo]: {
-		Receive: true,
+		SelfInit: true,
 		Sound: true,
 		ReplicateStunned: true,
 		Cooldown: 0,

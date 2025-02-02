@@ -25,6 +25,6 @@ export class AbilityManager {
 	public static RemoveAbility = (character: Character, ability: EAbility) =>
 		character.Model.Abilities.SetAttribute(ability, undefined);
 
-	public static AddAbility = (character: Character, abilityPlace: number, ability: EAbility) =>
+	public static AddAbility = (character: Character, abilityPlace: number, ability: EAbility | string) =>
 		character.Model.Abilities.SetAttribute(ability, abilityPlace);
 }

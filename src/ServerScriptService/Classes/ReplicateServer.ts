@@ -49,16 +49,16 @@ export class ReplicateServer {
 		if (NewSet) this.StyleChanged(undefined!, NewSet);
 	}
 
-	public AbilityAdded(abilityPlace: number, weapon: EWeapon, ability: EAbility) {
+	public AbilityAdded(abilityPlace: number, weapon: EWeapon, ability: EAbility | string) {
 		if (this.ReplicateModules.has(ability)) return;
 		const classByName = new (ModuleManager.GetReplicate(ability))(this.Character);
 		this.ReplicateModules.set(ability, classByName);
 	}
 
-	public AbilityRemoved(abilityPlace: number, weapon: EWeapon, ability: EAbility) {
+	public AbilityRemoved(abilityPlace: number, weapon: EWeapon, ability: EAbility | string) {
 		const ReplicateClass = this.ReplicateModules.get(ability);
 		if (!ReplicateClass) return;
-		ReplicateClass.Destroy!();
+		ReplicateClass.Destroy();
 
 		this.ReplicateModules.delete(ability);
 	}

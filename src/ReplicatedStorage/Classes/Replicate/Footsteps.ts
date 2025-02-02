@@ -85,7 +85,8 @@ export class Footsteps extends CReplicate {
 
 				tremoloSound.Depth = roundedTremolo;
 
-				PlayingSound.Destroy();
+				PlayingSound.Play();
+				this.Butler.Once(PlayingSound.Stopped, () => PlayingSound.Destroy());
 
 				if (NotFootprintMaterials.has(this.Humanoid.FloorMaterial)) return;
 
@@ -115,7 +116,7 @@ export class Footsteps extends CReplicate {
 				Tools.TweenPlay(ShadowDecal, FADE_OUT, { Transparency: 1 });
 				Tools.TweenPlay(BreakDecal, FADE_OUT, { Transparency: 1 });
 
-				ModelFadeOut.Completed.Once(() => FootprintClone.Destroy());
+				this.Butler.Once(ModelFadeOut.Completed, () => FootprintClone.Destroy());
 			},
 		);
 	}

@@ -4,12 +4,12 @@ import { IReplicateInfo } from "ReplicatedStorage/Interfaces/IReplicateInfo";
 import { ModuleManager } from "ReplicatedStorage/Managers/ModuleManager";
 
 const defaultReplicateInfo: IReplicateInfo = {
-	Receive: false,
+	SelfInit: false,
 	Signal: false,
 	CanFeint: false,
 	HasFeintStop: false,
 	ReplicateStunned: false,
-	CanOverride: false, // If the animation can be on top or on bottom of another one (when using ability or style)
+	CanOverride: false,
 	Sound: false,
 	Cooldown: 0,
 	ReplicateClass: undefined,

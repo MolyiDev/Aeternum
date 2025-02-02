@@ -34,7 +34,7 @@ export class Styles {
 	public Get = (styleType: EStyleType | string) =>
 		this.ModuleStyles.get(`${this.Style}_${this.Character.Weapons.EquippedWeapon}_${styleType}`)!;
 
-	public Start = (styleType: EStyleType | string, ...args: Array<unknown>) => {
+	public Start(styleType: EStyleType | string, ...args: Array<unknown>) {
 		const StyleName = `${this.Style}_${this.Character.Weapons.EquippedWeapon}_${styleType}`;
 
 		if (tick() - this.Character.Attributes.TickAnim(styleType) < ModuleManager.GetStyleInfo(StyleName)!.Cooldown)
@@ -43,9 +43,9 @@ export class Styles {
 		this.ModuleStyles.get(
 			`${this.Character.Styles.Style}_${this.Character.Weapons.EquippedWeapon}_${styleType}`,
 		)!.Start(...args);
-	};
+	}
 
-	public StartConstant = (style: EStyleType | string, ...args: Array<unknown>) => {
+	public StartConstant(style: EStyleType | string, ...args: Array<unknown>) {
 		const StyleName = `${this.Style}_${this.Character.Weapons.EquippedWeapon}_${style}`;
 
 		if (tick() - this.Character.Attributes.TickAnim(style) < ModuleManager.GetStyleInfo(StyleName)!.Cooldown)
@@ -53,7 +53,7 @@ export class Styles {
 
 		this.ModuleStyles.get(`${this.Character.Styles.Style}_${this.Character.Weapons.EquippedWeapon}_${style}`)!
 			.StartConstant!(...args);
-	};
+	}
 
 	public Stop = (style: EStyleType | string, ...args: Array<unknown>) => this.Get(style).Stop!(...args);
 

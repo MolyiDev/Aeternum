@@ -6,13 +6,14 @@ import { SettingsManager } from "ReplicatedStorage/Managers/SettingsManager";
 import { ESettingsControls } from "ReplicatedStorage/Enums/Settings/ESettingsControls";
 
 const Player = Players.LocalPlayer;
+SettingsManager.WaitForSettings(Player);
 
 export const ControlsSettings = forwardRef<CanvasGroup>((props, ref) => {
 	return (
 		<UIPanel ref={ref} Key="Controls" VerticalFlex={false}>
 			<SettingsDragger
 				Title="Double Tap Threshold"
-				Explanation="Sets the minimum time between two consecutive taps."
+				Explanation="Minimum time between two consecutive taps"
 				InitialValue={
 					(SettingsManager.GetSetting(Player, ESettingsControls.DoubleTapThreshold) as number) ?? 0.2
 				}

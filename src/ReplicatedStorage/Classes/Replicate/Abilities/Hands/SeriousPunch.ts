@@ -1,5 +1,4 @@
 // Imports
-import { RockManager } from "ReplicatedStorage/Managers/RockManager";
 import { Character } from "ReplicatedStorage/Classes/Character";
 import { ReplicateInfo } from "ReplicatedStorage/Attributes/ReplicateInfo";
 import { SeriousPunchInfo } from "ReplicatedStorage/Abilities/Hands/SeriousPunch";
@@ -75,18 +74,20 @@ export class SeriousPunch extends CReplicate {
 
 	public AnimPlayOnce(animTrack: AnimationTrack) {
 		this.MarkLegImpact = this.Butler.Connect(animTrack.GetMarkerReachedSignal("LegImpact"), () => {
+			if (!this.CanReplicate()) return;
 			const CF = this.Model.RightFoot.CFrame;
 
-			//RockManager.Crater(CF, 0, 0.35, 1, 5, 1, 0.05);
+			RockLibrary.Crater(CF, 1, 0.35, 5, 1, 2, 0, 0.1, 3, false);
 			RockLibrary.Explosion(CF.Position, 0.4, 45, 15, 3);
 		});
 
 		this.MarkFistImpact = this.Butler.Connect(animTrack.GetMarkerReachedSignal("FistImpact"), () => {
+			if (!this.CanReplicate()) return;
 			const CF = this.HumanoidRootPart.CFrame;
 
 			if (!this.Attributes.UsingAbility()) {
 				animTrack.Stop(EGlobal.Feint);
-				RockManager.Crater(CF, 0, 0.6, 3, 8, 1, 0.25);
+				RockLibrary.Crater(CF, 3, 0.55, 8, 1, 2, 0, 0.3, 3.5, false);
 				return;
 			}
 
@@ -99,10 +100,9 @@ export class SeriousPunch extends CReplicate {
 
 			//#endregion
 
-			//RockManager.Crater(CF, 6, 0.75, 4, 8, 2, 0.25, true, 0.5);
-
-			RockLibrary.Explosion(CF.Position, 0.5, 45, 35, 3);
-			RockLibrary.Line(CF, 28, -4.25, 2, 70, 1, 12, 30, 0, 3, 0.285, 2.75, 0.012);
+			RockLibrary.Crater(CF, 4, 0.75, 8, 2, 4, 6, 0.3, 3.5, true, 0.5);
+			RockLibrary.Explosion(CF.Position, 0.5, 45, 35, 4);
+			RockLibrary.Line(CF, 45, -4.25, 2, 70, 1, 12, 30, 4, 0.285, 2.75, 0.012);
 		});
 	}
 }

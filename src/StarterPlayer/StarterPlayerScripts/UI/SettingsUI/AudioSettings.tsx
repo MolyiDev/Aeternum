@@ -7,13 +7,14 @@ import { ESettingsAudio } from "ReplicatedStorage/Enums/Settings/ESettingsAudio"
 import { SoundManager } from "../Managers/SoundManager";
 
 const Player = Players.LocalPlayer;
+SettingsManager.WaitForSettings(Player);
 
 export const AudioSettings = forwardRef<CanvasGroup>((props, ref) => {
 	return (
 		<UIPanel ref={ref} Key="Audio" VerticalFlex={false}>
 			<SettingsDragger
 				Title="Overall"
-				Explanation="Volume of all sounds"
+				Explanation="Master volume level"
 				InitialValue={((SettingsManager.GetSetting(Player, ESettingsAudio.Overall) as number) ?? 1) * 100}
 				MinDrag={0}
 				MaxDrag={100}
@@ -28,7 +29,7 @@ export const AudioSettings = forwardRef<CanvasGroup>((props, ref) => {
 			/>
 			<SettingsDragger
 				Title="Music"
-				Explanation="Volume of the music"
+				Explanation="Music volume level"
 				InitialValue={((SettingsManager.GetSetting(Player, ESettingsAudio.Music) as number) ?? 1) * 100}
 				MinDrag={0}
 				MaxDrag={100}
@@ -43,7 +44,7 @@ export const AudioSettings = forwardRef<CanvasGroup>((props, ref) => {
 			/>
 			<SettingsDragger
 				Title="Effects"
-				Explanation="Volume of the effects"
+				Explanation="Sound effects volume level"
 				InitialValue={((SettingsManager.GetSetting(Player, ESettingsAudio.Effects) as number) ?? 1) * 100}
 				MinDrag={0}
 				MaxDrag={100}
@@ -58,7 +59,7 @@ export const AudioSettings = forwardRef<CanvasGroup>((props, ref) => {
 			/>
 			<SettingsDragger
 				Title="UI"
-				Explanation="Volume of the UI"
+				Explanation="UI sounds volume level"
 				InitialValue={((SettingsManager.GetSetting(Player, ESettingsAudio.UI) as number) ?? 1) * 100}
 				MinDrag={0}
 				MaxDrag={100}

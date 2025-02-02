@@ -56,9 +56,6 @@ export class Attributes {
 	public UsingAbility = () => this.Model.GetAttribute(EAttribute.UsingAbility) as string | undefined;
 	public SetUsingAbility = (ability: string | undefined) => this.Model.SetAttribute(EAttribute.UsingAbility, ability);
 
-	public Receive = () => this.Model.GetAttribute(EAttribute.Receive) as string | undefined;
-	public SetReceive = (receive: string | undefined) => this.Model.SetAttribute(EAttribute.Receive, receive);
-
 	public UsingAbilityAnim = () => this.Model.GetAttribute(EAttribute.UsingAbilityAnim) as string | undefined;
 	public SetUsingAbilityAnim = (ability: string | undefined) =>
 		this.Model.SetAttribute(EAttribute.UsingAbilityAnim, ability);

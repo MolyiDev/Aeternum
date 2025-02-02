@@ -6,6 +6,7 @@ import { CharacterManager } from "../../ReplicatedStorage/Managers/CharacterMana
 import { EStyleType } from "ReplicatedStorage/Enums/Style/EStyleType";
 import { EStartType } from "ReplicatedStorage/Enums/Style/EStartType";
 import { EStopType } from "ReplicatedStorage/Enums/Style/EStopType";
+import { ModuleLoader } from "ReplicatedStorage/Libraries/ModuleLoader";
 
 // Variables
 const Player = Players.LocalPlayer;
@@ -17,6 +18,8 @@ const ShiftLock = Character.ShiftLock;
 const Styles = Character.Styles;
 const Humanoid = Character.Humanoid;
 const Butler = Character.Butler;
+
+ModuleLoader.Init();
 
 Humanoid.SetStateEnabled(Enum.HumanoidStateType.Dead, false);
 Humanoid.SetStateEnabled(Enum.HumanoidStateType.Climbing, false);
@@ -38,6 +41,7 @@ function InputBegan(control: [string, number] | undefined, input: InputObject, d
 			break;
 		case ESettingsControls.Sprint:
 			if (!Attributes.IsStunned()) Styles.Start(EStyleType.Run, EStartType.Start);
+
 			break;
 		case ESettingsControls.Dash:
 			if (!Attributes.IsStunned()) Styles.Start(EStyleType.Dash);

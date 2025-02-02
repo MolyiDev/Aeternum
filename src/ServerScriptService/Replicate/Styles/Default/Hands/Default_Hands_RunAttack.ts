@@ -5,7 +5,6 @@ import { Character } from "ReplicatedStorage/Classes/Character";
 import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 import { EHitResult } from "ReplicatedStorage/Enums/EHitResult";
 import { EWeapon } from "ReplicatedStorage/Enums/EWeapons";
-import { EGlobal } from "ReplicatedStorage/Enums/Globals/EGlobal";
 import { EStyle } from "ReplicatedStorage/Enums/Style/EStyle";
 import { EStyleType } from "ReplicatedStorage/Enums/Style/EStyleType";
 import { CharacterManager } from "ReplicatedStorage/Managers/CharacterManager";
@@ -57,7 +56,6 @@ export class Default_Hands_RunAttack extends CReplicate {
 				new Vector3(4, 4, 5),
 				this.HumanoidRootPart.CFrame.mul(new CFrame(0, -0.5, -4.25)),
 				0.1,
-				true,
 				this.HumanoidRootPart,
 				this.OverlapParams,
 				(part: Part) => {

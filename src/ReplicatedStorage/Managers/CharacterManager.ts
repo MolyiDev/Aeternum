@@ -1,11 +1,13 @@
 /* eslint-disable no-constant-condition */
 // Imports
-import { HttpService, Players, RunService } from "@rbxts/services";
+import { HttpService, Players, ReplicatedStorage, RunService } from "@rbxts/services";
 import { NPCManager } from "ReplicatedStorage/Managers/NPCManager";
 import Signal from "@rbxts/lemon-signal";
 import { Character } from "ReplicatedStorage/Classes/Character";
 import { IModel } from "ReplicatedStorage/Interfaces/IModel";
-import { Butler } from "ReplicatedStorage/Modules/Butler";
+import { Butler } from "ReplicatedStorage/Libraries/Butler";
+import { ReplicateManager } from "./ReplicateManager";
+import { EReplicateResult } from "ReplicatedStorage/Enums/EReplicateResult";
 
 // Variables
 const ButlerPerPlayer = new Map<Player, Butler>();
@@ -88,6 +90,30 @@ if (RunService.IsClient()) {
 
 	for (const player of Players.GetPlayers()) RegisterPlayer(player);
 	for (const npc of NPCManager.GetNPCs()) RegisterCharacter(npc);
+
+	const ReplicateEvent = ReplicatedStorage.WaitForChild("Events")
+		.WaitForChild("Combat")
+		.WaitForChild("ReplicateEvent") as RemoteEvent;
+
+	ReplicateEvent.OnClientEvent.Connect((characterId: string, replicateName: string, ...args: Array<unknown>) => {
+		const Character = CharacterManager.GetCharacterById(characterId);
+		if (!Character || Character.IsDestroyed) return;
+		const [ReplicateClass, Results] = ReplicateManager.ReplicateHandlerClient(
+			Character.ReplicateClient,
+			replicateName,
+		);
+
+		for (const Result of Results) {
+			switch (Result) {
+				case EReplicateResult.Replicate:
+					ReplicateClass.FiredReplicate?.(...args);
+					break;
+				case EReplicateResult.ReplicateOnce:
+					ReplicateClass.FiredReplicateOnce?.(...args);
+					break;
+			}
+		}
+	});
 } else {
 	NPCManager.NPCAddedServer.Connect((model) => RegisterCharacter(model));
 	NPCManager.NPCRemovedServer.Connect((model) => UnRegisterCharacter(model));

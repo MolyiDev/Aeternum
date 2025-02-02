@@ -2,7 +2,7 @@
 import { Workspace } from "@rbxts/services";
 
 // Variables
-const Visualize = false;
+const Visualize = true;
 const HitboxFolder = Workspace.WaitForChild("Hitbox");
 const DebrisFolder = Workspace.WaitForChild("Debris");
 
@@ -12,7 +12,6 @@ export class HitboxManager {
 		size: Vector3, // (Anch, Height, Large)
 		cframe: CFrame,
 		lifeTime: number,
-		destroy: boolean,
 		weldTo: BasePart | undefined = undefined,
 		params: OverlapParams,
 		funct: Callback,
@@ -29,6 +28,7 @@ export class HitboxManager {
 		HitBox.Size = size;
 		HitBox.CanCollide = false;
 		HitBox.CFrame = cframe;
+		HitBox.SetNetworkOwner(undefined);
 		if (shape === Enum.PartType.Cylinder) HitBox.Orientation = new Vector3(0, 0, -90);
 		if (weldTo) {
 			HitBox.Massless = true;
@@ -39,15 +39,6 @@ export class HitboxManager {
 
 		params.FilterDescendantsInstances = [...params.FilterDescendantsInstances, DebrisFolder, HitboxFolder];
 		const partsOnHitBox = Workspace.GetPartsInPart(HitBox, params);
-
-		if (destroy) {
-			/*
-				// Destroy
-				task.spawn(() => {
-					for (const part of partsOnHitBox) VoxBreaker.VoxelizePart(part, 1, 10);
-				});
-			*/
-		}
 
 		for (const part of partsOnHitBox) funct(part);
 
@@ -73,7 +64,6 @@ export class HitboxManager {
 		quantity: number,
 		waitTime: number,
 		lifeTime: number,
-		destroy: boolean,
 		params: OverlapParams,
 		funct: Callback,
 	) {
@@ -88,7 +78,7 @@ export class HitboxManager {
 			);
 
 			const boxCFrame = cframe.mul(new CFrame(0, 0, -accumulatedOffsetZ - currentSize.Z / 2));
-			this.Create(Enum.PartType.Block, currentSize, boxCFrame, lifeTime, destroy, undefined, params, (part) =>
+			this.Create(Enum.PartType.Block, currentSize, boxCFrame, lifeTime, undefined, params, (part) =>
 				funct(part, i),
 			);
 			accumulatedOffsetZ += currentSize.Z;

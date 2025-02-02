@@ -29,7 +29,7 @@ const Default_Hands_IdleInfo = {
 		StyleClass: Style,
 	},
 	[EAnimations.Default_Hands_IdleVariant1]: {
-		CanOverride: false,
+		CanOverride: true,
 		ReplicateStunned: true,
 		StyleClass: Style,
 	},

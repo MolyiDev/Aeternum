@@ -4,7 +4,7 @@ import { IHumanoid } from "ReplicatedStorage/Interfaces/IHumanoid";
 import { Attributes } from "./Attributes";
 import { Animations } from "./Animations";
 import { Abilities } from "./Abilities";
-import { Butler } from "ReplicatedStorage/Modules/Butler";
+import { Butler } from "ReplicatedStorage/Libraries/Butler";
 import { ReplicateClient } from "./ReplicateClient";
 import { Players, RunService, ServerScriptService } from "@rbxts/services";
 import { Tweens } from "./Tweens";
@@ -15,6 +15,7 @@ import { IReplicateServer } from "ReplicatedStorage/Interfaces/IReplicateServer"
 import { Parameters } from "./Parameters";
 import { Controls } from "./Controls";
 import { ShiftLock } from "./ShiftLock";
+import { IHumanoidRootPart } from "ReplicatedStorage/Interfaces/IHumanoidRootPart";
 const ReplicateServer = RunService.IsServer()
 	? (
 			require(ServerScriptService.WaitForChild("Classes").WaitForChild("ReplicateServer") as ModuleScript) as {
@@ -28,7 +29,7 @@ export class Character {
 	public CharacterId: string;
 	public Model: IModel;
 	public Humanoid: IHumanoid;
-	public HumanoidRootPart: BasePart;
+	public HumanoidRootPart: IHumanoidRootPart;
 	public Attributes: Attributes;
 	public Abilities: Abilities;
 	public Animations: Animations;
@@ -53,7 +54,7 @@ export class Character {
 		this.Model = model;
 		this.Player = Players.GetPlayerFromCharacter(model);
 		this.Humanoid = model.WaitForChild("Humanoid") as IHumanoid;
-		this.HumanoidRootPart = model.WaitForChild("HumanoidRootPart") as BasePart;
+		this.HumanoidRootPart = model.WaitForChild("HumanoidRootPart") as IHumanoidRootPart;
 		this.Attributes = new Attributes(model);
 		this.Animations = new Animations(this);
 		this.Butler = new Butler();

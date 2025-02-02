@@ -5,22 +5,22 @@ import { EAnimations } from "ReplicatedStorage/Enums/EAnimations";
 
 const ReceiveAttackInfo = {
 	[EAnimations.ReceiveAttack1]: {
-		Receive: true,
+		SelfInit: true,
 		Sound: true,
 		ReplicateStunned: true,
 	},
 	[EAnimations.ReceiveAttack2]: {
-		Receive: true,
+		SelfInit: true,
 		Sound: true,
 		ReplicateStunned: true,
 	},
 	[EAnimations.ReceiveAttack3]: {
-		Receive: true,
+		SelfInit: true,
 		Sound: true,
 		ReplicateStunned: true,
 	},
 	[EAnimations.ReceiveAttack4]: {
-		Receive: true,
+		SelfInit: true,
 		Sound: true,
 		ReplicateStunned: true,
 	},

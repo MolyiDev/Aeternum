@@ -169,7 +169,6 @@ export class Default_Hands_BasicAttack extends CReplicate {
 						new Vector3(4, 8, 3.5),
 						this.HumanoidRootPart.CFrame.mul(new CFrame(0, -1, -4)),
 						0.1,
-						true,
 						this.HumanoidRootPart,
 						this.OverlapParams,
 						(part: Part) => {
@@ -220,7 +219,6 @@ export class Default_Hands_BasicAttack extends CReplicate {
 					new Vector3(3.8, 3.8, 4.35),
 					this.HumanoidRootPart.CFrame.mul(new CFrame(0, 0.5, -4.25)),
 					0.1,
-					true,
 					this.HumanoidRootPart,
 					this.OverlapParams,
 					(part: Part) => {
@@ -252,7 +250,6 @@ export class Default_Hands_BasicAttack extends CReplicate {
 						const HitAnimations = HitCharacter.Animations;
 						const HitHumanoidRootPart = HitCharacter.HumanoidRootPart;
 						HitAnimations.GetAnimation(`ReceiveAttack${new Random().NextInteger(1, 4)}`).Play();
-						HitCharacter.Attributes.SetReceive("ReceiveAttack");
 
 						if (this.CurrentAttack === EOrder.First)
 							this.CharactersReceivedAttacks.set(HitCharacter.CharacterId, this.CurrentAttack);
@@ -280,8 +277,6 @@ export class Default_Hands_BasicAttack extends CReplicate {
 								EAnimations.Default_Hands_ReceiveAttackCombo,
 							);
 
-							HitCharacter.Attributes.SetReceive(EAnimations.Default_Hands_ReceiveAttackCombo);
-
 							const newPosition = this.HumanoidRootPart.CFrame.Position.add(
 								this.HumanoidRootPart.CFrame.LookVector.mul(4.4),
 							);
@@ -296,9 +291,7 @@ export class Default_Hands_BasicAttack extends CReplicate {
 							this.ComboAttack.Play(0.15, 1, 0.75);
 							ReceiveAttackCombo.Play(0.15, 1, 0.75);
 
-							const HitStop = HitCharacter.Butler.Once(ReceiveAttackCombo.Stopped, () => {
-								HitCharacter.Butler.Remove(HitStop);
-
+							HitCharacter.Butler.Once(ReceiveAttackCombo.Stopped, () => {
 								HitModel.UpperTorso.CollisionGroup = ECollisionGroup.Player;
 								HitModel.LowerTorso.CollisionGroup = ECollisionGroup.Player;
 								HitModel.Head.CollisionGroup = ECollisionGroup.Player;
@@ -323,7 +316,7 @@ export class Default_Hands_BasicAttack extends CReplicate {
 						}
 
 						if (animName !== EAnimations.Default_Hands_BasicAttack4)
-							DamageManager.KnockbackStun(HitCharacter, KnockbackDirection.mul(47.5));
+							DamageManager.KnockbackStun(HitCharacter, KnockbackDirection.mul(47.5), 1);
 						else DamageManager.KnockbackRagdoll(HitCharacter, KnockbackDirection.mul(200), 1, 1.5);
 					},
 				);

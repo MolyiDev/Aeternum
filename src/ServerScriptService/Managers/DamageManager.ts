@@ -8,6 +8,7 @@ import { IAbilityInfo } from "ReplicatedStorage/Interfaces/IAbilityInfo";
 import { EGlobal } from "ReplicatedStorage/Enums/Globals/EGlobal";
 import { EHitResult } from "ReplicatedStorage/Enums/EHitResult";
 import { EParameter } from "ReplicatedStorage/Enums/EParameter";
+import { ReplicateManager } from "ReplicatedStorage/Managers/ReplicateManager";
 
 const KnockbackEvent = ReplicatedStorage.WaitForChild("Events")
 	.WaitForChild("Combat")
@@ -25,6 +26,7 @@ export class DamageManager {
 
 		character.Humanoid.TakeDamage(damage);
 		character.Parameters.Modify(EParameter.Health, -damage);
+		ReplicateManager.ReplicateAllClients(character.CharacterId, "ReceiveAttackNumbers", damage);
 	}
 
 	public static EvaluateHit(

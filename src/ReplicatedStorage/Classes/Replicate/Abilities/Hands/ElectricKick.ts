@@ -1,9 +1,9 @@
 // Imports
-import { RockManager } from "ReplicatedStorage/Managers/RockManager";
 import { ReplicateInfo } from "ReplicatedStorage/Attributes/ReplicateInfo";
 import { ElectricKickInfo } from "ReplicatedStorage/Abilities/Hands/ElectricKick";
 import { CReplicate } from "ReplicatedStorage/Classes/Abstracts/CReplicate";
 import { EGlobal } from "ReplicatedStorage/Enums/Globals/EGlobal";
+import RockLibrary from "ReplicatedStorage/Libraries/RockLibrary";
 
 @ReplicateInfo(ElectricKickInfo)
 export class ElectricKick extends CReplicate {
@@ -50,24 +50,25 @@ export class ElectricKick extends CReplicate {
 
 	public AnimPlayOnce(animTrack: AnimationTrack) {
 		this.MarkRockHand = this.Butler.Connect(animTrack.GetMarkerReachedSignal("RockHand"), () => {
+			if (!this.CanReplicate()) return;
 			const CF = this.Model.RightHand.CFrame;
-			RockManager.Crater(CF, 0, 0.35, 2, 6, 1, 0.1);
+			RockLibrary.Crater(CF, 2, 0.35, 6, 1, 2, 0, 0.2, 2, false);
 
 			if (!this.Attributes.UsingAbility()) {
 				animTrack.Stop(EGlobal.Feint);
 				return;
 			}
 
-			RockManager.Explosion(CF.Position, 0.35, 1, 2, 20);
-
-			RockManager.Trail(this.HumanoidRootPart.CFrame, 10, 20, 1, Vector3.one, 2, 8, 0.4, 4, false, 8, 3, 0.01);
+			RockLibrary.Explosion(CF.Position, 0.35, 40, 20, 4);
+			RockLibrary.Line(this.HumanoidRootPart.CFrame, 10, 5, 2, 20, 1, 8, 20, 4, 0.45, 3, 0.01);
 		});
 
 		this.MarkRockDown = this.Butler.Connect(animTrack.GetMarkerReachedSignal("RockDown"), () => {
+			if (!this.CanReplicate()) return;
 			const CF = this.HumanoidRootPart.CFrame;
-			RockManager.Explosion(CF.Position, 0.45, 1, 3, 30);
-			RockManager.Crater(CF, 0, 0.75, 4, 8, 2, 0.25, true, 0.5);
-			task.delay(0.05, () => RockManager.Crater(CF, 0, 0.45, 8, 20, 2, 0.25, true, 0.5));
+			RockLibrary.Explosion(CF.Position, 0.45, 45, 30, 4);
+			RockLibrary.Crater(CF, 4, 0.8, 8, 2, 4, 4, 0.3, 3, true, 0.5);
+			task.delay(0.05, () => RockLibrary.Crater(CF, 8, 0.8, 20, 2, 4, 6, 0.35, 3, true, 0.5));
 		});
 	}
 }

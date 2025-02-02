@@ -85,7 +85,7 @@ class Default_Hands_Slide extends CStyle {
 			this.FloorNormal = rayResult.Normal;
 		});
 
-		const RootAttachment = this.HumanoidRootPart.FindFirstChild("RootAttachment") as Attachment;
+		const RootAttachment = this.HumanoidRootPart.RootAttachment;
 
 		const AlignOrientation = new Instance("AlignOrientation", this.HumanoidRootPart);
 		AlignOrientation.Enabled = false;
