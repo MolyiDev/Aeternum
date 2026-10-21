@@ -1,2 +1,7 @@
 /out
 *.tsbuildinfo
+node_modules/
+include/
+aftman.exe
+.env
+.env.*
